@@ -5,8 +5,8 @@ import {
     BookOpen,
     LayoutDashboard,
     Settings,
-    UserCheck,
     Users,
+    LayoutList,
 } from "lucide-react"
 
 import {
@@ -19,7 +19,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarHeader,
-    SidebarMenuBadge,
+    SidebarFooter,
 } from "@/components/ui/sidebar"
 
 // Menu items.
@@ -40,14 +40,9 @@ const items = [
         icon: Users,
     },
     {
-        title: "Audience",
-        url: "/audience",
-        icon: UserCheck,
-    },
-    {
-        title: "Setup",
-        url: "/setup",
-        icon: Settings,
+        title: "Quizzes",
+        url: "/quizzes",
+        icon: LayoutList,
     },
 ]
 
@@ -82,6 +77,18 @@ export function AppSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton asChild tooltip="Settings">
+                            <a href="/settings">
+                                <Settings />
+                                <span>Settings</span>
+                            </a>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
         </Sidebar>
     )
 }
