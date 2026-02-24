@@ -126,7 +126,7 @@ export default function CoursesPage() {
                         <div className="flex flex-1 flex-col p-5">
                             <div className="mb-2 flex items-center justify-between">
                                 <span className={`text-xs font-bold uppercase tracking-wider ${course.level === 'Advanced' ? 'text-red-500' :
-                                        course.level === 'Intermediate' ? 'text-blue-500' : 'text-green-500'
+                                    course.level === 'Intermediate' ? 'text-blue-500' : 'text-green-500'
                                     }`}>
                                     {course.level}
                                 </span>
@@ -165,7 +165,10 @@ export default function CoursesPage() {
                                 </div>
                             </div>
 
-                            <button className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
+                            <a
+                                href={`/courses/${course.id}`}
+                                className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                            >
                                 {course.progress > 0 ? (
                                     <>
                                         <PlayCircle className="size-4" />
@@ -177,7 +180,7 @@ export default function CoursesPage() {
                                         Start Course
                                     </>
                                 )}
-                            </button>
+                            </a>
                         </div>
                     </div>
                 ))}
