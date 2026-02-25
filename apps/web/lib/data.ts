@@ -84,27 +84,83 @@ export const quizzes = [
         id: 1,
         title: "React Hooks Master Quiz",
         score: 95,
+        bestScore: 95,
         date: "2024-03-20",
         duration: "15m",
         category: "Development",
+        difficulty: "Advanced",
+        questions: 25,
+        isCompleted: true,
+        image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=400&auto=format&fit=crop"
     },
     {
         id: 2,
         title: "SQL Performance Tuning",
         score: 82,
+        bestScore: 82,
         date: "2024-03-18",
         duration: "25m",
         category: "Database",
+        difficulty: "Intermediate",
+        questions: 30,
+        isCompleted: true,
+        image: "https://images.unsplash.com/photo-1544383335-3fbc0653ba81?w=400&auto=format&fit=crop"
     },
     {
         id: 3,
         title: "Clean Architecture Patterns",
         score: 100,
+        bestScore: 100,
         date: "2024-03-15",
         duration: "30m",
         category: "Architecture",
+        difficulty: "Advanced",
+        questions: 20,
+        isCompleted: true,
+        image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400&auto=format&fit=crop"
     },
+    {
+        id: 4,
+        title: "Typescript Fundamentals",
+        score: 0,
+        bestScore: 0,
+        date: "-",
+        duration: "20m",
+        category: "Development",
+        difficulty: "Beginner",
+        questions: 15,
+        isCompleted: false,
+        image: "https://images.unsplash.com/photo-1516116216624-53e697fedbea?w=400&auto=format&fit=crop"
+    },
+    {
+        id: 5,
+        title: "UI Design Principles",
+        score: 0,
+        bestScore: 0,
+        date: "-",
+        duration: "15m",
+        category: "Design",
+        difficulty: "Beginner",
+        questions: 10,
+        isCompleted: false,
+        image: "https://images.unsplash.com/photo-1586717791821-3f44a563eb4c?w=400&auto=format&fit=crop"
+    },
+    {
+        id: 6,
+        title: "Next.js App Router",
+        score: 0,
+        bestScore: 0,
+        date: "-",
+        duration: "20m",
+        category: "Development",
+        difficulty: "Intermediate",
+        questions: 20,
+        isCompleted: false,
+        image: "https://images.unsplash.com/photo-1618477247222-acbdb0e159b3?w=400&auto=format&fit=crop"
+    }
 ]
+
+export const quizCategories = ["All", "Development", "Design", "Database", "Architecture"]
 
 export const weeklyStats = [
     { day: "Mon", hours: 2.5, lessons: 3 },
