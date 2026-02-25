@@ -122,3 +122,62 @@ export const userStats = {
     certificates: 4,
     streak: 12,
 }
+
+export const communityPosts = [
+    {
+        id: 1,
+        author: {
+            name: "Sarah Drasner",
+            avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&auto=format&fit=crop",
+            role: "Instructor"
+        },
+        title: "The Future of React Server Components",
+        content: "I've been experimenting with Next.js 15 and RSCs for a while now. The performance benefits are undeniable, but the mental model shift is real. What are your thoughts on 'use server' in larger teams?",
+        tags: ["React", "Architecture", "NextJS"],
+        likes: 124,
+        comments: 42,
+        date: "2h ago"
+    },
+    {
+        id: 2,
+        author: {
+            name: "Gary Simon",
+            avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop",
+            role: "Designer"
+        },
+        title: "Design Systems in 2024: Less is More",
+        content: "We're seeing a shift back to extreme minimalism. High contrast, large whitespace, and subtle border-radii. I'm putting together a guide on how to build 'invisible' UIs.",
+        tags: ["Design", "UI", "Minimalism"],
+        likes: 89,
+        comments: 15,
+        date: "5h ago"
+    },
+    {
+        id: 3,
+        author: {
+            name: "Lee Robinson",
+            avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop",
+            role: "Vercel"
+        },
+        title: "Speeding up local development with Turbopack",
+        content: "Turbopack is now stable in Next.js 15. If you haven't tried running with --turbo yet, you're missing out on 70% faster incremental builds.",
+        tags: ["Performance", "Tooling", "Tips"],
+        likes: 210,
+        comments: 67,
+        date: "1d ago"
+    }
+]
+
+export const trendingTopics = [
+    { name: "React19", posts: 142 },
+    { name: "ServerComponents", posts: 98 },
+    { name: "TailwindV4", posts: 76 },
+    { name: "AIEngineering", posts: 234 },
+    { name: "UXResearch", posts: 45 }
+]
+
+export const topContributors = [
+    { name: "Alex Rivers", points: 8450, avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop", rank: 1 },
+    { name: "Elena Chen", points: 7200, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop", rank: 2 },
+    { name: "Marcus Thorne", points: 6800, avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=100&auto=format&fit=crop", rank: 3 },
+]
