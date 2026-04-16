@@ -16,6 +16,7 @@ import {
     ShieldCheck,
     Languages
 } from "lucide-react"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,13 +27,25 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
 export default function SettingsPage() {
+    const { theme, setTheme } = useTheme()
+    const [mounted, setMounted] = React.useState(false)
+
+    // Wait until mounted on client to prevent hydration mismatch
+    React.useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return null
+    }
+
     return (
-        <div className="mx-auto max-w-5xl animate-in fade-in duration-700">
+        <div className="mx-auto max-w-5xl animate-in fade-in duration-700" style={{ fontFamily: 'var(--font-ui)' }}>
             <div className="flex flex-col gap-8 pb-20">
                 {/* Header Section */}
                 <div className="flex flex-col gap-2">
-                    <h1 className="text-4xl font-extrabold tracking-tight">Settings</h1>
-                    <p className="text-muted-foreground">Manage your account settings and preferences.</p>
+                    <h1 className="text-hero" style={{ fontFamily: 'var(--font-display)' }}>Settings</h1>
+                    <p style={{ color: 'var(--muted-foreground)' }}>Manage your account settings and preferences.</p>
                 </div>
 
                 <Tabs defaultValue="profile" className="flex flex-col lg:flex-row gap-12">
@@ -47,9 +60,10 @@ export default function SettingsPage() {
                             <TabsTrigger
                                 key={tab.id}
                                 value={tab.id}
-                                className="w-full justify-start rounded-xl px-4 py-3 text-sm font-bold tracking-tight data-[state=active]:bg-card data-[state=active]:shadow-sm transition-all hover:bg-muted/50 group"
+                                className="w-full justify-start rounded-xl px-4 py-3 text-sm font-bold tracking-tight transition-all hover:rounded-xl group"
+                                style={{ backgroundColor: 'transparent', ':hover': { backgroundColor: 'var(--surface-400)' } }}
                             >
-                                <tab.icon className="mr-3 size-4 text-muted-foreground group-data-[state=active]:text-primary transition-colors" />
+                                <tab.icon className="mr-3 size-4 transition-colors" style={{ color: 'var(--muted-foreground)' }} />
                                 {tab.label}
                             </TabsTrigger>
                         ))}
@@ -63,18 +77,18 @@ export default function SettingsPage() {
                                 <section className="flex flex-col gap-6">
                                     <div className="flex flex-col gap-1">
                                         <h3 className="text-lg font-bold">Public Profile</h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">This information will be displayed publicly to other community members.</p>
+                                        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>This information will be displayed publicly to other community members.</p>
                                     </div>
 
                                     <div className="flex flex-col gap-8">
                                         <div className="flex items-center gap-6">
                                             <div className="relative group cursor-pointer">
-                                                <Avatar className="size-24 ring-4 ring-background shadow-xl">
+                                                <Avatar className="size-24 shadow-xl" style={{ ring: '4px solid var(--surface-200)' }}>
                                                     <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=60" />
                                                     <AvatarFallback>M</AvatarFallback>
                                                 </Avatar>
-                                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Camera className="size-6 text-white" />
+                                                <div className="absolute inset-0 flex items-center justify-center rounded-full transition-opacity opacity-0 group-hover:opacity-100" style={{ backgroundColor: 'rgba(38, 37, 30, 0.4)' }}>
+                                                    <Camera className="size-6" style={{ color: 'var(--surface-200)' }} />
                                                 </div>
                                             </div>
                                             <div className="flex flex-col gap-3">
@@ -82,24 +96,25 @@ export default function SettingsPage() {
                                                     <Button size="sm" className="rounded-xl font-bold">Change Avatar</Button>
                                                     <Button size="sm" variant="outline" className="rounded-xl font-bold">Remove</Button>
                                                 </div>
-                                                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">JPG, GIF or PNG. 1MB Max.</p>
+                                                <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>JPG, GIF or PNG. 1MB Max.</p>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="flex flex-col gap-2">
-                                                <Label htmlFor="display-name" className="text-xs uppercase tracking-widest text-muted-foreground/60">Display Name</Label>
-                                                <Input id="display-name" defaultValue="Morné" className="bg-card/40 border-none rounded-xl h-11 px-4 placeholder:text-muted-foreground/40 focus-visible:ring-primary/40" />
+                                                <Label htmlFor="display-name">Display Name</Label>
+                                                <Input id="display-name" defaultValue="Morné" />
                                             </div>
                                             <div className="flex flex-col gap-2">
-                                                <Label htmlFor="username" className="text-xs uppercase tracking-widest text-muted-foreground/60">Username</Label>
-                                                <Input id="username" defaultValue="@mornelabs" className="bg-card/40 border-none rounded-xl h-11 px-4 placeholder:text-muted-foreground/40 focus-visible:ring-primary/40" />
+                                                <Label htmlFor="username">Username</Label>
+                                                <Input id="username" defaultValue="@mornelabs" />
                                             </div>
                                             <div className="col-span-full flex flex-col gap-2">
-                                                <Label htmlFor="bio" className="text-xs uppercase tracking-widest text-muted-foreground/60">Bio</Label>
+                                                <Label htmlFor="bio">Bio</Label>
                                                 <textarea
                                                     id="bio"
-                                                    className="min-h-[120px] w-full bg-card/40 border-none rounded-2xl p-4 text-sm placeholder:text-muted-foreground/40 focus-visible:ring-1 focus-visible:ring-primary/40 outline-none resize-none"
+                                                    className="min-h-[120px] w-full p-4 text-sm outline-none resize-none rounded-lg"
+                                                    style={{ backgroundColor: 'transparent', border: '1px solid var(--border-primary)', color: 'var(--foreground)' }}
                                                     placeholder="Tell the community about yourself..."
                                                     defaultValue="Passionate learner and software engineer exploring the frontiers of AI and web development."
                                                 />
@@ -119,43 +134,43 @@ export default function SettingsPage() {
                                 <section className="flex flex-col gap-8">
                                     <div className="flex flex-col gap-1">
                                         <h3 className="text-lg font-bold">Account Security</h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">Manage your email and security preferences.</p>
+                                        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>Manage your email and security preferences.</p>
                                     </div>
 
                                     <div className="flex flex-col gap-10">
-                                        <div className="flex items-center justify-between p-6 rounded-2xl bg-card/30 border border-border/50">
+                                        <div className="flex items-center justify-between p-6 rounded-2xl" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)' }}>
                                             <div className="flex items-center gap-4">
-                                                <div className="size-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                                                <div className="size-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
                                                     <Mail className="size-5" />
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-bold">Email Address</span>
-                                                    <span className="text-xs text-muted-foreground">mornie@example.com</span>
+                                                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>mornie@example.com</span>
                                                 </div>
                                             </div>
-                                            <Button variant="ghost" size="sm" className="font-bold text-primary rounded-lg text-xs tracking-tighter uppercase">Change</Button>
+                                            <Button variant="ghost" size="sm" className="font-bold rounded-lg text-xs tracking-tighter uppercase" style={{ color: 'var(--color-accent)' }}>Change</Button>
                                         </div>
 
-                                        <div className="flex items-center justify-between p-6 rounded-2xl bg-card/30 border border-border/50 transition-all hover:bg-card/40">
+                                        <div className="flex items-center justify-between p-6 rounded-2xl transition-all" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)', ':hover': { backgroundColor: 'var(--surface-300)' } }}>
                                             <div className="flex items-center gap-4">
-                                                <div className="size-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+                                                <div className="size-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
                                                     <ShieldCheck className="size-5" />
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-bold">Password</span>
-                                                    <span className="text-xs text-muted-foreground">Last updated 3 months ago</span>
+                                                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Last updated 3 months ago</span>
                                                 </div>
                                             </div>
-                                            <Button variant="ghost" size="sm" className="font-bold text-primary rounded-lg text-xs tracking-tighter uppercase">Reset</Button>
+                                            <Button variant="ghost" size="sm" className="font-bold rounded-lg text-xs tracking-tighter uppercase" style={{ color: 'var(--color-accent)' }}>Reset</Button>
                                         </div>
                                     </div>
 
                                     <div className="flex flex-col gap-4 mt-4">
-                                        <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60">Danger Zone</h4>
-                                        <div className="p-6 rounded-2xl border border-destructive/20 bg-destructive/5 flex items-center justify-between">
+                                        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>Danger Zone</h4>
+                                        <div className="p-6 rounded-2xl flex items-center justify-between" style={{ border: '1px solid var(--color-error)', backgroundColor: 'var(--color-error)/5' }}>
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-sm font-bold text-destructive">Delete Account</span>
-                                                <p className="text-xs text-muted-foreground">Permanently delete your account and all associated data.</p>
+                                                <span className="text-sm font-bold" style={{ color: 'var(--color-error)' }}>Delete Account</span>
+                                                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Permanently delete your account and all associated data.</p>
                                             </div>
                                             <Button variant="destructive" size="sm" className="rounded-xl font-bold">Delete</Button>
                                         </div>
@@ -170,7 +185,7 @@ export default function SettingsPage() {
                                 <section className="flex flex-col gap-8">
                                     <div className="flex flex-col gap-1">
                                         <h3 className="text-lg font-bold">Email Notifications</h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">Choose which updates you'd like to receive in your inbox.</p>
+                                        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>Choose which updates you'd like to receive in your inbox.</p>
                                     </div>
 
                                     <div className="flex flex-col gap-4">
@@ -180,10 +195,10 @@ export default function SettingsPage() {
                                             { title: "New Course Alerts", desc: "Stay informed when new courses related to your interests are published." },
                                             { title: "Weekly Recap", desc: "A summary of your learning activity and community stats." },
                                         ].map((item, i) => (
-                                            <div key={i} className="flex items-center justify-between py-6 border-b border-border/40 last:border-0">
+                                            <div key={i} className="flex items-center justify-between py-6" style={{ borderBottom: i < 3 ? '1px solid var(--border-primary)' : 'none' }}>
                                                 <div className="flex flex-col gap-1">
                                                     <span className="text-sm font-bold">{item.title}</span>
-                                                    <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">{item.desc}</p>
+                                                    <p className="text-xs leading-relaxed max-w-sm" style={{ color: 'var(--muted-foreground)' }}>{item.desc}</p>
                                                 </div>
                                                 <Switch defaultChecked={i < 2} />
                                             </div>
@@ -199,41 +214,47 @@ export default function SettingsPage() {
                                 <section className="flex flex-col gap-8">
                                     <div className="flex flex-col gap-1">
                                         <h3 className="text-lg font-bold">Interface Preferences</h3>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">Customize your viewing experience on the platform.</p>
+                                        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>Customize your viewing experience on the platform.</p>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="flex flex-col gap-4 p-6 rounded-3xl bg-card/30 border border-border/50">
+                                        <div className="flex flex-col gap-4 p-6 rounded-3xl" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)' }}>
                                             <div className="flex items-center gap-3">
-                                                <Moon className="size-4 text-primary" />
+                                                <Moon className="size-4" style={{ color: 'var(--color-accent)' }} />
                                                 <span className="text-sm font-bold">Theme</span>
                                             </div>
-                                            <div className="flex gap-2 p-1 bg-background/50 rounded-2xl">
+                                            <div className="flex gap-2 p-1 rounded-2xl" style={{ backgroundColor: 'var(--surface-200)' }}>
                                                 {[
                                                     { id: "light", icon: Sun, label: "Light" },
                                                     { id: "dark", icon: Moon, label: "Dark" },
                                                     { id: "system", icon: Smartphone, label: "System" },
-                                                ].map((theme) => (
+                                                ].map((t) => (
                                                     <button
-                                                        key={theme.id}
-                                                        className={`flex flex-1 items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${theme.id === 'dark' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'text-muted-foreground hover:text-foreground'}`}
+                                                        key={t.id}
+                                                        onClick={() => setTheme(t.id)}
+                                                        className={`flex flex-1 items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${theme === t.id ? 'shadow-lg' : ''}`}
+                                                        style={{
+                                                            backgroundColor: theme === t.id ? 'var(--color-accent)' : 'transparent',
+                                                            color: theme === t.id ? 'white' : 'var(--muted-foreground)',
+                                                            boxShadow: theme === t.id ? 'var(--shadow-card)' : 'none'
+                                                        }}
                                                     >
-                                                        <theme.icon className="size-3.5" />
-                                                        {theme.label}
+                                                        <t.icon className="size-3.5" />
+                                                        {t.label}
                                                     </button>
                                                 ))}
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col gap-4 p-6 rounded-3xl bg-card/30 border border-border/50">
+                                        <div className="flex flex-col gap-4 p-6 rounded-3xl" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)' }}>
                                             <div className="flex items-center gap-3">
-                                                <Languages className="size-4 text-primary" />
+                                                <Languages className="size-4" style={{ color: 'var(--color-accent)' }} />
                                                 <span className="text-sm font-bold">Language</span>
                                             </div>
                                             <div className="relative group">
-                                                <div className="w-full flex items-center justify-between py-3 px-4 bg-background/50 rounded-2xl cursor-pointer">
+                                                <div className="w-full flex items-center justify-between py-3 px-4 rounded-2xl cursor-pointer" style={{ backgroundColor: 'var(--surface-200)' }}>
                                                     <span className="text-sm font-medium">English (US)</span>
-                                                    <ChevronRight className="size-4 opacity-40 group-hover:translate-x-0.5 transition-transform" />
+                                                    <ChevronRight className="size-4 transition-transform" style={{ opacity: '0.4' }} />
                                                 </div>
                                             </div>
                                         </div>
