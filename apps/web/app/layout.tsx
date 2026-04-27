@@ -24,13 +24,13 @@ export default function RootLayout({
           <SidebarProvider>
             <AppSidebar />
             <SidebarInset>
-              <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border-primary px-4" style={{ backgroundColor: 'var(--surface-200)' }}>
+              <header className="fixed top-0 left-0 right-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b border-border-primary px-4" style={{ backgroundColor: 'var(--surface-200)' }}>
                 <SidebarTrigger className="-ml-1" />
                 <Separator orientation="vertical" className="mr-2 h-4" style={{ borderColor: 'var(--border-primary)' }} />
                 <PageHeaderTitle />
                 <HeaderActions />
               </header>
-              <main className="p-4" style={{ backgroundColor: 'var(--surface-200)' }}>
+              <main className="pt-20 p-4" style={{ backgroundColor: 'var(--surface-200)' }}>
                 {children}
               </main>
             </SidebarInset>
