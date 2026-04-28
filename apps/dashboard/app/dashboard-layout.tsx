@@ -116,7 +116,7 @@ export function DashboardLayout({
                   asChild
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
-                  <a href="#">
+                  <a href="/courses">
                     <BookOpen className="h-4 w-4" style={{ color: '#26251e' }} />
                     <span style={{ color: '#26251e' }}>Courses</span>
                   </a>
