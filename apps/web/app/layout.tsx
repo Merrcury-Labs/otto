@@ -6,6 +6,10 @@ import { HeaderActions } from "@/components/header-actions";
 import { Separator } from "@/components/ui/separator";
 import { PageHeaderTitle } from "@/components/page-header-title";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Nunito_Sans } from "next/font/google";
+import { cn } from "@/lib/utils";
+
+const nunitoSans = Nunito_Sans({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -18,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={cn("font-sans", nunitoSans.variable)}>
       <body className="antialiased font-ui">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <SidebarProvider>
