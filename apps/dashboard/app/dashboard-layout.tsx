@@ -73,7 +73,7 @@ export function DashboardLayout({
                   asChild
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
-                  <a href="#">
+                  <a href="/">
                     <House className="h-4 w-4" style={{ color: '#26251e' }} />
                     <span style={{ color: '#26251e' }}>Dashboard</span>
                   </a>
@@ -167,7 +167,7 @@ export function DashboardLayout({
                 asChild
                 className="cursor-btn-hover focus-warm transition-all duration-150"
               >
-                <a href="#">
+                <a href="/settings">
                   <Faders className="h-4 w-4" style={{ color: '#26251e' }} />
                   <span style={{ color: '#26251e' }}>Settings</span>
                 </a>
