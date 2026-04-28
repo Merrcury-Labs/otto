@@ -21,7 +21,7 @@ import {
   FileText,
   TrendUp,
   Clock,
-  MoreVertical,
+  DotsThreeVertical,
   CheckCircle,
   Circle,
   XCircle,
@@ -187,7 +187,7 @@ export default function CoursesPage() {
             </CardDescription>
           </div>
           <button className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md opacity-0 group-hover:opacity-100">
-            <MoreVertical
+            <DotsThreeVertical
               className="h-5 w-5"
               style={{ color: "rgba(38, 37, 30, 0.55)" }}
             />
