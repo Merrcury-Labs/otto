@@ -26,6 +26,9 @@ import {
   ListBullets,
   TextH,
   Link,
+  DotsSix,
+  CheckSquare,
+  ArrowsLeftRight,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 
@@ -35,11 +38,16 @@ interface Module {
   lessons: Lesson[];
 }
 
+export type QuizType = "multiple-choice" | "drag-drop" | "checkbox" | "true-false";
+
 interface QuizQuestion {
   id: number;
   question: string;
+  type: QuizType;
   options: string[];
-  correctAnswer: number;
+  correctAnswer?: number | number[];
+  correctItems?: number[];
+  answer?: string;
   hint?: string;
 }
 
@@ -89,6 +97,7 @@ interface LessonFormData {
   url?: string;
   content?: string;
   questions?: QuizQuestion[];
+  quizType?: QuizType;
 }
 
 export default function CreateCoursePage() {
@@ -163,6 +172,7 @@ export default function CreateCoursePage() {
       url: "",
       content: "",
       questions: [],
+      quizType: "multiple-choice",
     });
     setIsModalOpen(true);
   };
@@ -222,11 +232,15 @@ export default function CreateCoursePage() {
   }, [lessonFormData.content]);
 
   const addQuestion = () => {
+    const quizType = lessonFormData.quizType || "multiple-choice";
     const newQuestion: QuizQuestion = {
       id: Date.now(),
       question: "",
-      options: ["", "", "", ""],
-      correctAnswer: 0,
+      type: quizType,
+      options: quizType === "true-false" ? ["True", "False"] : ["", "", ""],
+      correctAnswer: quizType === "multiple-choice" ? 0 : undefined,
+      correctItems: quizType === "drag-drop" ? [] : undefined,
+      answer: quizType === "true-false" ? "True" : undefined,
       hint: "",
     };
     setLessonFormData({
@@ -248,6 +262,22 @@ export default function CreateCoursePage() {
       questions: lessonFormData.questions?.map((q) =>
         q.id === questionId ? { ...q, ...updates } : q
       ) || [],
+    });
+  };
+
+  const updateQuizType = (type: QuizType) => {
+    setLessonFormData({
+      ...lessonFormData,
+      quizType: type,
+      // Update existing questions to new type
+      questions: lessonFormData.questions?.map((q) => ({
+        ...q,
+        type,
+        options: type === "true-false" ? ["True", "False"] : q.options,
+        correctAnswer: type === "multiple-choice" ? 0 : undefined,
+        correctItems: type === "drag-drop" ? [] : undefined,
+        answer: type === "true-false" ? "True" : undefined,
+      })) || [],
     });
   };
 
@@ -972,6 +1002,7 @@ export default function CreateCoursePage() {
           style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
           onClick={closeModal}
         >
+
           <div
             className="w-full max-w-lg rounded-lg shadow-2xl"
             style={{ backgroundColor: "#e6e5e0" }}
@@ -1024,7 +1055,10 @@ export default function CreateCoursePage() {
                     }}
                     required
                   />
-                  <p className="text-xs mt-2" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                  <p
+                    className="text-xs mt-2"
+                    style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                  >
                     Paste YouTube, Vimeo, or any video hosting platform link
                   </p>
                 </div>
@@ -1205,6 +1239,111 @@ export default function CreateCoursePage() {
 
               {lessonFormData.type === "quiz" && (
                 <div className="space-y-6">
+                  {/* Quiz Type Selector */}
+                  <div>
+                    <label
+                      className="text-sm font-medium mb-2"
+                      style={{ color: "#26251e" }}
+                    >
+                      Quiz Type
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => updateQuizType("multiple-choice")}
+                        className={`p-3 rounded-lg border-2 cursor-btn-hover focus-warm transition-all duration-150 text-left ${
+                          lessonFormData.quizType === "multiple-choice"
+                            ? "bg-[#26251e] text-white border-[#26251e]"
+                            : "bg-[#f7f7f4] border-transparent"
+                        }`}
+                        style={{
+                          borderColor:
+                            lessonFormData.quizType === "multiple-choice"
+                              ? "#26251e"
+                                : "rgba(38, 37, 30, 0.1)",
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <DotsSix className="h-4 w-4" />
+                          <div>
+                            <div className="font-medium text-sm">Multiple Choice</div>
+                            <div className="text-xs opacity-75">One correct answer</div>
+                          </div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateQuizType("drag-drop")}
+                        className={`p-3 rounded-lg border-2 cursor-btn-hover focus-warm transition-all duration-150 text-left ${
+                          lessonFormData.quizType === "drag-drop"
+                            ? "bg-[#26251e] text-white border-[#26251e]"
+                            : "bg-[#f7f7f4] border-transparent"
+                        }`}
+                        style={{
+                          borderColor:
+                            lessonFormData.quizType === "drag-drop"
+                              ? "#26251e"
+                                : "rgba(38, 37, 30, 0.1)",
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <ArrowsLeftRight className="h-4 w-4" />
+                          <div>
+                            <div className="font-medium text-sm">Drag & Drop</div>
+                            <div className="text-xs opacity-75">Match or order items</div>
+                          </div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateQuizType("checkbox")}
+                        className={`p-3 rounded-lg border-2 cursor-btn-hover focus-warm transition-all duration-150 text-left ${
+                          lessonFormData.quizType === "checkbox"
+                            ? "bg-[#26251e] text-white border-[#26251e]"
+                            : "bg-[#f7f7f4] border-transparent"
+                        }`}
+                        style={{
+                          borderColor:
+                            lessonFormData.quizType === "checkbox"
+                              ? "#26251e"
+                                : "rgba(38, 37, 30, 0.1)",
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="h-4 w-4" />
+                          <div>
+                            <div className="font-medium text-sm">Checks</div>
+                            <div className="text-xs opacity-75">Multiple correct answers</div>
+                          </div>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateQuizType("true-false")}
+                        className={`p-3 rounded-lg border-2 cursor-btn-hover focus-warm transition-all duration-150 text-left ${
+                          lessonFormData.quizType === "true-false"
+                            ? "bg-[#26251e] text-white border-[#26251e]"
+                            : "bg-[#f7f7f4] border-transparent"
+                        }`}
+                        style={{
+                          borderColor:
+                            lessonFormData.quizType === "true-false"
+                              ? "#26251e"
+                                : "rgba(38, 37, 30, 0.1)",
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Check className="h-4 w-4" />
+                          <div>
+                            <div className="font-medium text-sm">True/False</div>
+                            <div className="text-xs opacity-75">Binary questions</div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+
                   {/* Questions Header */}
                   <div className="flex items-center justify-between">
                     <label
@@ -1239,90 +1378,118 @@ export default function CreateCoursePage() {
                             borderColor: "rgba(38, 37, 30, 0.1)",
                           }}
                         >
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <div
-                                className="text-xs font-medium mb-1"
-                                style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                              >
-                                Question {index + 1}
-                              </div>
-                              <input
-                                type="text"
-                                value={question.question}
-                                onChange={(e) =>
-                                  updateQuestion(question.id, {
-                                    question: e.target.value,
-                                  })
-                                }
-                                placeholder="Enter your question..."
-                                className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                                style={{
-                                  backgroundColor: "#e6e5e0",
-                                  borderColor: "rgba(38, 37, 30, 0.1)",
-                                  color: "#26251e",
-                                }}
-                              />
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => removeQuestion(question.id)}
-                              className="cursor-btn-hover focus-warm transition-all duration-150"
-                              style={{ color: "#cf2d56" }}
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          {/* Options */}
-                          <div className="space-y-2 mb-3">
-                            <div
-                              className="text-xs font-medium"
-                              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                            >
-                              Answer Options
-                            </div>
-                            {question.options.map((option, optionIndex) => (
-                              <div
-                                key={optionIndex}
-                                className="flex items-center gap-2"
-                              >
-                                <button
+                          {/* Multiple Choice UI */}
+                          {question.type === "multiple-choice" && (
+                            <>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div
+                                    className="text-xs font-medium mb-1"
+                                    style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                  >
+                                    Question {index + 1}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={question.question}
+                                    onChange={(e) =>
+                                      updateQuestion(question.id, {
+                                        question: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Enter your question..."
+                                    className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                    style={{
+                                      backgroundColor: "#e6e5e0",
+                                      borderColor: "rgba(38, 37, 30, 0.1)",
+                                      color: "#26251e",
+                                    }}
+                                  />
+                                </div>
+                                <Button
                                   type="button"
-                                  onClick={() =>
-                                    updateQuestion(question.id, {
-                                      correctAnswer: optionIndex,
-                                    })
-                                  }
-                                  className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 ${
-                                    question.correctAnswer === optionIndex
-                                      ? "bg-[#26251e] text-white"
-                                      : "bg-[#e6e5e0] text-[#26251e] border"
-                                  }`}
-                                  style={{
-                                    borderColor:
-                                      question.correctAnswer === optionIndex
-                                        ? "transparent"
-                                        : "rgba(38, 37, 30, 0.2)",
-                                  }}
+                                  variant="ghost"
+                                  onClick={() => removeQuestion(question.id)}
+                                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{ color: "#cf2d56" }}
                                 >
-                                  {question.correctAnswer === optionIndex && (
-                                    <Check className="h-3 w-3" />
-                                  )}
-                                </button>
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              {/* Options */}
+                              <div className="space-y-2 mb-3">
+                                <div
+                                  className="text-xs font-medium"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Answer Options
+                                </div>
+                                {question.options.map((option, optionIndex) => (
+                                  <div key={optionIndex} className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        updateQuestion(question.id, {
+                                          correctAnswer: optionIndex,
+                                        })
+                                      }
+                                      className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 ${
+                                        question.correctAnswer === optionIndex
+                                          ? "bg-[#26251e] text-white"
+                                          : "bg-[#e6e5e0] text-[#26251e] border"
+                                      }`}
+                                      style={{
+                                        borderColor:
+                                          question.correctAnswer === optionIndex
+                                            ? "transparent"
+                                            : "rgba(38, 37, 30, 0.2)",
+                                      }}
+                                    >
+                                      {question.correctAnswer === optionIndex && (
+                                        <Check className="h-3 w-3" />
+                                      )}
+                                    </button>
+                                    <input
+                                      type="text"
+                                      value={option}
+                                      onChange={(e) => {
+                                        const newOptions = [...question.options];
+                                        newOptions[optionIndex] = e.target.value;
+                                        updateQuestion(question.id, {
+                                          options: newOptions,
+                                        });
+                                      }}
+                                      placeholder={`Option ${optionIndex + 1}`}
+                                      className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                      style={{
+                                        backgroundColor: "#e6e5e0",
+                                        borderColor: "rgba(38, 37, 30, 0.1)",
+                                        color: "#26251e",
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Hint */}
+                              <div>
+                                <div
+                                  className="text-xs font-medium mb-1"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Hint (Optional)
+                                </div>
                                 <input
                                   type="text"
-                                  value={option}
-                                  onChange={(e) => {
-                                    const newOptions = [...question.options];
-                                    newOptions[optionIndex] = e.target.value;
+                                  value={question.hint || ""}
+                                  onChange={(e) =>
                                     updateQuestion(question.id, {
-                                      options: newOptions,
-                                    });
-                                  }}
-                                  placeholder={`Option ${optionIndex + 1}`}
-                                  className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                      hint: e.target.value,
+                                    })
+                                  }
+                                  placeholder="Add a hint for students..."
+                                  className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
                                   style={{
                                     backgroundColor: "#e6e5e0",
                                     borderColor: "rgba(38, 37, 30, 0.1)",
@@ -1330,34 +1497,387 @@ export default function CreateCoursePage() {
                                   }}
                                 />
                               </div>
-                            ))}
-                          </div>
+                            </>
+                          )}
 
-                          {/* Hint */}
-                          <div>
-                            <div
-                              className="text-xs font-medium mb-1"
-                              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                            >
-                              Hint (Optional)
-                            </div>
-                            <input
-                              type="text"
-                              value={question.hint || ""}
-                              onChange={(e) =>
-                                updateQuestion(question.id, {
-                                  hint: e.target.value,
-                                })
-                              }
-                              placeholder="Add a hint for students..."
-                              className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                              style={{
-                                backgroundColor: "#e6e5e0",
-                                borderColor: "rgba(38, 37, 30, 0.1)",
-                                color: "#26251e",
-                              }}
-                            />
-                          </div>
+                          {/* Drag & Drop UI */}
+                          {question.type === "drag-drop" && (
+                            <>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div
+                                    className="text-xs font-medium mb-1"
+                                    style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                  >
+                                    Question {index + 1}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={question.question}
+                                    onChange={(e) =>
+                                      updateQuestion(question.id, {
+                                        question: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Enter your question..."
+                                    className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                    style={{
+                                      backgroundColor: "#e6e5e0",
+                                      borderColor: "rgba(38, 37, 30, 0.1)",
+                                      color: "#26251e",
+                                    }}
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  onClick={() => removeQuestion(question.id)}
+                                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{ color: "#cf2d56" }}
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              <div className="mb-3">
+                                <div
+                                  className="text-xs font-medium mb-2"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Items to Match/Order
+                                </div>
+                                <div className="space-y-2">
+                                  {question.options.map((option, optionIndex) => (
+                                    <div
+                                      key={optionIndex}
+                                      className={`p-3 rounded-md border-2 cursor-move ${
+                                        question.correctItems?.includes(optionIndex)
+                                          ? "border-[#26251e]"
+                                          : "border-transparent"
+                                      }`}
+                                      style={{
+                                        backgroundColor: "#e6e5e0",
+                                        borderColor: question.correctItems?.includes(
+                                          optionIndex
+                                        )
+                                          ? "#26251e"
+                                          : "rgba(38, 37, 30, 0.1)",
+                                      }}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <ArrowsLeftRight className="h-4 w-4" />
+                                        <input
+                                          type="text"
+                                          value={option}
+                                          onChange={(e) => {
+                                            const newOptions = [...question.options];
+                                            newOptions[optionIndex] = e.target.value;
+                                            updateQuestion(question.id, {
+                                              options: newOptions,
+                                            });
+                                          }}
+                                          placeholder={`Item ${optionIndex + 1}`}
+                                          className="flex-1 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                          style={{
+                                            backgroundColor: "#ebeae5",
+                                            borderColor: "rgba(38, 37, 30, 0.1)",
+                                            color: "#26251e",
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Hint */}
+                              <div>
+                                <div
+                                  className="text-xs font-medium mb-1"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Hint (Optional)
+                                </div>
+                                <input
+                                  type="text"
+                                  value={question.hint || ""}
+                                  onChange={(e) =>
+                                    updateQuestion(question.id, {
+                                      hint: e.target.value,
+                                    })
+                                  }
+                                  placeholder="Add a hint for students..."
+                                  className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{
+                                    backgroundColor: "#e6e5e0",
+                                    borderColor: "rgba(38, 37, 30, 0.1)",
+                                    color: "#26251e",
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* Checkbox UI */}
+                          {question.type === "checkbox" && (
+                            <>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div
+                                    className="text-xs font-medium mb-1"
+                                    style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                  >
+                                    Question {index + 1}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={question.question}
+                                    onChange={(e) =>
+                                      updateQuestion(question.id, {
+                                        question: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Enter your question..."
+                                    className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                    style={{
+                                      backgroundColor: "#e6e5e0",
+                                      borderColor: "rgba(38, 37, 30, 0.1)",
+                                      color: "#26251e",
+                                    }}
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  onClick={() => removeQuestion(question.id)}
+                                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{ color: "#cf2d56" }}
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              {/* Options with checkboxes */}
+                              <div className="space-y-2 mb-3">
+                                <div
+                                  className="text-xs font-medium"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Answer Options (Select all correct)
+                                </div>
+                                {question.options.map((option, optionIndex) => (
+                                  <div key={optionIndex} className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const currentCorrect = Array.isArray(
+                                          question.correctAnswer
+                                        )
+                                          ? question.correctAnswer
+                                          : [];
+                                        const newCorrect = currentCorrect.includes(
+                                          optionIndex
+                                        )
+                                          ? currentCorrect.filter(
+                                              (i) => i !== optionIndex
+                                            )
+                                          : [...currentCorrect, optionIndex];
+                                        updateQuestion(question.id, {
+                                          correctAnswer: newCorrect,
+                                        });
+                                      }}
+                                      className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
+                                        Array.isArray(question.correctAnswer) &&
+                                        question.correctAnswer.includes(optionIndex)
+                                          ? "bg-[#26251e] text-white border-[#26251e]"
+                                          : "bg-[#e6e5e0] text-[#26251e] border-transparent"
+                                      }`}
+                                      style={{
+                                        borderColor: Array.isArray(
+                                          question.correctAnswer
+                                        ) &&
+                                        question.correctAnswer.includes(optionIndex)
+                                          ? "#26251e"
+                                          : "rgba(38, 37, 30, 0.2)",
+                                      }}
+                                    >
+                                      {Array.isArray(question.correctAnswer) &&
+                                        question.correctAnswer.includes(optionIndex) && (
+                                          <Check className="h-3 w-3" />
+                                        )}
+                                    </button>
+                                    <input
+                                      type="text"
+                                      value={option}
+                                      onChange={(e) => {
+                                        const newOptions = [...question.options];
+                                        newOptions[optionIndex] = e.target.value;
+                                        updateQuestion(question.id, {
+                                          options: newOptions,
+                                        });
+                                      }}
+                                      placeholder={`Option ${optionIndex + 1}`}
+                                      className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                      style={{
+                                        backgroundColor: "#e6e5e0",
+                                        borderColor: "rgba(38, 37, 30, 0.1)",
+                                        color: "#26251e",
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Hint */}
+                              <div>
+                                <div
+                                  className="text-xs font-medium mb-1"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Hint (Optional)
+                                </div>
+                                <input
+                                  type="text"
+                                  value={question.hint || ""}
+                                  onChange={(e) =>
+                                    updateQuestion(question.id, {
+                                      hint: e.target.value,
+                                    })
+                                  }
+                                  placeholder="Add a hint for students..."
+                                  className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{
+                                    backgroundColor: "#e6e5e0",
+                                    borderColor: "rgba(38, 37, 30, 0.1)",
+                                    color: "#26251e",
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {/* True/False UI */}
+                          {question.type === "true-false" && (
+                            <>
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <div
+                                    className="text-xs font-medium mb-1"
+                                    style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                  >
+                                    Question {index + 1}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    value={question.question}
+                                    onChange={(e) =>
+                                      updateQuestion(question.id, {
+                                        question: e.target.value,
+                                      })
+                                    }
+                                    placeholder="Enter your question..."
+                                    className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                    style={{
+                                      backgroundColor: "#e6e5e0",
+                                      borderColor: "rgba(38, 37, 30, 0.1)",
+                                      color: "#26251e",
+                                    }}
+                                  />
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  onClick={() => removeQuestion(question.id)}
+                                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{ color: "#cf2d56" }}
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </Button>
+                              </div>
+
+                              {/* True/False Selection */}
+                              <div className="mb-3">
+                                <div
+                                  className="text-xs font-medium mb-2"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Correct Answer
+                                </div>
+                                <div className="flex gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateQuestion(question.id, {
+                                        answer: "True",
+                                      })
+                                    }
+                                    className={`flex-1 p-4 rounded-lg cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
+                                      question.answer === "True"
+                                        ? "bg-[#26251e] text-white border-[#26251e]"
+                                        : "bg-[#e6e5e0] text-[#26251e] border-transparent"
+                                    }`}
+                                    style={{
+                                      borderColor:
+                                        question.answer === "True"
+                                          ? "#26251e"
+                                          : "rgba(38, 37, 30, 0.2)",
+                                    }}
+                                  >
+                                    <Check className="h-4 w-4 mr-2" />
+                                    True
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      updateQuestion(question.id, {
+                                        answer: "False",
+                                      })
+                                    }
+                                    className={`flex-1 p-4 rounded-lg cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
+                                      question.answer === "False"
+                                        ? "bg-[#26251e] text-white border-[#26251e]"
+                                        : "bg-[#e6e5e0] text-[#26251e] border-transparent"
+                                    }`}
+                                    style={{
+                                      borderColor:
+                                        question.answer === "False"
+                                          ? "#26251e"
+                                          : "rgba(38, 37, 30, 0.2)",
+                                    }}
+                                  >
+                                    <X className="h-4 w-4 mr-2" />
+                                    False
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Hint */}
+                              <div>
+                                <div
+                                  className="text-xs font-medium mb-1"
+                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                >
+                                  Hint (Optional)
+                                </div>
+                                <input
+                                  type="text"
+                                  value={question.hint || ""}
+                                  onChange={(e) =>
+                                    updateQuestion(question.id, {
+                                      hint: e.target.value,
+                                    })
+                                  }
+                                  placeholder="Add a hint for students..."
+                                  className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{
+                                    backgroundColor: "#e6e5e0",
+                                    borderColor: "rgba(38, 37, 30, 0.1)",
+                                    color: "#26251e",
+                                  }}
+                                />
+                              </div>
+                            </>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1380,7 +1900,12 @@ export default function CreateCoursePage() {
                         className="text-xs"
                         style={{ color: "rgba(38, 37, 30, 0.55)" }}
                       >
-                        Click "Add Question" to create your first quiz question
+                        Click "Add Question" to create your first{" "}
+                        {lessonFormData.quizType === "multiple-choice" && "multiple choice"}
+                        {lessonFormData.quizType === "drag-drop" && "drag and drop"}
+                        {lessonFormData.quizType === "checkbox" && "checkbox"}
+                        {lessonFormData.quizType === "true-false" && "true/false"}{" "}
+                        question
                       </div>
                     </div>
                   )}
