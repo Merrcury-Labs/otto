@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -19,7 +19,6 @@ import {
   Check,
   X,
   BookOpen,
-  Clock,
   Tag,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
@@ -35,6 +34,9 @@ interface Lesson {
   title: string;
   type: "video" | "text" | "quiz" | "code";
   duration?: string;
+  url?: string;
+  content?: string;
+  questionCount?: number;
 }
 
 interface CourseFormData {
@@ -66,6 +68,15 @@ const availableTags = [
   "API",
 ];
 
+interface LessonFormData {
+  title: string;
+  type: Lesson["type"];
+  duration: string;
+  url?: string;
+  content?: string;
+  questionCount?: number;
+}
+
 export default function CreateCoursePage() {
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
@@ -75,6 +86,14 @@ export default function CreateCoursePage() {
   });
 
   const [tagInput, setTagInput] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
+  const [lessonFormData, setLessonFormData] = useState<LessonFormData>({
+    title: "",
+    type: "video",
+    duration: "",
+  });
+  const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
 
   const addTag = (tag: string) => {
     if (!formData.tags.includes(tag)) {
@@ -121,22 +140,111 @@ export default function CreateCoursePage() {
     });
   };
 
-  const addLesson = (moduleId: number, type: Lesson["type"]) => {
-    const newLesson: Lesson = {
-      id: Date.now(),
+  const openLessonModal = (moduleId: number, type: Lesson["type"]) => {
+    setCurrentModuleId(moduleId);
+    setLessonFormData({
       title: "",
       type,
       duration: "",
+      url: "",
+      content: "",
+      questionCount: 0,
+    });
+    setIsModalOpen(true);
+  };
+
+  const addLesson = (moduleId: number, type: Lesson["type"]) => {
+    openLessonModal(moduleId, type);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setCurrentModuleId(null);
+    setLessonFormData({
+      title: "",
+      type: "video",
+      duration: "",
+    });
+    setShowMarkdownPreview(false);
+  };
+
+  // Simple markdown parser with inline styles
+  const parseMarkdown = (markdown: string): string => {
+    if (!markdown) return "";
+
+    let html = markdown;
+
+    // Headers with inline styles
+    html = html.replace(/^### (.*$)/gim, '<h3 style="font-size: 1.25em; font-weight: 600; margin: 0.83em 0; color: #26251e;">$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2 style="font-size: 1.5em; font-weight: 600; margin: 0.75em 0; color: #26251e;">$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1 style="font-size: 2em; font-weight: 700; margin: 0.67em 0; color: #26251e;">$1</h1>');
+
+    // Bold and italic with inline styles
+    html = html.replace(/\*\*(.*)\*\*/gim, '<strong style="font-weight: 600; color: #26251e;">$1</strong>');
+    html = html.replace(/\*(.*)\*/gim, '<em style="font-style: italic; color: #26251e;">$1</em>');
+
+    // Code blocks with inline styles
+    html = html.replace(/```([\s\S]*?)```/gim, '<pre style="background-color: #e6e5e0; padding: 1em; border-radius: 0.5em; overflow-x: auto; margin: 1em 0; color: #26251e;"><code style="background-color: transparent; padding: 0;">$1</code></pre>');
+    html = html.replace(/`([^`]+)`/gim, '<code style="background-color: #e6e5e0; padding: 0.125em 0.25em; border-radius: 0.25em; font-size: 0.875em; color: #26251e;">$1</code>');
+
+    // Lists
+    html = html.replace(/^\- (.*$)/gim, '<li style="margin: 0.25em 0; color: #26251e;">$1</li>');
+    html = html.replace(/^([0-9]+)\. (.*$)/gim, '<li style="margin: 0.25em 0; color: #26251e;">$2</li>');
+
+    // Links with inline styles
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank" style="color: #26251e; text-decoration: underline;">$1</a>');
+
+    // Paragraphs
+    html = html.replace(/\n\n/gim, '</p><p style="margin: 1em 0; color: #26251e;">');
+
+    // Line breaks for single lines
+    html = html.replace(/\n/gim, '<br>');
+
+    return html;
+  };
+
+  const markdownPreview = useMemo(() => {
+    return parseMarkdown(lessonFormData.content || "");
+  }, [lessonFormData.content]);
+
+  const saveLesson = () => {
+    if (!currentModuleId) return;
+
+    // Find the current module to calculate lesson index
+    const currentModule = formData.modules.find(m => m.id === currentModuleId);
+    const lessonIndex = currentModule ? currentModule.lessons.length + 1 : 1;
+
+    const newLesson: Lesson = {
+      id: Date.now(),
+      title: `${getLessonTypeLabel(lessonFormData.type)} ${lessonIndex}`,
+      type: lessonFormData.type,
+      duration: "",
     };
+
+    // Add type-specific fields
+    if (lessonFormData.type === "video" && lessonFormData.url) {
+      newLesson.url = lessonFormData.url;
+    }
+    if (lessonFormData.type === "text" && lessonFormData.content) {
+      newLesson.content = lessonFormData.content;
+    }
+    if (lessonFormData.type === "quiz" && lessonFormData.questionCount) {
+      newLesson.questionCount = lessonFormData.questionCount;
+    }
+    if (lessonFormData.type === "code" && lessonFormData.content) {
+      newLesson.content = lessonFormData.content;
+    }
 
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
-        module.id === moduleId
+        module.id === currentModuleId
           ? { ...module, lessons: [...module.lessons, newLesson] }
           : module
       ),
     });
+
+    closeModal();
   };
 
   const removeLesson = (moduleId: number, lessonId: number) => {
@@ -147,26 +255,6 @@ export default function CreateCoursePage() {
           ? {
               ...module,
               lessons: module.lessons.filter((lesson) => lesson.id !== lessonId),
-            }
-          : module
-      ),
-    });
-  };
-
-  const updateLesson = (
-    moduleId: number,
-    lessonId: number,
-    updates: Partial<Lesson>
-  ) => {
-    setFormData({
-      ...formData,
-      modules: formData.modules.map((module) =>
-        module.id === moduleId
-          ? {
-              ...module,
-              lessons: module.lessons.map((lesson) =>
-                lesson.id === lessonId ? { ...lesson, ...updates } : lesson
-              ),
             }
           : module
       ),
@@ -519,7 +607,7 @@ export default function CreateCoursePage() {
                     {/* Lessons */}
                     {module.lessons.length > 0 && (
                       <div className="space-y-2 mb-4 ml-8">
-                        {module.lessons.map((lesson, lessonIndex) => (
+                        {module.lessons.map((lesson) => (
                           <div
                             key={lesson.id}
                             className="flex items-center gap-3 p-3 rounded-lg border"
@@ -528,7 +616,7 @@ export default function CreateCoursePage() {
                               borderColor: "rgba(38, 37, 30, 0.1)",
                             }}
                           >
-                            <SplitVerticalIcon 
+                            <SplitVerticalIcon
                               className="h-4 w-4 cursor-move"
                               style={{ color: "rgba(38, 37, 30, 0.4)" }}
                             />
@@ -537,43 +625,30 @@ export default function CreateCoursePage() {
                               {getLessonIcon(lesson.type)}
                               {getLessonTypeLabel(lesson.type)}
                             </div>
-                            <input
-                              type="text"
-                              value={lesson.title}
-                              onChange={(e) =>
-                                updateLesson(module.id, lesson.id, {
-                                  title: e.target.value,
-                                })
-                              }
-                              placeholder={`Lesson ${lessonIndex + 1} Title`}
-                              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                              style={{
-                                backgroundColor: "#e6e5e0",
-                                borderColor: "rgba(38, 37, 30, 0.1)",
-                                color: "#26251e",
-                              }}
-                            />
-                            <div className="flex items-center gap-2">
-                              <Clock
-                                className="h-3.5 w-3.5"
-                                style={{ color: "rgba(38, 37, 30, 0.4)" }}
-                              />
-                              <input
-                                type="text"
-                                value={lesson.duration || ""}
-                                onChange={(e) =>
-                                  updateLesson(module.id, lesson.id, {
-                                    duration: e.target.value,
-                                  })
-                                }
-                                placeholder="10 min"
-                                className="w-20 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                                style={{
-                                  backgroundColor: "#e6e5e0",
-                                  borderColor: "rgba(38, 37, 30, 0.1)",
-                                  color: "#26251e",
-                                }}
-                              />
+                            <div className="flex-1">
+                              <div
+                                className="text-sm font-medium"
+                                style={{ color: "#26251e" }}
+                              >
+                                {lesson.title}
+                              </div>
+                              <div
+                                className="text-xs"
+                                style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                              >
+                                {lesson.type === "video" && lesson.url && (
+                                  <span className="truncate block">{lesson.url}</span>
+                                )}
+                                {lesson.type === "text" && lesson.content && (
+                                  <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
+                                )}
+                                {lesson.type === "quiz" && lesson.questionCount && (
+                                  <span className="truncate block">{lesson.questionCount} questions</span>
+                                )}
+                                {lesson.type === "code" && lesson.content && (
+                                  <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
+                                )}
+                              </div>
                             </div>
                             <Button
                               type="button"
@@ -825,6 +900,223 @@ export default function CreateCoursePage() {
           </Button>
         </div>
       </form>
+
+      {/* Lesson Modal */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onClick={closeModal}
+        >
+          <div
+            className="w-full max-w-lg rounded-lg shadow-2xl"
+            style={{ backgroundColor: "#e6e5e0" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}>
+              <div>
+                <h2
+                  className="text-xl font-normal"
+                  style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                >
+                  Add {getLessonTypeLabel(lessonFormData.type)}
+                </h2>
+                <p className="text-sm mt-1" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                  {getLessonTypeLabel(lessonFormData.type).toLowerCase()} details
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                onClick={closeModal}
+                className="cursor-btn-hover focus-warm transition-all duration-150"
+                style={{ color: "#26251e" }}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Type-specific fields */}
+              {lessonFormData.type === "video" && (
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "#26251e" }}
+                  >
+                    Video URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={lessonFormData.url || ""}
+                    onChange={(e) =>
+                      setLessonFormData({ ...lessonFormData, url: e.target.value })
+                    }
+                    placeholder="https://youtube.com/watch?v=..."
+                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                    style={{
+                      backgroundColor: "#f7f7f4",
+                      borderColor: "rgba(38, 37, 30, 0.1)",
+                      color: "#26251e",
+                    }}
+                    required
+                  />
+                  <p className="text-xs mt-2" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                    Paste YouTube, Vimeo, or any video hosting platform link
+                  </p>
+                </div>
+              )}
+
+              {lessonFormData.type === "text" && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label
+                      className="text-sm font-medium"
+                      style={{ color: "#26251e" }}
+                    >
+                      Reading Content (Markdown Supported)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowMarkdownPreview(!showMarkdownPreview)}
+                      className="text-sm px-3 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                      style={{
+                        backgroundColor: showMarkdownPreview ? "#e6e5e0" : "#f7f7f4",
+                        color: "#26251e",
+                      }}
+                    >
+                      {showMarkdownPreview ? "Edit" : "Preview"}
+                    </button>
+                  </div>
+
+                  {showMarkdownPreview ? (
+                    <div
+                      className="w-full px-4 py-3 rounded-md prose prose-sm max-w-none"
+                      style={{
+                        backgroundColor: "#f7f7f4",
+                        borderColor: "rgba(38, 37, 30, 0.1)",
+                        color: "#26251e",
+                        minHeight: "200px",
+                        fontSize: "14px",
+                        lineHeight: "1.6",
+                      }}
+                    >
+                      <div dangerouslySetInnerHTML={{ __html: markdownPreview }} />
+                    </div>
+                  ) : (
+                    <textarea
+                      value={lessonFormData.content || ""}
+                      onChange={(e) =>
+                        setLessonFormData({ ...lessonFormData, content: e.target.value })
+                      }
+                      placeholder="Write your reading content in markdown...
+
+# Heading
+## Subheading
+
+**Bold** and *italic* text
+
+- List item 1
+- List item 2
+
+`inline code`
+
+[Link text](https://example.com)"
+                      rows={8}
+                      className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none font-mono text-sm"
+                      style={{
+                        backgroundColor: "#f7f7f4",
+                        borderColor: "rgba(38, 37, 30, 0.1)",
+                        color: "#26251e",
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+
+              {lessonFormData.type === "quiz" && (
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "#26251e" }}
+                  >
+                    Number of Questions
+                  </label>
+                  <input
+                    type="number"
+                    value={lessonFormData.questionCount || 0}
+                    onChange={(e) =>
+                      setLessonFormData({
+                        ...lessonFormData,
+                        questionCount: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    placeholder="10"
+                    min="1"
+                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                    style={{
+                      backgroundColor: "#f7f7f4",
+                      borderColor: "rgba(38, 37, 30, 0.1)",
+                      color: "#26251e",
+                    }}
+                  />
+                </div>
+              )}
+
+              {lessonFormData.type === "code" && (
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: "#26251e" }}
+                  >
+                    Exercise Instructions or Repository URL
+                  </label>
+                  <textarea
+                    value={lessonFormData.content || ""}
+                    onChange={(e) =>
+                      setLessonFormData({ ...lessonFormData, content: e.target.value })
+                    }
+                    placeholder="Enter exercise instructions or paste GitHub repository URL..."
+                    rows={4}
+                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none"
+                    style={{
+                      backgroundColor: "#f7f7f4",
+                      borderColor: "rgba(38, 37, 30, 0.1)",
+                      color: "#26251e",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 p-6 border-t" style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={closeModal}
+                className="cursor-btn-hover focus-warm transition-all duration-150"
+                style={{
+                  backgroundColor: "#f7f7f4",
+                  borderColor: "rgba(38, 37, 30, 0.1)",
+                  color: "#26251e",
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={saveLesson}
+                className="cursor-btn-hover focus-warm transition-all duration-150"
+                style={{
+                  backgroundColor: "#ebeae5",
+                  color: "#26251e",
+                }}
+              >
+                {getLessonTypeLabel(lessonFormData.type)}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
