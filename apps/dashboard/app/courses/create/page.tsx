@@ -22,7 +22,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
-import LessonModal from "./components/LessonModal";
+import LessonModal from "../components/LessonModal";
 
 interface Module {
   id: number;
