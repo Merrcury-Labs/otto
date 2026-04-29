@@ -20,6 +20,12 @@ import {
   X,
   BookOpen,
   Tag,
+  TextB,
+  TextItalic,
+  Code as CodeIcon,
+  ListBullets,
+  TextH,
+  Link,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 
@@ -206,6 +212,26 @@ export default function CreateCoursePage() {
   const markdownPreview = useMemo(() => {
     return parseMarkdown(lessonFormData.content || "");
   }, [lessonFormData.content]);
+
+  const insertMarkdown = (before: string, after: string = "") => {
+    const textarea = document.querySelector('textarea[name="markdown-editor"]') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+
+    const newText =
+      text.substring(0, start) + before + text.substring(start, end) + after + text.substring(end);
+
+    setLessonFormData({ ...lessonFormData, content: newText });
+
+    // Move cursor to after the inserted text
+    setTimeout(() => {
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = start + before.length + (end - start);
+    }, 0);
+  };
 
   const saveLesson = () => {
     if (!currentModuleId) return;
@@ -1003,12 +1029,117 @@ export default function CreateCoursePage() {
                       <div dangerouslySetInnerHTML={{ __html: markdownPreview }} />
                     </div>
                   ) : (
-                    <textarea
-                      value={lessonFormData.content || ""}
-                      onChange={(e) =>
-                        setLessonFormData({ ...lessonFormData, content: e.target.value })
-                      }
-                      placeholder="Write your reading content in markdown...
+                    <div className="space-y-3">
+                      {/* Markdown Toolbar */}
+                      <div
+                        className="flex flex-wrap gap-2 p-2 rounded-md"
+                        style={{
+                          backgroundColor: "#f7f7f4",
+                          borderColor: "rgba(38, 37, 30, 0.1)",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => insertMarkdown("**", "**")}
+                          className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+                          style={{
+                            backgroundColor: "#e6e5e0",
+                            color: "#26251e",
+                          }}
+                          title="Bold"
+                        >
+                          <TextB className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertMarkdown("*", "*")}
+                          className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+                          style={{
+                            backgroundColor: "#e6e5e0",
+                            color: "#26251e",
+                          }}
+                          title="Italic"
+                        >
+                          <TextItalic className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertMarkdown("# ", "")}
+                          className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+                          style={{
+                            backgroundColor: "#e6e5e0",
+                            color: "#26251e",
+                          }}
+                          title="Heading"
+                        >
+                          <TextH className="h-4 w-4" />
+                        </button>
+                        <div
+                          className="w-px"
+                          style={{ backgroundColor: "rgba(38, 37, 30, 0.2)" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => insertMarkdown("`", "`")}
+                          className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+                          style={{
+                            backgroundColor: "#e6e5e0",
+                            color: "#26251e",
+                          }}
+                          title="Inline Code"
+                        >
+                          <CodeIcon className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertMarkdown("```\n", "\n```")}
+                          className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+                          style={{
+                            backgroundColor: "#e6e5e0",
+                            color: "#26251e",
+                          }}
+                          title="Code Block"
+                        >
+                          <Code className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => insertMarkdown("- ", "")}
+                          className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+                          style={{
+                            backgroundColor: "#e6e5e0",
+                            color: "#26251e",
+                          }}
+                          title="List"
+                        >
+                          <ListBullets className="h-4 w-4" />
+                        </button>
+                        <div
+                          className="w-px"
+                          style={{ backgroundColor: "rgba(38, 37, 30, 0.2)" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => insertMarkdown("[", "](url)")}
+                          className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+                          style={{
+                            backgroundColor: "#e6e5e0",
+                            color: "#26251e",
+                          }}
+                          title="Link"
+                        >
+                          <Link className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      {/* Textarea */}
+                      <textarea
+                        name="markdown-editor"
+                        value={lessonFormData.content || ""}
+                        onChange={(e) =>
+                          setLessonFormData({ ...lessonFormData, content: e.target.value })
+                        }
+                        placeholder="Write your reading content in markdown...
 
 # Heading
 ## Subheading
@@ -1021,14 +1152,15 @@ export default function CreateCoursePage() {
 `inline code`
 
 [Link text](https://example.com)"
-                      rows={8}
-                      className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none font-mono text-sm"
-                      style={{
-                        backgroundColor: "#f7f7f4",
-                        borderColor: "rgba(38, 37, 30, 0.1)",
-                        color: "#26251e",
-                      }}
-                    />
+                        rows={8}
+                        className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none font-mono text-sm"
+                        style={{
+                          backgroundColor: "#f7f7f4",
+                          borderColor: "rgba(38, 37, 30, 0.1)",
+                          color: "#26251e",
+                        }}
+                      />
+                    </div>
                   )}
                 </div>
               )}
