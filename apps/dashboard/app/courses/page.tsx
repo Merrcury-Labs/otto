@@ -373,14 +373,17 @@ export default function CoursesPage() {
           </p>
         </div>
         <Button
+          asChild
           className="cursor-btn-hover focus-warm transition-all duration-150"
           style={{
             backgroundColor: "#ebeae5",
             color: "#26251e",
           }}
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Course
+          <a href="/courses/create">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Course
+          </a>
         </Button>
       </div>
 
