@@ -35,6 +35,14 @@ interface Module {
   lessons: Lesson[];
 }
 
+interface QuizQuestion {
+  id: number;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  hint?: string;
+}
+
 interface Lesson {
   id: number;
   title: string;
@@ -42,7 +50,7 @@ interface Lesson {
   duration?: string;
   url?: string;
   content?: string;
-  questionCount?: number;
+  questions?: QuizQuestion[];
 }
 
 interface CourseFormData {
@@ -80,7 +88,7 @@ interface LessonFormData {
   duration: string;
   url?: string;
   content?: string;
-  questionCount?: number;
+  questions?: QuizQuestion[];
 }
 
 export default function CreateCoursePage() {
@@ -154,7 +162,7 @@ export default function CreateCoursePage() {
       duration: "",
       url: "",
       content: "",
-      questionCount: 0,
+      questions: [],
     });
     setIsModalOpen(true);
   };
@@ -213,6 +221,36 @@ export default function CreateCoursePage() {
     return parseMarkdown(lessonFormData.content || "");
   }, [lessonFormData.content]);
 
+  const addQuestion = () => {
+    const newQuestion: QuizQuestion = {
+      id: Date.now(),
+      question: "",
+      options: ["", "", "", ""],
+      correctAnswer: 0,
+      hint: "",
+    };
+    setLessonFormData({
+      ...lessonFormData,
+      questions: [...(lessonFormData.questions || []), newQuestion],
+    });
+  };
+
+  const removeQuestion = (questionId: number) => {
+    setLessonFormData({
+      ...lessonFormData,
+      questions: lessonFormData.questions?.filter((q) => q.id !== questionId) || [],
+    });
+  };
+
+  const updateQuestion = (questionId: number, updates: Partial<QuizQuestion>) => {
+    setLessonFormData({
+      ...lessonFormData,
+      questions: lessonFormData.questions?.map((q) =>
+        q.id === questionId ? { ...q, ...updates } : q
+      ) || [],
+    });
+  };
+
   const insertMarkdown = (before: string, after: string = "") => {
     const textarea = document.querySelector('textarea[name="markdown-editor"]') as HTMLTextAreaElement;
     if (!textarea) return;
@@ -254,8 +292,8 @@ export default function CreateCoursePage() {
     if (lessonFormData.type === "text" && lessonFormData.content) {
       newLesson.content = lessonFormData.content;
     }
-    if (lessonFormData.type === "quiz" && lessonFormData.questionCount) {
-      newLesson.questionCount = lessonFormData.questionCount;
+    if (lessonFormData.type === "quiz" && lessonFormData.questions) {
+      newLesson.questions = lessonFormData.questions;
     }
     if (lessonFormData.type === "code" && lessonFormData.content) {
       newLesson.content = lessonFormData.content;
@@ -668,8 +706,8 @@ export default function CreateCoursePage() {
                                 {lesson.type === "text" && lesson.content && (
                                   <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
                                 )}
-                                {lesson.type === "quiz" && lesson.questionCount && (
-                                  <span className="truncate block">{lesson.questionCount} questions</span>
+                                {lesson.type === "quiz" && lesson.questions && (
+                                  <span className="truncate block">{lesson.questions.length} questions</span>
                                 )}
                                 {lesson.type === "code" && lesson.content && (
                                   <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
@@ -1166,31 +1204,186 @@ export default function CreateCoursePage() {
               )}
 
               {lessonFormData.type === "quiz" && (
-                <div>
-                  <label
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: "#26251e" }}
-                  >
-                    Number of Questions
-                  </label>
-                  <input
-                    type="number"
-                    value={lessonFormData.questionCount || 0}
-                    onChange={(e) =>
-                      setLessonFormData({
-                        ...lessonFormData,
-                        questionCount: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="10"
-                    min="1"
-                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                      color: "#26251e",
-                    }}
-                  />
+                <div className="space-y-6">
+                  {/* Questions Header */}
+                  <div className="flex items-center justify-between">
+                    <label
+                      className="text-sm font-medium"
+                      style={{ color: "#26251e" }}
+                    >
+                      Questions ({lessonFormData.questions?.length || 0})
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addQuestion}
+                      className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
+                      style={{
+                        backgroundColor: "#e6e5e0",
+                        color: "#26251e",
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Question
+                    </button>
+                  </div>
+
+                  {/* Questions List */}
+                  {lessonFormData.questions && lessonFormData.questions.length > 0 ? (
+                    <div className="space-y-4">
+                      {lessonFormData.questions.map((question, index) => (
+                        <div
+                          key={question.id}
+                          className="border rounded-lg p-4"
+                          style={{
+                            backgroundColor: "#f7f7f4",
+                            borderColor: "rgba(38, 37, 30, 0.1)",
+                          }}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <div
+                                className="text-xs font-medium mb-1"
+                                style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                              >
+                                Question {index + 1}
+                              </div>
+                              <input
+                                type="text"
+                                value={question.question}
+                                onChange={(e) =>
+                                  updateQuestion(question.id, {
+                                    question: e.target.value,
+                                  })
+                                }
+                                placeholder="Enter your question..."
+                                className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                style={{
+                                  backgroundColor: "#e6e5e0",
+                                  borderColor: "rgba(38, 37, 30, 0.1)",
+                                  color: "#26251e",
+                                }}
+                              />
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              onClick={() => removeQuestion(question.id)}
+                              className="cursor-btn-hover focus-warm transition-all duration-150"
+                              style={{ color: "#cf2d56" }}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          {/* Options */}
+                          <div className="space-y-2 mb-3">
+                            <div
+                              className="text-xs font-medium"
+                              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                            >
+                              Answer Options
+                            </div>
+                            {question.options.map((option, optionIndex) => (
+                              <div
+                                key={optionIndex}
+                                className="flex items-center gap-2"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateQuestion(question.id, {
+                                      correctAnswer: optionIndex,
+                                    })
+                                  }
+                                  className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 ${
+                                    question.correctAnswer === optionIndex
+                                      ? "bg-[#26251e] text-white"
+                                      : "bg-[#e6e5e0] text-[#26251e] border"
+                                  }`}
+                                  style={{
+                                    borderColor:
+                                      question.correctAnswer === optionIndex
+                                        ? "transparent"
+                                        : "rgba(38, 37, 30, 0.2)",
+                                  }}
+                                >
+                                  {question.correctAnswer === optionIndex && (
+                                    <Check className="h-3 w-3" />
+                                  )}
+                                </button>
+                                <input
+                                  type="text"
+                                  value={option}
+                                  onChange={(e) => {
+                                    const newOptions = [...question.options];
+                                    newOptions[optionIndex] = e.target.value;
+                                    updateQuestion(question.id, {
+                                      options: newOptions,
+                                    });
+                                  }}
+                                  placeholder={`Option ${optionIndex + 1}`}
+                                  className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                                  style={{
+                                    backgroundColor: "#e6e5e0",
+                                    borderColor: "rgba(38, 37, 30, 0.1)",
+                                    color: "#26251e",
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Hint */}
+                          <div>
+                            <div
+                              className="text-xs font-medium mb-1"
+                              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                            >
+                              Hint (Optional)
+                            </div>
+                            <input
+                              type="text"
+                              value={question.hint || ""}
+                              onChange={(e) =>
+                                updateQuestion(question.id, {
+                                  hint: e.target.value,
+                                })
+                              }
+                              placeholder="Add a hint for students..."
+                              className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                              style={{
+                                backgroundColor: "#e6e5e0",
+                                borderColor: "rgba(38, 37, 30, 0.1)",
+                                color: "#26251e",
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      className="text-center py-8 border-2 border-dashed rounded-lg"
+                      style={{ borderColor: "rgba(38, 37, 30, 0.2)" }}
+                    >
+                      <Check
+                        className="h-8 w-8 mx-auto mb-2"
+                        style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                      />
+                      <div
+                        className="text-sm font-medium mb-1"
+                        style={{ color: "#26251e" }}
+                      >
+                        No questions yet
+                      </div>
+                      <div
+                        className="text-xs"
+                        style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                      >
+                        Click "Add Question" to create your first quiz question
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
