@@ -759,8 +759,8 @@ export default function LessonModal({
                               className="cursor-btn-hover focus-warm transition-all duration-150"
                               style={{ color: "#cf2d56" }}
                             >
-                              <Trash className="h-4 w-4" }
-                            />
+                              <Trash className="h-4 w-4" />
+                            </Button>
                           </div>
 
                           <div className="space-y-2 mb-3">
