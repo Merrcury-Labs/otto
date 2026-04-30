@@ -22,12 +22,15 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
-import LessonModal from "../components/LessonModal";
+import LessonModal, {
+  LessonFormData,
+  QuizQuestion,
+} from "../components/LessonModal";
 
 interface Module {
   id: number;
   title: string;
-  lessons: any[];
+  lessons: Lesson[];
 }
 
 interface Lesson {
@@ -37,19 +40,32 @@ interface Lesson {
   duration?: string;
   url?: string;
   content?: string;
-  questions?: any;
+  questions?: QuizQuestion[];
+}
+
+interface CourseFormData {
+  title: string;
+  description: string;
+  thumbnail: string;
+  prerequisites: string[];
+  tags: string[];
+  modules: Module[];
 }
 
 export default function CreateCoursePage() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CourseFormData>({
     title: "",
     description: "",
+    thumbnail: "",
+    prerequisites: [],
     tags: [],
     modules: [],
   });
 
   const [tagInput, setTagInput] = useState("");
+  const [prerequisiteInput, setPrerequisiteInput] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
 
@@ -104,6 +120,27 @@ export default function CreateCoursePage() {
     });
   };
 
+  const addPrerequisite = (prerequisite: string) => {
+    const normalizedPrerequisite = prerequisite.trim();
+    if (!normalizedPrerequisite) return;
+    if (!formData.prerequisites.includes(normalizedPrerequisite)) {
+      setFormData({
+        ...formData,
+        prerequisites: [...formData.prerequisites, normalizedPrerequisite],
+      });
+    }
+    setPrerequisiteInput("");
+  };
+
+  const removePrerequisite = (prerequisiteToRemove: string) => {
+    setFormData({
+      ...formData,
+      prerequisites: formData.prerequisites.filter(
+        (prerequisite) => prerequisite !== prerequisiteToRemove
+      ),
+    });
+  };
+
   const removeModule = (moduleId: number) => {
     setFormData({
       ...formData,
@@ -140,6 +177,23 @@ export default function CreateCoursePage() {
     });
   };
 
+  const handleThumbnailUpload = (file: File | null) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const thumbnail = reader.result;
+
+      if (typeof thumbnail === "string") {
+        setFormData((currentData) => ({
+          ...currentData,
+          thumbnail,
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const getLessonTypeLabel = (type: Lesson["type"]) => {
     switch (type) {
       case "video":
@@ -155,7 +209,7 @@ export default function CreateCoursePage() {
     }
   };
 
-  const handleModalSave = (data: any) => {
+  const handleModalSave = (data: LessonFormData) => {
     const currentModule = formData.modules.find((m) => m.id === currentModuleId);
     if (!currentModule) return;
 
@@ -163,7 +217,7 @@ export default function CreateCoursePage() {
       id: Date.now(),
       title: `${getLessonTypeLabel(data.type)} ${currentModule.lessons.length + 1}`,
       type: data.type,
-      duration: "",
+      duration: data.duration || "",
     };
 
     if (data.type === "video" && data.url) {
@@ -196,6 +250,15 @@ export default function CreateCoursePage() {
     e.preventDefault();
     console.log("Creating course:", formData);
   };
+
+  const totalLessons = formData.modules.reduce(
+    (acc, module) => acc + module.lessons.length,
+    0
+  );
+
+  const isCourseReady = Boolean(
+    formData.title && formData.description && formData.thumbnail
+  );
 
   return (
     <div className="space-y-6 px-4">
@@ -249,6 +312,154 @@ export default function CreateCoursePage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: "#26251e" }}
+              >
+                Course Thumbnail *
+              </label>
+              <div className="space-y-3">
+                <div
+                  className="overflow-hidden rounded-lg border"
+                  style={{
+                    backgroundColor: "#f7f7f4",
+                    borderColor: "rgba(38, 37, 30, 0.1)",
+                  }}
+                >
+                  {formData.thumbnail ? (
+                    <img
+                      src={formData.thumbnail}
+                      alt="Course thumbnail preview"
+                      className="h-48 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-48 items-center justify-center">
+                      <div className="text-center">
+                        <BookOpen
+                          className="h-8 w-8 mx-auto mb-3"
+                          style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                        />
+                        <p
+                          className="text-sm"
+                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                        >
+                          Upload a thumbnail students will see before enrolling
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <label
+                    className="inline-flex cursor-pointer items-center rounded-md px-4 py-2 text-sm transition-all duration-150"
+                    style={{
+                      backgroundColor: "#ebeae5",
+                      color: "#26251e",
+                    }}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) =>
+                        handleThumbnailUpload(e.target.files?.[0] || null)
+                      }
+                    />
+                    {formData.thumbnail ? "Replace Thumbnail" : "Upload Thumbnail"}
+                  </label>
+                  {formData.thumbnail && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setFormData((currentData) => ({
+                          ...currentData,
+                          thumbnail: "",
+                        }))
+                      }
+                      className="cursor-btn-hover focus-warm transition-all duration-150"
+                      style={{
+                        backgroundColor: "#f7f7f4",
+                        borderColor: "rgba(38, 37, 30, 0.1)",
+                        color: "#26251e",
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label
+                className="block text-sm font-medium mb-2"
+                style={{ color: "#26251e" }}
+              >
+                Course Prerequisites
+              </label>
+              <div className="space-y-3">
+                {formData.prerequisites.length > 0 && (
+                  <div className="space-y-2">
+                    {formData.prerequisites.map((prerequisite) => (
+                      <div
+                        key={prerequisite}
+                        className="flex items-center justify-between rounded-md px-3 py-2"
+                        style={{
+                          backgroundColor: "#ebeae5",
+                          color: "#26251e",
+                        }}
+                      >
+                        <span className="text-sm">{prerequisite}</span>
+                        <button
+                          type="button"
+                          onClick={() => removePrerequisite(prerequisite)}
+                          className="transition-colors"
+                          style={{ color: "#26251e" }}
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={prerequisiteInput}
+                    onChange={(e) => setPrerequisiteInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addPrerequisite(prerequisiteInput);
+                      }
+                    }}
+                    placeholder="Add a prerequisite, e.g. Basic JavaScript knowledge"
+                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
+                    style={{
+                      backgroundColor: "#f7f7f4",
+                      borderColor: "rgba(38, 37, 30, 0.1)",
+                      color: "#26251e",
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={() => addPrerequisite(prerequisiteInput)}
+                    className="cursor-btn-hover focus-warm transition-all duration-150"
+                    style={{
+                      backgroundColor: "#ebeae5",
+                      color: "#26251e",
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label
                   className="block text-sm font-medium mb-2"
@@ -405,13 +616,13 @@ export default function CreateCoursePage() {
                 </div>
               </div>
               <Button
-                  type="button"
-                  onClick={addModule}
-                  className="cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#ebeae5",
-                    color: "#26251e",
-                  }}
+                type="button"
+                onClick={addModule}
+                className="cursor-btn-hover focus-warm transition-all duration-150"
+                style={{
+                  backgroundColor: "#ebeae5",
+                  color: "#26251e",
+                }}
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Module
@@ -537,6 +748,9 @@ export default function CreateCoursePage() {
                                 className="text-xs"
                                 style={{ color: "rgba(38, 37, 30, 0.55)" }}
                               >
+                                {lesson.duration && (
+                                  <span className="block mb-1">{lesson.duration}</span>
+                                )}
                                 {lesson.type === "video" && lesson.url && (
                                   <span className="truncate block">{lesson.url}</span>
                                 )}
@@ -643,9 +857,20 @@ export default function CreateCoursePage() {
                     Course Preview
                   </CardTitle>
                   <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
-                    Summary of your course structure
+                    See the course the way a student would
                   </CardDescription>
                 </div>
+                <Button
+                  type="button"
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                  style={{
+                    backgroundColor: "#ebeae5",
+                    color: "#26251e",
+                  }}
+                >
+                  Open Student Preview
+                </Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -660,8 +885,21 @@ export default function CreateCoursePage() {
                   >
                     {formData.title || "Untitled Course"}
                   </div>
+                  <p
+                    className="text-sm mb-3"
+                    style={{ color: "rgba(38, 37, 30, 0.7)" }}
+                  >
+                    {formData.description || "Your course description will appear here."}
+                  </p>
+                  {formData.thumbnail && (
+                    <img
+                      src={formData.thumbnail}
+                      alt="Course preview thumbnail"
+                      className="h-40 w-full rounded-md object-cover mb-3"
+                    />
+                  )}
                   {formData.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1 mb-3">
                       {formData.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
@@ -692,8 +930,29 @@ export default function CreateCoursePage() {
                       <FileText className="h-4 w-4" />
                       <span>{formData.modules.length} modules</span>
                       <BookOpen className="h-4 w-4" />
-                      <span>{formData.modules.reduce((acc, module) => acc + module.lessons.length, 0)} lessons</span>
+                      <span>{totalLessons} lessons</span>
                     </div>
+                    {formData.prerequisites.length > 0 && (
+                      <div className="rounded-md p-3" style={{ backgroundColor: "#ebeae5" }}>
+                        <div
+                          className="text-xs font-medium uppercase tracking-wide mb-2"
+                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                        >
+                          Prerequisites
+                        </div>
+                        <div className="space-y-1">
+                          {formData.prerequisites.slice(0, 3).map((prerequisite) => (
+                            <div
+                              key={prerequisite}
+                              className="text-sm"
+                              style={{ color: "#26251e" }}
+                            >
+                              {prerequisite}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       {formData.modules.slice(0, 3).map((module, index) => (
                         <div
@@ -741,15 +1000,15 @@ export default function CreateCoursePage() {
           </Button>
           <Button
             type="submit"
-            disabled={!formData.title || !formData.description}
+            disabled={!isCourseReady}
             className="cursor-btn-hover focus-warm transition-all duration-150"
             style={{
-              backgroundColor: formData.title && formData.description
+              backgroundColor: isCourseReady
                 ? "#ebeae5"
                 : "#e6e5e0",
               color: "#26251e",
-              opacity: formData.title && formData.description ? 1 : 0.6,
-              cursor: formData.title && formData.description ? "pointer" : "not-allowed",
+              opacity: isCourseReady ? 1 : 0.6,
+              cursor: isCourseReady ? "pointer" : "not-allowed",
             }}
           >
             Create Course
@@ -766,6 +1025,248 @@ export default function CreateCoursePage() {
           setCurrentModuleId(null);
         }}
       />
+
+      {isPreviewOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          <div
+            className="w-full max-w-4xl overflow-hidden rounded-lg shadow-2xl"
+            style={{ backgroundColor: "#e6e5e0" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="flex items-center justify-between border-b p-6"
+              style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}
+            >
+              <div>
+                <h2
+                  className="text-xl font-normal"
+                  style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                >
+                  Student Course Preview
+                </h2>
+                <p
+                  className="text-sm mt-1"
+                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                >
+                  A learner-facing view of your course landing page
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsPreviewOpen(false)}
+                className="cursor-btn-hover focus-warm transition-all duration-150"
+                style={{ color: "#26251e" }}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <div className="max-h-[80vh] overflow-y-auto p-6">
+              <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+                <div className="space-y-6">
+                  <div
+                    className="overflow-hidden rounded-xl border"
+                    style={{
+                      backgroundColor: "#f7f7f4",
+                      borderColor: "rgba(38, 37, 30, 0.1)",
+                    }}
+                  >
+                    {formData.thumbnail ? (
+                      <img
+                        src={formData.thumbnail}
+                        alt="Course hero thumbnail"
+                        className="h-72 w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-72 items-center justify-center">
+                        <div className="text-center">
+                          <BookOpen
+                            className="h-10 w-10 mx-auto mb-3"
+                            style={{ color: "rgba(38, 37, 30, 0.35)" }}
+                          />
+                          <p
+                            className="text-sm"
+                            style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          >
+                            Add a thumbnail to complete the student experience
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3
+                      className="text-3xl font-normal mb-3"
+                      style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                    >
+                      {formData.title || "Untitled Course"}
+                    </h3>
+                    <p
+                      className="text-base leading-7"
+                      style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                    >
+                      {formData.description ||
+                        "Your course description will help students understand the value of this course."}
+                    </p>
+                  </div>
+
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full px-3 py-1.5 text-sm pill-shape"
+                          style={{
+                            backgroundColor: "#ebeae5",
+                            color: "#26251e",
+                          }}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {formData.prerequisites.length > 0 && (
+                    <div
+                      className="rounded-xl border p-5"
+                      style={{
+                        backgroundColor: "#f7f7f4",
+                        borderColor: "rgba(38, 37, 30, 0.1)",
+                      }}
+                    >
+                      <h4
+                        className="text-lg font-medium mb-4"
+                        style={{ color: "#26251e" }}
+                      >
+                        Prerequisites
+                      </h4>
+                      <ul className="list-disc space-y-2 pl-5">
+                        {formData.prerequisites.map((prerequisite) => (
+                          <li key={prerequisite} style={{ color: "rgba(38, 37, 30, 0.75)" }}>
+                            {prerequisite}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl border p-5"
+                    style={{
+                      backgroundColor: "#f7f7f4",
+                      borderColor: "rgba(38, 37, 30, 0.1)",
+                    }}
+                  >
+                    <h4
+                      className="text-lg font-medium mb-4"
+                      style={{ color: "#26251e" }}
+                    >
+                      Course Overview
+                    </h4>
+                    <div
+                      className="space-y-3 text-sm"
+                      style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>Modules</span>
+                        <span>{formData.modules.length}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Lessons</span>
+                        <span>{totalLessons}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Thumbnail</span>
+                        <span>{formData.thumbnail ? "Added" : "Missing"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className="rounded-xl border p-5"
+                    style={{
+                      backgroundColor: "#f7f7f4",
+                      borderColor: "rgba(38, 37, 30, 0.1)",
+                    }}
+                  >
+                    <h4
+                      className="text-lg font-medium mb-4"
+                      style={{ color: "#26251e" }}
+                    >
+                      Course Content
+                    </h4>
+                    <div className="space-y-3">
+                      {formData.modules.length > 0 ? (
+                        formData.modules.map((module, moduleIndex) => (
+                          <div
+                            key={module.id}
+                            className="rounded-lg border p-4"
+                            style={{
+                              backgroundColor: "#ebeae5",
+                              borderColor: "rgba(38, 37, 30, 0.1)",
+                            }}
+                          >
+                            <div
+                              className="text-sm font-medium mb-1"
+                              style={{ color: "#26251e" }}
+                            >
+                              Module {moduleIndex + 1}:{" "}
+                              {module.title || `Untitled Module ${moduleIndex + 1}`}
+                            </div>
+                            <div
+                              className="text-xs mb-3"
+                              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                            >
+                              {module.lessons.length} lessons
+                            </div>
+                            <div className="space-y-2">
+                              {module.lessons.map((lesson, lessonIndex) => (
+                                <div
+                                  key={lesson.id}
+                                  className="rounded-md px-3 py-2 text-sm"
+                                  style={{ backgroundColor: "#f7f7f4", color: "#26251e" }}
+                                >
+                                  <div>
+                                    {lessonIndex + 1}. {lesson.title}
+                                  </div>
+                                  {lesson.duration && (
+                                    <div
+                                      className="text-xs mt-1"
+                                      style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                    >
+                                      {lesson.duration}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p
+                          className="text-sm"
+                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                        >
+                          Add modules and lessons to preview the student curriculum.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

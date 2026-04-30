@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   Code,
   Code as CodeIcon,
@@ -10,8 +10,8 @@ import {
   TextH,
   TextItalic,
 } from "@phosphor-icons/react";
+import { MarkdownPreview } from "./MarkdownPreview";
 import { LessonFormData } from "./types";
-import { parseMarkdown } from "./utils";
 
 interface TextLessonFieldsProps {
   lessonFormData: LessonFormData;
@@ -50,11 +50,6 @@ export function TextLessonFields({
     }, 0);
   };
 
-  const markdownPreview = useMemo(
-    () => parseMarkdown(lessonFormData.content || ""),
-    [lessonFormData.content]
-  );
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-2">
@@ -85,7 +80,7 @@ export function TextLessonFields({
             lineHeight: "1.6",
           }}
         >
-          <div dangerouslySetInnerHTML={{ __html: markdownPreview }} />
+          <MarkdownPreview content={lessonFormData.content || ""} />
         </div>
       ) : (
         <>
@@ -172,10 +167,34 @@ export function TextLessonFields({
             >
               <ListBullets className="h-4 w-4" />
             </button>
+            <button
+              type="button"
+              onClick={() => insertMarkdown("1. ")}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+              style={{
+                backgroundColor: "#e6e5e0",
+                color: "#26251e",
+              }}
+              title="Numbered List"
+            >
+              <span className="text-xs font-semibold">1.</span>
+            </button>
             <div
               className="w-px"
               style={{ backgroundColor: "rgba(38, 37, 30, 0.2)" }}
             />
+            <button
+              type="button"
+              onClick={() => insertMarkdown("> ")}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
+              style={{
+                backgroundColor: "#e6e5e0",
+                color: "#26251e",
+              }}
+              title="Quote"
+            >
+              <span className="text-xs font-semibold">"</span>
+            </button>
             <button
               type="button"
               onClick={() => insertMarkdown("[", "](url)")}
@@ -215,6 +234,9 @@ export function TextLessonFields({
               color: "#26251e",
             }}
           />
+          <p className="text-xs" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+            Supports headings, bold, italic, links, code, quotes, bullet lists, and numbered lists.
+          </p>
         </>
       )}
     </div>

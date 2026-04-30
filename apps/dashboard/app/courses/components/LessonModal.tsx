@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CodeLessonFields } from "./lesson-modal/CodeLessonFields";
+import { LessonDetailsFields } from "./lesson-modal/LessonDetailsFields";
 import { LessonModalFooter } from "./lesson-modal/LessonModalFooter";
 import { LessonModalHeader } from "./lesson-modal/LessonModalHeader";
 import { QuizLessonFields } from "./lesson-modal/QuizLessonFields";
@@ -106,6 +107,13 @@ export default function LessonModal({
         <LessonModalHeader lessonType={lessonType} onClose={onClose} />
 
         <div className="p-6 space-y-4">
+          <LessonDetailsFields
+            lessonFormData={lessonFormData}
+            onDurationChange={(duration) =>
+              setLessonFormData((currentData) => ({ ...currentData, duration }))
+            }
+          />
+
           {lessonType === "video" && (
             <VideoLessonFields
               lessonFormData={lessonFormData}
