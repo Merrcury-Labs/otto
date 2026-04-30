@@ -22,6 +22,7 @@ import {
   Faders,
   House,
   TrendUp,
+  Brain,
 } from "@phosphor-icons/react";
 
 export function DashboardLayout({
@@ -119,6 +120,17 @@ export function DashboardLayout({
                   <a href="/courses">
                     <BookOpen className="h-4 w-4" style={{ color: '#26251e' }} />
                     <span style={{ color: '#26251e' }}>Courses</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                >
+                  <a href="/quizzes">
+                    <Brain className="h-4 w-4" style={{ color: '#26251e' }} />
+                    <span style={{ color: '#26251e' }}>Quizzes</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
