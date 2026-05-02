@@ -10,7 +10,7 @@ import {
 import {
   BookOpen,
   Users,
-  TrendingUp,
+  TrendUp,
   Clock,
   Trophy,
   Target,
