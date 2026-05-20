@@ -9,6 +9,8 @@
     "./card": "./src/ui/card.tsx",
     "./code": "./src/ui/code.tsx",
     "./input": "./src/ui/input.tsx",
+    "./label": "./src/ui/label.tsx",
+    "./login-form": "./src/components/login-form.tsx",
     "./separator": "./src/ui/separator.tsx",
     "./sheet": "./src/ui/sheet.tsx",
     "./sidebar": "./src/ui/sidebar.tsx",
