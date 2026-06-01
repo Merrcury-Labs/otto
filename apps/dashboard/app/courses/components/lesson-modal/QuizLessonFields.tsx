@@ -73,7 +73,7 @@ export function QuizLessonFields({
               className="text-xs"
               style={{ color: "rgba(38, 37, 30, 0.55)" }}
             >
-              Click "Add Question" to create your first {getQuizTypeLabel(quizType)} question
+              Click &quot;Add Question&quot; to create your first {getQuizTypeLabel(quizType)} question
             </div>
           </div>
         )}

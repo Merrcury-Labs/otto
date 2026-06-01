@@ -12,9 +12,7 @@ import {
   Bell,
   Shield,
   Palette,
-  Globe,
   Database,
-  Sliders,
   Trash,
   SignOut,
 } from "@phosphor-icons/react";

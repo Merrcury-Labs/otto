@@ -17,7 +17,6 @@ import {
   Eye,
   Trash,
   Users,
-  FileText,
   TrendUp,
   Clock,
   DotsThreeVertical,
@@ -29,113 +28,15 @@ import {
   BookOpen,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
-
-interface Quiz {
-  id: number;
-  title: string;
-  description: string;
-  status: "published" | "draft" | "archived";
-  questions: number;
-  duration: string;
-  attempts: number;
-  avgScore: number;
-  courseId?: number;
-  courseTitle?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { QuizPreviewModal } from "./components/QuizPreviewModal";
+import { quizzes } from "./data";
+import type { Quiz } from "./types";
 
 export default function QuizzesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  const quizzes: Quiz[] = [
-    {
-      id: 1,
-      title: "React Hooks Fundamentals",
-      description: "Test your knowledge of useState, useEffect, and custom hooks",
-      status: "published",
-      questions: 15,
-      duration: "15 minutes",
-      attempts: 234,
-      avgScore: 78,
-      courseId: 1,
-      courseTitle: "React Fundamentals",
-      createdAt: "2024-04-25",
-      updatedAt: "2 hours ago",
-    },
-    {
-      id: 2,
-      title: "TypeScript Types Quiz",
-      description: "Challenge yourself with advanced TypeScript type concepts",
-      status: "published",
-      questions: 10,
-      duration: "10 minutes",
-      attempts: 156,
-      avgScore: 85,
-      courseId: 2,
-      courseTitle: "TypeScript Advanced",
-      createdAt: "2024-04-24",
-      updatedAt: "1 day ago",
-    },
-    {
-      id: 3,
-      title: "Next.js Routing Quiz",
-      description: "Test your understanding of Next.js App Router",
-      status: "draft",
-      questions: 8,
-      duration: "8 minutes",
-      attempts: 0,
-      avgScore: 0,
-      courseId: 3,
-      courseTitle: "Next.js App Router",
-      createdAt: "2024-04-23",
-      updatedAt: "3 days ago",
-    },
-    {
-      id: 4,
-      title: "SQL Optimization Quiz",
-      description: "Challenge your database optimization skills",
-      status: "published",
-      questions: 12,
-      duration: "12 minutes",
-      attempts: 189,
-      avgScore: 72,
-      courseId: 4,
-      courseTitle: "Database Design",
-      createdAt: "2024-04-22",
-      updatedAt: "5 days ago",
-    },
-    {
-      id: 5,
-      title: "Python Basics Quiz",
-      description: "Fundamental Python concepts and syntax",
-      status: "draft",
-      questions: 6,
-      duration: "6 minutes",
-      attempts: 0,
-      avgScore: 0,
-      courseId: 5,
-      courseTitle: "Python for Beginners",
-      createdAt: "2024-04-21",
-      updatedAt: "1 week ago",
-    },
-    {
-      id: 6,
-      title: "JavaScript ES6+ Quiz",
-      description: "Modern JavaScript features and best practices",
-      status: "published",
-      questions: 10,
-      duration: "10 minutes",
-      attempts: 312,
-      avgScore: 88,
-      courseId: 6,
-      courseTitle: "JavaScript ES6+",
-      createdAt: "2024-04-20",
-      updatedAt: "2 weeks ago",
-    },
-  ];
+  const [previewQuiz, setPreviewQuiz] = useState<Quiz | null>(null);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -215,7 +116,7 @@ export default function QuizzesPage() {
           <div className="flex items-center gap-4 text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
             <div className="flex items-center gap-1.5">
               <ListChecks className="h-4 w-4" />
-              <span>{quiz.questions} questions</span>
+              <span>{quiz.questions.length} questions</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
@@ -269,23 +170,28 @@ export default function QuizzesPage() {
             </div>
             <div className="flex items-center gap-1">
               <button
+                type="button"
+                onClick={() => setPreviewQuiz(quiz)}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
                 title="View"
+                aria-label={`Preview ${quiz.title}`}
               >
                 <Eye
                   className="h-4 w-4"
                   style={{ color: "rgba(38, 37, 30, 0.55)" }}
                 />
               </button>
-              <button
+              <a
+                href={`/quizzes/${quiz.id}/edit`}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
                 title="Edit"
+                aria-label={`Edit ${quiz.title}`}
               >
                 <PencilSimple
                   className="h-4 w-4"
                   style={{ color: "rgba(38, 37, 30, 0.55)" }}
                 />
-              </button>
+              </a>
               <button
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
                 title="Delete"
@@ -333,7 +239,7 @@ export default function QuizzesPage() {
       <div className="flex items-center gap-4 text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
         <div className="flex items-center gap-1.5 min-w-[90px]">
           <ListChecks className="h-4 w-4" />
-          <span>{quiz.questions} questions</span>
+          <span>{quiz.questions.length} questions</span>
         </div>
         <div className="flex items-center gap-1.5 min-w-[80px]">
           <Clock className="h-4 w-4" />
@@ -359,23 +265,28 @@ export default function QuizzesPage() {
         {getStatusBadge(quiz.status)}
         <div className="flex items-center gap-1">
           <button
+            type="button"
+            onClick={() => setPreviewQuiz(quiz)}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
             title="View"
+            aria-label={`Preview ${quiz.title}`}
           >
             <Eye
               className="h-4 w-4"
               style={{ color: "rgba(38, 37, 30, 0.55)" }}
             />
           </button>
-          <button
+          <a
+            href={`/quizzes/${quiz.id}/edit`}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
             title="Edit"
+            aria-label={`Edit ${quiz.title}`}
           >
             <PencilSimple
               className="h-4 w-4"
               style={{ color: "rgba(38, 37, 30, 0.55)" }}
             />
-          </button>
+          </a>
           <button
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
             title="Delete"
@@ -652,6 +563,14 @@ export default function QuizzesPage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {previewQuiz && (
+        <QuizPreviewModal
+          quiz={previewQuiz}
+          isOpen={Boolean(previewQuiz)}
+          onClose={() => setPreviewQuiz(null)}
+        />
       )}
     </div>
   );

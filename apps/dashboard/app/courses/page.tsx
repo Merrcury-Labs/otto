@@ -11,7 +11,6 @@ import {
 import {
   Plus,
   MagnifyingGlass,
-  Funnel,
   GridFour,
   List,
   PencilSimple,
@@ -27,100 +26,15 @@ import {
   XCircle,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
-
-interface Course {
-  id: number;
-  title: string;
-  description: string;
-  status: "published" | "draft" | "archived";
-  students: number;
-  quizzes: number;
-  progress: number;
-  duration: string;
-  createdAt: string;
-  updatedAt: string;
-  image?: string;
-}
+import { CoursePreviewModal } from "./components/CoursePreviewModal";
+import { courses } from "./data";
+import type { Course } from "./types";
 
 export default function CoursesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  const courses: Course[] = [
-    {
-      id: 1,
-      title: "React Fundamentals",
-      description: "Learn the basics of React including components, state, and hooks",
-      status: "published",
-      students: 234,
-      quizzes: 12,
-      progress: 75,
-      duration: "12 hours",
-      createdAt: "2024-04-25",
-      updatedAt: "2 hours ago",
-    },
-    {
-      id: 2,
-      title: "TypeScript Advanced",
-      description: "Deep dive into TypeScript advanced features and patterns",
-      status: "published",
-      students: 156,
-      quizzes: 8,
-      progress: 60,
-      duration: "8 hours",
-      createdAt: "2024-04-24",
-      updatedAt: "1 day ago",
-    },
-    {
-      id: 3,
-      title: "Next.js App Router",
-      description: "Build modern web applications with Next.js 13+",
-      status: "draft",
-      students: 0,
-      quizzes: 5,
-      progress: 30,
-      duration: "10 hours",
-      createdAt: "2024-04-23",
-      updatedAt: "3 days ago",
-    },
-    {
-      id: 4,
-      title: "Database Design",
-      description: "Master database design principles and SQL optimization",
-      status: "published",
-      students: 189,
-      quizzes: 15,
-      progress: 90,
-      duration: "15 hours",
-      createdAt: "2024-04-22",
-      updatedAt: "5 days ago",
-    },
-    {
-      id: 5,
-      title: "Python for Beginners",
-      description: "Start your programming journey with Python",
-      status: "draft",
-      students: 0,
-      quizzes: 3,
-      progress: 20,
-      duration: "6 hours",
-      createdAt: "2024-04-21",
-      updatedAt: "1 week ago",
-    },
-    {
-      id: 6,
-      title: "JavaScript ES6+",
-      description: "Modern JavaScript features and best practices",
-      status: "published",
-      students: 312,
-      quizzes: 10,
-      progress: 85,
-      duration: "9 hours",
-      createdAt: "2024-04-20",
-      updatedAt: "2 weeks ago",
-    },
-  ];
+  const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -244,23 +158,28 @@ export default function CoursesPage() {
             </div>
             <div className="flex items-center gap-1">
               <button
+                type="button"
+                onClick={() => setPreviewCourse(course)}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
                 title="View"
+                aria-label={`Preview ${course.title}`}
               >
                 <Eye
                   className="h-4 w-4"
                   style={{ color: "rgba(38, 37, 30, 0.55)" }}
                 />
               </button>
-              <button
+              <a
+                href={`/courses/${course.id}/edit`}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
                 title="Edit"
+                aria-label={`Edit ${course.title}`}
               >
                 <PencilSimple
                   className="h-4 w-4"
                   style={{ color: "rgba(38, 37, 30, 0.55)" }}
                 />
-              </button>
+              </a>
               <button
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
                 title="Delete"
@@ -326,23 +245,28 @@ export default function CoursesPage() {
         {getStatusBadge(course.status)}
         <div className="flex items-center gap-1">
           <button
+            type="button"
+            onClick={() => setPreviewCourse(course)}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
             title="View"
+            aria-label={`Preview ${course.title}`}
           >
             <Eye
               className="h-4 w-4"
               style={{ color: "rgba(38, 37, 30, 0.55)" }}
             />
           </button>
-          <button
+          <a
+            href={`/courses/${course.id}/edit`}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
             title="Edit"
+            aria-label={`Edit ${course.title}`}
           >
             <PencilSimple
               className="h-4 w-4"
               style={{ color: "rgba(38, 37, 30, 0.55)" }}
             />
-          </button>
+          </a>
           <button
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
             title="Delete"
@@ -617,6 +541,14 @@ export default function CoursesPage() {
             </Button>
           </div>
         </div>
+      )}
+
+      {previewCourse && (
+        <CoursePreviewModal
+          course={previewCourse}
+          isOpen={Boolean(previewCourse)}
+          onClose={() => setPreviewCourse(null)}
+        />
       )}
     </div>
   );

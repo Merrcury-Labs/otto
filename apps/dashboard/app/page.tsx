@@ -10,10 +10,7 @@ import {
 import {
   BookOpen,
   Users,
-  TrendUp,
   Clock,
-  Trophy,
-  Target,
   FileText,
   CheckCircle,
   Circle,

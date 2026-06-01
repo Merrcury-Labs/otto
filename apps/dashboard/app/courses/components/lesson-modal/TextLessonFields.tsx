@@ -193,7 +193,7 @@ export function TextLessonFields({
               }}
               title="Quote"
             >
-              <span className="text-xs font-semibold">"</span>
+              <span className="text-xs font-semibold">&quot;</span>
             </button>
             <button
               type="button"

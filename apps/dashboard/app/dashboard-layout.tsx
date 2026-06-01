@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   SidebarProvider,
@@ -81,10 +82,10 @@ export function DashboardLayout({
                   asChild
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
-                  <a href="/">
+                  <Link href="/">
                     <House className="h-4 w-4" style={{ color: '#26251e' }} />
                     <span style={{ color: '#26251e' }}>Dashboard</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
