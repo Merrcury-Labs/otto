@@ -1,0 +1,147 @@
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 80px 24px;
+  font-synthesis: none;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  max-width: 1000px;
+  width: 100%;
+  align-items: center;
+}
+
+.welcome {
+  text-align: center;
+  max-width: 600px;
+}
+
+.welcomeTitle {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 16px 0;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.welcomeSubtitle {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--foreground);
+  opacity: 0.8;
+  margin: 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.statCard {
+  background: var(--background);
+  border: 1px solid rgba(var(--foreground-rgb), 0.1);
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .statCard:hover {
+    border-color: rgba(var(--foreground-rgb), 0.2);
+    transform: translateY(-2px);
+  }
+}
+
+.statValue {
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 8px;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cta {
+  margin-top: 16px;
+}
+
+.primaryButton {
+  appearance: none;
+  border-radius: 12px;
+  height: 52px;
+  padding: 0 32px;
+  font-family: var(--font-geist-sans);
+  background: var(--foreground);
+  color: var(--background);
+  border: 2px solid var(--foreground);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .primaryButton:hover {
+    background: transparent;
+    color: var(--foreground);
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 48px 16px;
+  }
+
+  .main {
+    gap: 32px;
+  }
+
+  .welcome {
+    max-width: 100%;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  .statCard {
+    padding: 24px 16px;
+  }
+
+  .statValue {
+    font-size: 2rem;
+  }
+
+  .statLabel {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}

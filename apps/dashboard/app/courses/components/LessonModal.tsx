@@ -1,0 +1,164 @@
+"use client";
+
+import { useState } from "react";
+import { CodeLessonFields } from "./lesson-modal/CodeLessonFields";
+import { LessonDetailsFields } from "./lesson-modal/LessonDetailsFields";
+import { LessonModalFooter } from "./lesson-modal/LessonModalFooter";
+import { LessonModalHeader } from "./lesson-modal/LessonModalHeader";
+import { QuizLessonFields } from "./lesson-modal/QuizLessonFields";
+import { TextLessonFields } from "./lesson-modal/TextLessonFields";
+import {
+  LessonFormData,
+  LessonModalProps,
+  QuizQuestion,
+  QuizType,
+} from "./lesson-modal/types";
+import { VideoLessonFields } from "./lesson-modal/VideoLessonFields";
+
+export type { LessonFormData, LessonModalProps, QuizQuestion, QuizType } from "./lesson-modal/types";
+
+export default function LessonModal({
+  isOpen,
+  lessonType,
+  onSave,
+  onClose,
+}: LessonModalProps) {
+  const [lessonFormData, setLessonFormData] = useState<LessonFormData>({
+    title: "",
+    type: lessonType,
+    duration: "",
+    url: "",
+    content: "",
+    questions: [],
+    quizType: lessonType === "quiz" ? "multiple-choice" : undefined,
+  });
+
+  const addQuestion = () => {
+    const quizType = lessonFormData.quizType || "multiple-choice";
+    const newQuestion: QuizQuestion = {
+      id: Date.now(),
+      question: "",
+      type: quizType,
+      options: quizType === "true-false" ? ["True", "False"] : ["", "", ""],
+      correctAnswer: quizType === "multiple-choice" ? 0 : undefined,
+      correctItems: quizType === "drag-drop" ? [] : undefined,
+      answer: quizType === "true-false" ? "True" : undefined,
+      hint: "",
+    };
+
+    setLessonFormData((currentData) => ({
+      ...currentData,
+      questions: [...(currentData.questions || []), newQuestion],
+    }));
+  };
+
+  const removeQuestion = (questionId: number) => {
+    setLessonFormData((currentData) => ({
+      ...currentData,
+      questions:
+        currentData.questions?.filter((question) => question.id !== questionId) || [],
+    }));
+  };
+
+  const updateQuestion = (questionId: number, updates: Partial<QuizQuestion>) => {
+    setLessonFormData((currentData) => ({
+      ...currentData,
+      questions:
+        currentData.questions?.map((question) =>
+          question.id === questionId ? { ...question, ...updates } : question
+        ) || [],
+    }));
+  };
+
+  const updateQuizType = (type: QuizType) => {
+    setLessonFormData((currentData) => ({
+      ...currentData,
+      quizType: type,
+      questions:
+        currentData.questions?.map((question) => ({
+          ...question,
+          type,
+          options: type === "true-false" ? ["True", "False"] : question.options,
+          correctAnswer: type === "multiple-choice" ? 0 : undefined,
+          correctItems: type === "drag-drop" ? [] : undefined,
+          answer: type === "true-false" ? "True" : undefined,
+        })) || [],
+    }));
+  };
+
+  const handleSave = () => {
+    onSave(lessonFormData);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-lg shadow-2xl"
+        style={{ backgroundColor: "#e6e5e0" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <LessonModalHeader lessonType={lessonType} onClose={onClose} />
+
+        <div className="p-6 space-y-4">
+          <LessonDetailsFields
+            lessonFormData={lessonFormData}
+            onDurationChange={(duration) =>
+              setLessonFormData((currentData) => ({ ...currentData, duration }))
+            }
+          />
+
+          {lessonType === "video" && (
+            <VideoLessonFields
+              lessonFormData={lessonFormData}
+              onUrlChange={(url) =>
+                setLessonFormData((currentData) => ({ ...currentData, url }))
+              }
+            />
+          )}
+
+          {lessonType === "text" && (
+            <TextLessonFields
+              lessonFormData={lessonFormData}
+              onContentChange={(content) =>
+                setLessonFormData((currentData) => ({ ...currentData, content }))
+              }
+            />
+          )}
+
+          {lessonType === "code" && (
+            <CodeLessonFields
+              lessonFormData={lessonFormData}
+              onContentChange={(content) =>
+                setLessonFormData((currentData) => ({ ...currentData, content }))
+              }
+            />
+          )}
+
+          {lessonType === "quiz" && (
+            <QuizLessonFields
+              questions={lessonFormData.questions || []}
+              quizType={lessonFormData.quizType}
+              onAddQuestion={addQuestion}
+              onUpdateQuestion={updateQuestion}
+              onRemoveQuestion={removeQuestion}
+              onUpdateQuizType={updateQuizType}
+            />
+          )}
+        </div>
+
+        <LessonModalFooter
+          lessonType={lessonType}
+          onClose={onClose}
+          onSave={handleSave}
+        />
+      </div>
+    </div>
+  );
+}
