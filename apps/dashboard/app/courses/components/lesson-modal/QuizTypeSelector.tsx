@@ -49,7 +49,7 @@ export function QuizTypeSelector({
 }: QuizTypeSelectorProps) {
   return (
     <div>
-      <label className="text-sm font-medium mb-2" style={{ color: "#26251e" }}>
+      <label className="text-sm font-medium mb-2 text-foreground">
         Quiz Type
       </label>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -60,13 +60,9 @@ export function QuizTypeSelector({
             onClick={() => onChange(type)}
             className={`p-3 rounded-lg border-2 cursor-btn-hover focus-warm transition-all duration-150 text-left ${
               quizType === type
-                ? "bg-[#26251e] text-white border-[#26251e]"
-                : "bg-[#f7f7f4] border-transparent"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-surface-100 border-border/10"
             }`}
-            style={{
-              borderColor:
-                quizType === type ? "#26251e" : "rgba(38, 37, 30, 0.1)",
-            }}
           >
             <div className="flex items-center gap-2">
               <Icon className="h-4 w-4" />

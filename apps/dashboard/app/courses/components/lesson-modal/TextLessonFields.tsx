@@ -53,17 +53,15 @@ export function TextLessonFields({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between mb-2">
-        <label className="text-sm font-medium" style={{ color: "#26251e" }}>
+        <label className="text-sm font-medium text-foreground">
           Reading Content (Markdown Supported)
         </label>
         <button
           type="button"
           onClick={() => setShowMarkdownPreview(!showMarkdownPreview)}
-          className="text-sm px-3 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-          style={{
-            backgroundColor: showMarkdownPreview ? "#e6e5e0" : "#f7f7f4",
-            color: "#26251e",
-          }}
+          className={`text-sm px-3 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 ${
+            showMarkdownPreview ? "bg-card text-foreground" : "bg-surface-100 text-foreground"
+          }`}
         >
           {showMarkdownPreview ? "Edit" : "Preview"}
         </button>
@@ -71,34 +69,20 @@ export function TextLessonFields({
 
       {showMarkdownPreview ? (
         <div
-          className="w-full px-4 py-3 rounded-md"
-          style={{
-            backgroundColor: "#f7f7f4",
-            borderColor: "rgba(38, 37, 30, 0.1)",
-            color: "#26251e",
-            fontSize: "14px",
-            lineHeight: "1.6",
-          }}
+          className="w-full px-4 py-3 rounded-md bg-surface-100 border border-border/10 text-foreground"
+          style={{ fontSize: "14px", lineHeight: "1.6" }}
         >
           <MarkdownPreview content={lessonFormData.content || ""} />
         </div>
       ) : (
         <>
           <div
-            className="flex flex-wrap gap-2 p-2 rounded-md"
-            style={{
-              backgroundColor: "#f7f7f4",
-              borderColor: "rgba(38, 37, 30, 0.1)",
-            }}
+            className="flex flex-wrap gap-2 p-2 rounded-md bg-surface-100 border border-border/10"
           >
             <button
               type="button"
               onClick={() => insertMarkdown("**", "**")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Bold"
             >
               <TextB className="h-4 w-4" />
@@ -106,27 +90,18 @@ export function TextLessonFields({
             <button
               type="button"
               onClick={() => insertMarkdown("*", "*")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Italic"
             >
               <TextItalic className="h-4 w-4" />
             </button>
             <div
-              className="w-px"
-              style={{ backgroundColor: "rgba(38, 37, 30, 0.2)" }}
+              className="w-px bg-border/20"
             />
             <button
               type="button"
               onClick={() => insertMarkdown("# ")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Heading"
             >
               <TextH className="h-4 w-4" />
@@ -134,11 +109,7 @@ export function TextLessonFields({
             <button
               type="button"
               onClick={() => insertMarkdown("`", "`")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Inline Code"
             >
               <CodeIcon className="h-4 w-4" />
@@ -146,11 +117,7 @@ export function TextLessonFields({
             <button
               type="button"
               onClick={() => insertMarkdown("```", "\n```")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Code Block"
             >
               <Code className="h-4 w-4" />
@@ -158,11 +125,7 @@ export function TextLessonFields({
             <button
               type="button"
               onClick={() => insertMarkdown("- ")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="List"
             >
               <ListBullets className="h-4 w-4" />
@@ -170,27 +133,18 @@ export function TextLessonFields({
             <button
               type="button"
               onClick={() => insertMarkdown("1. ")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Numbered List"
             >
               <span className="text-xs font-semibold">1.</span>
             </button>
             <div
-              className="w-px"
-              style={{ backgroundColor: "rgba(38, 37, 30, 0.2)" }}
+              className="w-px bg-border/20"
             />
             <button
               type="button"
               onClick={() => insertMarkdown("> ")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Quote"
             >
               <span className="text-xs font-semibold">&quot;</span>
@@ -198,11 +152,7 @@ export function TextLessonFields({
             <button
               type="button"
               onClick={() => insertMarkdown("[", "](url)")}
-              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                color: "#26251e",
-              }}
+              className="p-2 rounded cursor-btn-hover focus-warm transition-all duration-150 bg-card text-foreground"
               title="Link"
             >
               <Link className="h-4 w-4" />
@@ -227,14 +177,9 @@ export function TextLessonFields({
 
 [Link text](https://example.com)"
             rows={8}
-            className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none font-mono text-sm"
-            style={{
-              backgroundColor: "#f7f7f4",
-              borderColor: "rgba(38, 37, 30, 0.1)",
-              color: "#26251e",
-            }}
+            className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none font-mono text-sm bg-surface-100 border border-border/10 text-foreground"
           />
-          <p className="text-xs" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <p className="text-xs text-muted-foreground">
             Supports headings, bold, italic, links, code, quotes, bullet lists, and numbered lists.
           </p>
         </>

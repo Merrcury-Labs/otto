@@ -26,6 +26,7 @@ import {
   TrendUp,
   Brain,
 } from "@phosphor-icons/react";
+import { ThemeToggle } from "../components/theme-toggle";
 
 export function DashboardLayout({
   children,
@@ -42,37 +43,33 @@ export function DashboardLayout({
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader
-          className="border-b px-4 py-4"
-          style={{ backgroundColor: '#e6e5e0', borderColor: 'rgba(38, 37, 30, 0.1)' }}
+          className="border-b border-sidebar-border/10 px-4 py-4 bg-sidebar"
         >
           <div className="flex items-center gap-3">
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-lg"
-              style={{ backgroundColor: '#26251e' }}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary"
             >
-              <House className="h-5 w-5" style={{ color: '#f2f1ed' }} />
+              <House className="h-5 w-5 text-sidebar-primary-foreground" />
             </div>
             <div className="flex flex-col">
               <span
-                className="text-sm font-semibold"
-                style={{ color: '#26251e', letterSpacing: '-0.11px' }}
+                className="text-sm font-semibold text-sidebar-foreground"
+                style={{ letterSpacing: '-0.11px' }}
               >
                 Otto
               </span>
               <span
-                className="text-xs"
-                style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                className="text-xs text-sidebar-foreground/55"
               >
                 Dashboard
               </span>
             </div>
           </div>
         </SidebarHeader>
-        <SidebarContent style={{ backgroundColor: '#e6e5e0' }}>
+        <SidebarContent className="bg-sidebar">
           <SidebarGroup>
             <SidebarGroupLabel
-              className="text-xs font-medium uppercase tracking-wider"
-              style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+              className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/55"
             >
               Overview
             </SidebarGroupLabel>
@@ -83,8 +80,8 @@ export function DashboardLayout({
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
                   <Link href="/">
-                    <House className="h-4 w-4" style={{ color: '#26251e' }} />
-                    <span style={{ color: '#26251e' }}>Dashboard</span>
+                    <House className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -94,8 +91,8 @@ export function DashboardLayout({
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
                   <a href="#">
-                    <ChartLine className="h-4 w-4" style={{ color: '#26251e' }} />
-                    <span style={{ color: '#26251e' }}>Progress</span>
+                    <ChartLine className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Progress</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -105,8 +102,8 @@ export function DashboardLayout({
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
                   <a href="#">
-                    <TrendUp className="h-4 w-4" style={{ color: '#26251e' }} />
-                    <span style={{ color: '#26251e' }}>Analytics</span>
+                    <TrendUp className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Analytics</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -114,8 +111,7 @@ export function DashboardLayout({
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupLabel
-              className="text-xs font-medium uppercase tracking-wider"
-              style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+              className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/55"
             >
               Learning
             </SidebarGroupLabel>
@@ -126,8 +122,8 @@ export function DashboardLayout({
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
                   <a href="/courses">
-                    <BookOpen className="h-4 w-4" style={{ color: '#26251e' }} />
-                    <span style={{ color: '#26251e' }}>Courses</span>
+                    <BookOpen className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Courses</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -137,8 +133,8 @@ export function DashboardLayout({
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
                   <a href="/quizzes">
-                    <Brain className="h-4 w-4" style={{ color: '#26251e' }} />
-                    <span style={{ color: '#26251e' }}>Quizzes</span>
+                    <Brain className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Quizzes</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -148,8 +144,8 @@ export function DashboardLayout({
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
                   <a href="#">
-                    <Users className="h-4 w-4" style={{ color: '#26251e' }} />
-                    <span style={{ color: '#26251e' }}>Community</span>
+                    <Users className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Community</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -157,8 +153,7 @@ export function DashboardLayout({
           </SidebarGroup>
           <SidebarGroup>
             <SidebarGroupLabel
-              className="text-xs font-medium uppercase tracking-wider"
-              style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+              className="text-xs font-medium uppercase tracking-wider text-sidebar-foreground/55"
             >
               Reports
             </SidebarGroupLabel>
@@ -169,8 +164,8 @@ export function DashboardLayout({
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
                   <a href="#">
-                    <ChartBar className="h-4 w-4" style={{ color: '#26251e' }} />
-                    <span style={{ color: '#26251e' }}>Statistics</span>
+                    <ChartBar className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Statistics</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -178,9 +173,12 @@ export function DashboardLayout({
           </SidebarGroup>
         </SidebarContent>
         <SidebarFooter
-          className="border-t px-4 py-4"
-          style={{ backgroundColor: '#e6e5e0', borderColor: 'rgba(38, 37, 30, 0.1)' }}
+          className="border-t border-sidebar-border/10 px-4 py-4 bg-sidebar"
         >
+          <div className="flex items-center justify-between px-2 pb-2">
+            <span className="text-xs text-sidebar-foreground/55">Theme</span>
+            <ThemeToggle />
+          </div>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -188,28 +186,23 @@ export function DashboardLayout({
                 className="cursor-btn-hover focus-warm transition-all duration-150"
               >
                 <a href="/settings">
-                  <Faders className="h-4 w-4" style={{ color: '#26251e' }} />
-                  <span style={{ color: '#26251e' }}>Settings</span>
+                  <Faders className="h-4 w-4 text-sidebar-foreground" />
+                  <span className="text-sidebar-foreground">Settings</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset style={{ backgroundColor: '#f2f1ed' }}>
+      <SidebarInset className="bg-background">
         <header
-          className="flex h-16 shrink-0 items-center gap-2 px-4"
-          style={{ borderBottom: '1px solid rgba(38, 37, 30, 0.1)', backgroundColor: '#f2f1ed' }}
+          className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-border/10 bg-background"
         >
           <SidebarTrigger className="-ml-1 cursor-btn-hover focus-warm transition-all duration-150" />
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             <div
-              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: '#ebeae5',
-                color: '#26251e',
-              }}
+              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
             >
               JD
             </div>

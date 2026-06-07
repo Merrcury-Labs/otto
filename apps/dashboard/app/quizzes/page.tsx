@@ -41,11 +41,11 @@ export default function QuizzesPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "published":
-        return <CheckCircle className="h-5 w-5" style={{ color: "#1f8a65" }} />;
+        return <CheckCircle className="h-5 w-5 text-brand-success" />;
       case "draft":
-        return <Circle className="h-5 w-5" style={{ color: "#c08532" }} />;
+        return <Circle className="h-5 w-5 text-brand-gold" />;
       case "archived":
-        return <XCircle className="h-5 w-5" style={{ color: "rgba(38, 37, 30, 0.4)" }} />;
+        return <XCircle className="h-5 w-5 text-muted-foreground" />;
       default:
         return null;
     }
@@ -53,8 +53,8 @@ export default function QuizzesPage() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      published: "bg-[#1f8a65] text-white",
-      draft: "bg-[#c08532] text-white",
+      published: "bg-brand-success text-white",
+      draft: "bg-brand-gold text-white",
       archived: "bg-muted text-muted-foreground",
     };
 
@@ -81,39 +81,36 @@ export default function QuizzesPage() {
 
   const QuizCard = ({ quiz }: { quiz: Quiz }) => (
     <Card
-      className="cursor-card hover:cursor-card-hover transition-all duration-200 group"
-      style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+      className="cursor-card hover:cursor-card-hover transition-all duration-200 group bg-card rounded-lg"
     >
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <CardTitle
-                className="text-lg font-normal"
-                style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                className="text-lg font-normal text-foreground"
+                style={{ letterSpacing: "-0.11px" }}
               >
                 {quiz.title}
               </CardTitle>
               {getStatusIcon(quiz.status)}
             </div>
             <CardDescription
-              className="line-clamp-2"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="line-clamp-2 text-muted-foreground"
             >
               {quiz.description}
             </CardDescription>
           </div>
           <button className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md opacity-0 group-hover:opacity-100">
             <DotsThreeVertical
-              className="h-5 w-5"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="h-5 w-5 text-muted-foreground"
             />
           </button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="flex items-center gap-4 text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <ListChecks className="h-4 w-4" />
               <span>{quiz.questions.length} questions</span>
@@ -129,7 +126,7 @@ export default function QuizzesPage() {
           </div>
 
           {quiz.courseTitle && (
-            <div className="flex items-center gap-1.5 text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <BookOpen className="h-4 w-4" />
               <span>{quiz.courseTitle}</span>
             </div>
@@ -138,20 +135,18 @@ export default function QuizzesPage() {
           {quiz.status === "published" && (
             <div className="space-y-1">
               <div className="flex items-center justify-between text-sm">
-                <span style={{ color: "#26251e" }}>Avg. Score</span>
-                <span style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                <span className="text-foreground">Avg. Score</span>
+                <span className="text-muted-foreground">
                   {quiz.avgScore}%
                 </span>
               </div>
               <div
-                className="h-2 w-full rounded-full"
-                style={{ backgroundColor: "#f7f7f4" }}
+                className="h-2 w-full rounded-full bg-surface-100"
               >
                 <div
-                  className="h-2 rounded-full transition-all duration-200"
+                  className="h-2 rounded-full transition-all duration-200 bg-primary"
                   style={{
                     width: `${quiz.avgScore}%`,
-                    backgroundColor: "#26251e",
                   }}
                 />
               </div>
@@ -162,8 +157,7 @@ export default function QuizzesPage() {
             <div className="flex items-center gap-2">
               {getStatusBadge(quiz.status)}
               <span
-                className="text-xs"
-                style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                className="text-xs text-muted-foreground"
               >
                 Updated {quiz.updatedAt}
               </span>
@@ -177,8 +171,7 @@ export default function QuizzesPage() {
                 aria-label={`Preview ${quiz.title}`}
               >
                 <Eye
-                  className="h-4 w-4"
-                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                  className="h-4 w-4 text-muted-foreground"
                 />
               </button>
               <a
@@ -188,8 +181,7 @@ export default function QuizzesPage() {
                 aria-label={`Edit ${quiz.title}`}
               >
                 <PencilSimple
-                  className="h-4 w-4"
-                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                  className="h-4 w-4 text-muted-foreground"
                 />
               </a>
               <button
@@ -197,8 +189,7 @@ export default function QuizzesPage() {
                 title="Delete"
               >
                 <Trash
-                  className="h-4 w-4"
-                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                  className="h-4 w-4 text-muted-foreground"
                 />
               </button>
             </div>
@@ -210,33 +201,31 @@ export default function QuizzesPage() {
 
   const QuizRow = ({ quiz }: { quiz: Quiz }) => (
     <div
-      className="flex items-center gap-4 p-4 border-b cursor-btn-hover focus-warm transition-all duration-150 hover:bg-[#ebeae5]"
-      style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}
+      className="flex items-center gap-4 p-4 border-b cursor-btn-hover focus-warm transition-all duration-150 hover:bg-accent border-border/10"
     >
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <h3
-            className="font-medium"
-            style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+            className="font-medium text-foreground"
+            style={{ letterSpacing: "-0.11px" }}
           >
             {quiz.title}
           </h3>
           {getStatusIcon(quiz.status)}
         </div>
         <p
-          className="text-sm mt-1 line-clamp-1"
-          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+          className="text-sm mt-1 line-clamp-1 text-muted-foreground"
         >
           {quiz.description}
         </p>
         {quiz.courseTitle && (
-          <div className="flex items-center gap-1.5 text-xs mt-1" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <div className="flex items-center gap-1.5 text-xs mt-1 text-muted-foreground">
             <BookOpen className="h-3.5 w-3.5" />
             <span>{quiz.courseTitle}</span>
           </div>
         )}
       </div>
-      <div className="flex items-center gap-4 text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-1.5 min-w-[90px]">
           <ListChecks className="h-4 w-4" />
           <span>{quiz.questions.length} questions</span>
@@ -252,10 +241,10 @@ export default function QuizzesPage() {
         {quiz.status === "published" && (
           <div className="flex items-center gap-2 min-w-[100px]">
             <div className="w-16">
-              <div className="h-2 w-full rounded-full" style={{ backgroundColor: "#f7f7f4" }}>
+              <div className="h-2 w-full rounded-full bg-surface-100">
                 <div
-                  className="h-2 rounded-full"
-                  style={{ width: `${quiz.avgScore}%`, backgroundColor: "#26251e" }}
+                  className="h-2 rounded-full bg-primary"
+                  style={{ width: `${quiz.avgScore}%` }}
                 />
               </div>
             </div>
@@ -272,8 +261,7 @@ export default function QuizzesPage() {
             aria-label={`Preview ${quiz.title}`}
           >
             <Eye
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="h-4 w-4 text-muted-foreground"
             />
           </button>
           <a
@@ -283,8 +271,7 @@ export default function QuizzesPage() {
             aria-label={`Edit ${quiz.title}`}
           >
             <PencilSimple
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="h-4 w-4 text-muted-foreground"
             />
           </a>
           <button
@@ -292,8 +279,7 @@ export default function QuizzesPage() {
             title="Delete"
           >
             <Trash
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="h-4 w-4 text-muted-foreground"
             />
           </button>
         </div>
@@ -307,22 +293,18 @@ export default function QuizzesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1
-            className="text-3xl font-normal tracking-tight"
-            style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+            className="text-3xl font-normal tracking-tight text-foreground"
+            style={{ letterSpacing: "-0.11px" }}
           >
             Quizzes
           </h1>
-          <p className="text-base" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <p className="text-base text-muted-foreground">
             Manage and create quizzes for your courses
           </p>
         </div>
         <Button
           asChild
-          className="cursor-btn-hover focus-warm transition-all duration-150"
-          style={{
-            backgroundColor: "#ebeae5",
-            color: "#26251e",
-          }}
+          className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
         >
           <a href="/quizzes/create">
             <Plus className="h-4 w-4 mr-2" />
@@ -334,100 +316,92 @@ export default function QuizzesPage() {
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card bg-card rounded-lg"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Total Quizzes
             </CardTitle>
             <Brain
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="h-4 w-4 text-muted-foreground"
             />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {quizzes.length}
             </div>
           </CardContent>
         </Card>
         <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card bg-card rounded-lg"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Published
             </CardTitle>
             <CheckCircle
-              className="h-4 w-4"
-              style={{ color: "#1f8a65" }}
+              className="h-4 w-4 text-brand-success"
             />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {quizzes.filter((q) => q.status === "published").length}
             </div>
           </CardContent>
         </Card>
         <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card bg-card rounded-lg"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Total Attempts
             </CardTitle>
             <Users
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="h-4 w-4 text-muted-foreground"
             />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {quizzes.reduce((acc, quiz) => acc + quiz.attempts, 0)}
             </div>
           </CardContent>
         </Card>
         <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card bg-card rounded-lg"
         >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Avg. Score
             </CardTitle>
             <TrendUp
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="h-4 w-4 text-muted-foreground"
             />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {Math.round(
                 quizzes
@@ -445,31 +419,20 @@ export default function QuizzesPage() {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
           <MagnifyingGlass
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-            style={{ color: "rgba(38, 37, 30, 0.55)" }}
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
           />
           <input
             type="text"
             placeholder="Search quizzes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-            style={{
-              backgroundColor: "#f7f7f4",
-              borderColor: "rgba(38, 37, 30, 0.1)",
-              color: "#26251e",
-            }}
+            className="w-full pl-10 pr-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-          style={{
-            backgroundColor: "#f7f7f4",
-            borderColor: "rgba(38, 37, 30, 0.1)",
-            color: "#26251e",
-          }}
+          className="px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
         >
           <option value="all">All Status</option>
           <option value="published">Published</option>
@@ -481,8 +444,8 @@ export default function QuizzesPage() {
             onClick={() => setViewMode("grid")}
             className={`p-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 ${
               viewMode === "grid"
-                ? "bg-[#26251e] text-white"
-                : "bg-[#f7f7f4] text-[#26251e]"
+                ? "bg-primary text-white"
+                : "bg-surface-100 text-foreground"
             }`}
           >
             <GridFour className="h-5 w-5" />
@@ -491,8 +454,8 @@ export default function QuizzesPage() {
             onClick={() => setViewMode("list")}
             className={`p-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 ${
               viewMode === "list"
-                ? "bg-[#26251e] text-white"
-                : "bg-[#f7f7f4] text-[#26251e]"
+                ? "bg-primary text-white"
+                : "bg-surface-100 text-foreground"
             }`}
           >
             <List className="h-5 w-5" />
@@ -517,9 +480,9 @@ export default function QuizzesPage() {
             )
           )
         ) : (
-          <div className="text-center py-12" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <div className="text-center py-12 text-muted-foreground">
             <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2" style={{ color: "#26251e" }}>
+            <h3 className="text-lg font-medium mb-2 text-foreground">
               No quizzes found
             </h3>
             <p>Try adjusting your search or filter criteria</p>
@@ -531,8 +494,7 @@ export default function QuizzesPage() {
       {filteredQuizzes.length > 0 && (
         <div className="flex items-center justify-between">
           <p
-            className="text-sm"
-            style={{ color: "rgba(38, 37, 30, 0.55)" }}
+            className="text-sm text-muted-foreground"
           >
             Showing {filteredQuizzes.length} of {quizzes.length} quizzes
           </p>
@@ -540,24 +502,14 @@ export default function QuizzesPage() {
             <Button
               variant="outline"
               disabled
-              className="cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#f7f7f4",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "rgba(38, 37, 30, 0.4)",
-              }}
+              className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border-border/10 text-muted-foreground"
             >
               Previous
             </Button>
             <Button
               variant="outline"
               disabled
-              className="cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#f7f7f4",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "rgba(38, 37, 30, 0.4)",
-              }}
+              className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border-border/10 text-muted-foreground"
             >
               Next
             </Button>

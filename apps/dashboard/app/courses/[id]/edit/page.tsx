@@ -71,25 +71,22 @@ export default function EditCoursePage() {
       <div className="space-y-6 px-4">
         <Button
           variant="ghost"
-          className="cursor-btn-hover focus-warm transition-all duration-150"
-          style={{ color: "#26251e" }}
+          className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
           onClick={() => window.history.back()}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <Card style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}>
+        <Card className="bg-card rounded-lg">
           <CardContent className="py-12 text-center">
             <FileText
-              className="h-12 w-12 mx-auto mb-4"
-              style={{ color: "rgba(38, 37, 30, 0.4)" }}
+              className="h-12 w-12 mx-auto mb-4 text-muted-foreground"
             />
-            <h1 className="text-xl font-medium" style={{ color: "#26251e" }}>
+            <h1 className="text-xl font-medium text-foreground">
               Course not found
             </h1>
             <p
-              className="mt-2"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="mt-2 text-muted-foreground"
             >
               This course may have been deleted or moved.
             </p>
@@ -291,8 +288,7 @@ export default function EditCoursePage() {
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            className="cursor-btn-hover focus-warm transition-all duration-150"
-            style={{ color: "#26251e" }}
+            className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
             onClick={() => window.history.back()}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -300,14 +296,13 @@ export default function EditCoursePage() {
           </Button>
           <div>
             <h1
-              className="text-3xl font-normal tracking-tight"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-3xl font-normal tracking-tight text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Edit Course
             </h1>
             <p
-              className="text-base"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="text-base text-muted-foreground"
             >
               Update the course details students and admins see
             </p>
@@ -316,11 +311,7 @@ export default function EditCoursePage() {
         <Button
           type="button"
           onClick={() => setIsPreviewOpen(true)}
-          className="cursor-btn-hover focus-warm transition-all duration-150"
-          style={{
-            backgroundColor: "#ebeae5",
-            color: "#26251e",
-          }}
+          className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
         >
           <Eye className="h-4 w-4 mr-2" />
           Preview
@@ -328,23 +319,22 @@ export default function EditCoursePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}>
+        <Card className="bg-card rounded-lg">
           <CardHeader>
             <div className="flex items-center gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ backgroundColor: "#f7f7f4" }}
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
               >
-                <BookOpen className="h-5 w-5" style={{ color: "#26251e" }} />
+                <BookOpen className="h-5 w-5 text-foreground" />
               </div>
               <div>
                 <CardTitle
-                  className="text-xl font-normal"
-                  style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                  className="text-xl font-normal text-foreground"
+                  style={{ letterSpacing: "-0.11px" }}
                 >
                   Course Information
                 </CardTitle>
-                <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                <CardDescription className="text-muted-foreground">
                   Core details and publishing state
                 </CardDescription>
               </div>
@@ -355,8 +345,7 @@ export default function EditCoursePage() {
               <div className="space-y-4">
                 <div>
                   <label
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: "#26251e" }}
+                    className="block text-sm font-medium mb-2 text-foreground"
                   >
                     Course Title
                   </label>
@@ -365,20 +354,14 @@ export default function EditCoursePage() {
                     onChange={(event) =>
                       setFormData({ ...formData, title: event.target.value })
                     }
-                    className="w-full rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                      color: "#26251e",
-                    }}
+                    className="w-full rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                     required
                   />
                 </div>
 
                 <div>
                   <label
-                    className="block text-sm font-medium mb-2"
-                    style={{ color: "#26251e" }}
+                    className="block text-sm font-medium mb-2 text-foreground"
                   >
                     Course Description
                   </label>
@@ -391,12 +374,7 @@ export default function EditCoursePage() {
                       })
                     }
                     rows={5}
-                    className="w-full resize-none rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                      color: "#26251e",
-                    }}
+                    className="w-full resize-none rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                     required
                   />
                 </div>
@@ -404,17 +382,12 @@ export default function EditCoursePage() {
 
               <div className="space-y-3">
                 <label
-                  className="block text-sm font-medium"
-                  style={{ color: "#26251e" }}
+                  className="block text-sm font-medium text-foreground"
                 >
                   Thumbnail
                 </label>
                 <div
-                  className="overflow-hidden rounded-lg border"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                  }}
+                  className="overflow-hidden rounded-lg border bg-surface-100 border-border/10"
                 >
                   {formData.thumbnail ? (
                     <Image
@@ -428,18 +401,13 @@ export default function EditCoursePage() {
                   ) : (
                     <div className="flex h-36 items-center justify-center">
                       <BookOpen
-                        className="h-8 w-8"
-                        style={{ color: "rgba(38, 37, 30, 0.35)" }}
+                        className="h-8 w-8 text-muted-foreground"
                       />
                     </div>
                   )}
                 </div>
                 <label
-                  className="inline-flex w-full cursor-pointer items-center justify-center rounded-md px-4 py-2 text-sm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#ebeae5",
-                    color: "#26251e",
-                  }}
+                  className="inline-flex w-full cursor-pointer items-center justify-center rounded-md px-4 py-2 text-sm transition-all duration-150 bg-surface-300 text-foreground"
                 >
                   <input
                     type="file"
@@ -457,20 +425,14 @@ export default function EditCoursePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: "#26251e" }}
+                  className="block text-sm font-medium mb-2 text-foreground"
                 >
                   Status
                 </label>
                 <select
                   value={status}
                   onChange={(event) => setStatus(event.target.value as CourseStatus)}
-                  className="w-full rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                    color: "#26251e",
-                  }}
+                  className="w-full rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
@@ -480,25 +442,18 @@ export default function EditCoursePage() {
 
               <div>
                 <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: "#26251e" }}
+                  className="block text-sm font-medium mb-2 text-foreground"
                 >
                   Tags
                 </label>
                 <div className="relative">
                   <Tag
-                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
-                    style={{ color: "rgba(38, 37, 30, 0.45)" }}
+                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
                   />
                   <input
                     value={formData.tags.join(", ")}
                     onChange={(event) => updateTags(event.target.value)}
-                    className="w-full rounded-md py-3 pl-10 pr-4 cursor-btn-hover focus-warm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                      color: "#26251e",
-                    }}
+                    className="w-full rounded-md py-3 pl-10 pr-4 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                   />
                 </div>
               </div>
@@ -506,8 +461,7 @@ export default function EditCoursePage() {
 
             <div>
               <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: "#26251e" }}
+                className="block text-sm font-medium mb-2 text-foreground"
               >
                 Prerequisites
               </label>
@@ -515,35 +469,29 @@ export default function EditCoursePage() {
                 value={formData.prerequisites.join("\n")}
                 onChange={(event) => updatePrerequisites(event.target.value)}
                 rows={4}
-                className="w-full resize-none rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150"
-                style={{
-                  backgroundColor: "#f7f7f4",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                  color: "#26251e",
-                }}
+                className="w-full resize-none rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
               />
             </div>
           </CardContent>
         </Card>
 
-        <Card style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}>
+        <Card className="bg-card rounded-lg">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "#f7f7f4" }}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
                 >
-                  <FileText className="h-5 w-5" style={{ color: "#26251e" }} />
+                  <FileText className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
                   <CardTitle
-                    className="text-xl font-normal"
-                    style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                    className="text-xl font-normal text-foreground"
+                    style={{ letterSpacing: "-0.11px" }}
                   >
                     Course Structure
                   </CardTitle>
-                  <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                  <CardDescription className="text-muted-foreground">
                     Organize your course into modules and lessons
                   </CardDescription>
                 </div>
@@ -551,11 +499,7 @@ export default function EditCoursePage() {
               <Button
                 type="button"
                 onClick={addModule}
-                className="cursor-btn-hover focus-warm transition-all duration-150"
-                style={{
-                  backgroundColor: "#ebeae5",
-                  color: "#26251e",
-                }}
+                className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Module
@@ -565,30 +509,23 @@ export default function EditCoursePage() {
           <CardContent>
             {formData.modules.length === 0 ? (
               <div
-                className="text-center py-12 border-2 border-dashed rounded-lg"
-                style={{ borderColor: "rgba(38, 37, 30, 0.2)" }}
+                className="text-center py-12 border-2 border-dashed rounded-lg border-border/10"
               >
                 <FileText
-                  className="h-12 w-8 mx-auto mb-4"
-                  style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                  className="h-12 w-8 mx-auto mb-4 text-muted-foreground"
                 />
                 <h3
-                  className="text-lg font-medium mb-2"
-                  style={{ color: "#26251e" }}
+                  className="text-lg font-medium mb-2 text-foreground"
                 >
                   No modules yet
                 </h3>
-                <p className="mb-4" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                <p className="mb-4 text-muted-foreground">
                   Start by creating your first module to structure your course
                 </p>
                 <Button
                   type="button"
                   onClick={addModule}
-                  className="cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#ebeae5",
-                    color: "#26251e",
-                  }}
+                  className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Module
@@ -599,17 +536,12 @@ export default function EditCoursePage() {
                 {formData.modules.map((module, moduleIndex) => (
                   <div
                     key={module.id}
-                    className="border rounded-lg p-4"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                    }}
+                    className="border rounded-lg p-4 bg-surface-100 border-border/10"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div
-                          className="text-xs font-medium mb-1"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-xs font-medium mb-1 text-muted-foreground"
                         >
                           Module {moduleIndex + 1}
                         </div>
@@ -620,20 +552,14 @@ export default function EditCoursePage() {
                             updateModuleTitle(module.id, event.target.value)
                           }
                           placeholder={`Module ${moduleIndex + 1} Title`}
-                          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{
-                            backgroundColor: "#e6e5e0",
-                            borderColor: "rgba(38, 37, 30, 0.1)",
-                            color: "#26251e",
-                          }}
+                          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                         />
                       </div>
                       <Button
                         type="button"
                         variant="ghost"
                         onClick={() => removeModule(module.id)}
-                        className="cursor-btn-hover focus-warm transition-all duration-150"
-                        style={{ color: "#cf2d56" }}
+                        className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                         aria-label={`Remove module ${moduleIndex + 1}`}
                       >
                         <Trash className="h-4 w-4" />
@@ -645,22 +571,13 @@ export default function EditCoursePage() {
                         {module.lessons.map((lesson) => (
                           <div
                             key={lesson.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border"
-                            style={{
-                              backgroundColor: "#ebeae5",
-                              borderColor: "rgba(38, 37, 30, 0.1)",
-                            }}
+                            className="flex items-center gap-3 p-3 rounded-lg border bg-surface-300 border-border/10"
                           >
                             <SplitVerticalIcon
-                              className="h-4 w-4 cursor-move"
-                              style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                              className="h-4 w-4 cursor-move text-muted-foreground"
                             />
                             <div
-                              className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape"
-                              style={{
-                                backgroundColor: "#f7f7f4",
-                                color: "#26251e",
-                              }}
+                              className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape bg-surface-100 text-foreground"
                             >
                               {getLessonIcon(lesson.type)}
                               {getLessonTypeLabel(lesson.type)}
@@ -675,12 +592,7 @@ export default function EditCoursePage() {
                                     event.target.value
                                   )
                                 }
-                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150"
-                                style={{
-                                  backgroundColor: "#f7f7f4",
-                                  borderColor: "rgba(38, 37, 30, 0.1)",
-                                  color: "#26251e",
-                                }}
+                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                               />
                               <input
                                 value={lesson.duration || ""}
@@ -692,20 +604,14 @@ export default function EditCoursePage() {
                                   )
                                 }
                                 placeholder="Duration"
-                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150"
-                                style={{
-                                  backgroundColor: "#f7f7f4",
-                                  borderColor: "rgba(38, 37, 30, 0.1)",
-                                  color: "#26251e",
-                                }}
+                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                               />
                             </div>
                             <Button
                               type="button"
                               variant="ghost"
                               onClick={() => removeLesson(module.id, lesson.id)}
-                              className="cursor-btn-hover focus-warm transition-all duration-150"
-                              style={{ color: "#cf2d56" }}
+                              className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                               aria-label={`Remove ${lesson.title}`}
                             >
                               <X className="h-4 w-4" />
@@ -719,11 +625,7 @@ export default function EditCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "video")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <Video className="h-4 w-4" />
                         Add Video
@@ -731,11 +633,7 @@ export default function EditCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "text")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <FileText className="h-4 w-4" />
                         Add Reading
@@ -743,11 +641,7 @@ export default function EditCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "quiz")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <Check className="h-4 w-4" />
                         Add Quiz
@@ -755,11 +649,7 @@ export default function EditCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "code")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <Code className="h-4 w-4" />
                         Add Exercise
@@ -777,22 +667,13 @@ export default function EditCoursePage() {
             type="button"
             variant="outline"
             onClick={() => window.history.back()}
-            className="cursor-btn-hover focus-warm transition-all duration-150"
-            style={{
-              backgroundColor: "#f7f7f4",
-              borderColor: "rgba(38, 37, 30, 0.1)",
-              color: "#26251e",
-            }}
+            className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            className="cursor-btn-hover focus-warm transition-all duration-150"
-            style={{
-              backgroundColor: "#ebeae5",
-              color: "#26251e",
-            }}
+            className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
           >
             Save Changes
           </Button>

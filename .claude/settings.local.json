@@ -4,7 +4,9 @@
       "Bash(pnpm add *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(grep -n \"#[0-9a-fA-F]\\\\{3,6\\\\}\" /home/isaac_s/Desktop/otto/apps/dashboard/app/quizzes/create/page.tsx)",
+      "Bash(pnpm --filter dashboard build)"
     ]
   }
 }

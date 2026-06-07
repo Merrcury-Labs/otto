@@ -25,17 +25,13 @@ export function QuizLessonFields({
     <>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium" style={{ color: "#26251e" }}>
+          <label className="text-sm font-medium text-foreground">
             Questions ({questions.length})
           </label>
           <button
             type="button"
             onClick={onAddQuestion}
-            className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-            style={{
-              backgroundColor: "#e6e5e0",
-              color: "#26251e",
-            }}
+            className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
           >
             <Plus className="h-4 w-4" />
             Add Question
@@ -56,22 +52,18 @@ export function QuizLessonFields({
           </div>
         ) : (
           <div
-            className="text-center py-8 border-2 border-dashed rounded-lg"
-            style={{ borderColor: "rgba(38, 37, 30, 0.2)" }}
+            className="text-center py-8 border-2 border-dashed rounded-lg border-border/20"
           >
             <Check
-              className="h-8 w-8 mx-auto mb-2"
-              style={{ color: "rgba(38, 37, 30, 0.4)" }}
+              className="h-8 w-8 mx-auto mb-2 text-muted-foreground"
             />
             <div
-              className="text-sm font-medium mb-1"
-              style={{ color: "#26251e" }}
+              className="text-sm font-medium mb-1 text-foreground"
             >
               No questions yet
             </div>
             <div
-              className="text-xs"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="text-xs text-muted-foreground"
             >
               Click &quot;Add Question&quot; to create your first {getQuizTypeLabel(quizType)} question
             </div>

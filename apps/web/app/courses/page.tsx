@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { courses } from "@/lib/data"
 
-const categories = ["All", ...Array.from(new Set(courses.map(c => c.category)))]
+const publishedCourses = courses.filter((course) => course.status === "published")
+const categories = ["All", ...Array.from(new Set(publishedCourses.map(c => c.category)))]
 const levels = ["All", "Beginner", "Intermediate", "Advanced"]
 
 export default function CoursesPage() {
@@ -25,7 +26,7 @@ export default function CoursesPage() {
     const [selectedLevel, setSelectedLevel] = React.useState("All")
 
     const filteredCourses = React.useMemo(() => {
-        return courses.filter(course => {
+        return publishedCourses.filter(course => {
             const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 course.description.toLowerCase().includes(searchQuery.toLowerCase())
             const matchesCategory = selectedCategory === "All" || course.category === selectedCategory
@@ -206,4 +207,3 @@ export default function CoursesPage() {
         </div>
     )
 }
-
