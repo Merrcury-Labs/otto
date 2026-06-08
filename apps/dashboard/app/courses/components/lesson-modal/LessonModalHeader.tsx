@@ -15,25 +15,23 @@ export function LessonModalHeader({
 
   return (
     <div
-      className="flex items-center justify-between p-6 border-b"
-      style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}
+      className="flex items-center justify-between p-6 border-b border-border/10"
     >
       <div>
         <h2
-          className="text-xl font-normal"
-          style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+          className="text-xl font-normal text-foreground"
+          style={{ letterSpacing: "-0.11px" }}
         >
           Add {lessonLabel}
         </h2>
-        <p className="text-sm mt-1" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+        <p className="text-sm mt-1 text-muted-foreground">
           {lessonLabel.toLowerCase()} details
         </p>
       </div>
       <Button
         variant="ghost"
         onClick={onClose}
-        className="cursor-btn-hover focus-warm transition-all duration-150"
-        style={{ color: "#26251e" }}
+        className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
       >
         <X className="h-5 w-5" />
       </Button>

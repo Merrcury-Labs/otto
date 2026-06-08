@@ -1,31 +1,83 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import {
     BookOpen,
     Clock,
-    GraduationCap,
     PlayCircle,
     Search,
-    SlidersHorizontal,
     Star,
-    Trophy,
     X
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { courses } from "@/lib/data"
+import { graphqlFetch } from "@/lib/graphql/client"
+import { publishedCoursesQuery } from "@/lib/graphql/courses"
 
-const categories = ["All", ...Array.from(new Set(courses.map(c => c.category)))]
+type Course = {
+    id: number | string
+    title: string
+    description: string
+    instructor: string
+    duration: string
+    level: string
+    category: string
+    status: string
+    progress: number
+    rating: number
+    lessons: number
+    image: string
+}
+
+type CoursesGraphqlResponse = {
+    data?: {
+        courses: Course[]
+    }
+    errors?: Array<{ message: string }>
+}
+
+const initialPublishedCourses = courses.filter((course) => course.status === "published")
 const levels = ["All", "Beginner", "Intermediate", "Advanced"]
 
 export default function CoursesPage() {
+    const [courseList, setCourseList] = React.useState<Course[]>(initialPublishedCourses)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [selectedCategory, setSelectedCategory] = React.useState("All")
     const [selectedLevel, setSelectedLevel] = React.useState("All")
 
+    React.useEffect(() => {
+        let isMounted = true
+
+        async function loadPublishedCourses() {
+            const result = await graphqlFetch<NonNullable<CoursesGraphqlResponse["data"]>>({
+                query: publishedCoursesQuery,
+            })
+
+            if (isMounted) {
+                setCourseList(result.courses)
+            }
+        }
+
+        loadPublishedCourses().catch(() => {
+            if (isMounted) {
+                setCourseList(initialPublishedCourses)
+            }
+        })
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    const categories = React.useMemo(
+        () => ["All", ...Array.from(new Set(courseList.map(c => c.category)))],
+        [courseList]
+    )
+
     const filteredCourses = React.useMemo(() => {
-        return courses.filter(course => {
+        return courseList.filter(course => {
             const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 course.description.toLowerCase().includes(searchQuery.toLowerCase())
             const matchesCategory = selectedCategory === "All" || course.category === selectedCategory
@@ -33,7 +85,7 @@ export default function CoursesPage() {
 
             return matchesSearch && matchesCategory && matchesLevel
         })
-    }, [searchQuery, selectedCategory, selectedLevel])
+    }, [courseList, searchQuery, selectedCategory, selectedLevel])
 
     const clearFilters = () => {
         setSearchQuery("")
@@ -110,9 +162,11 @@ export default function CoursesPage() {
                         >
                             {/* Image Section */}
                             <div className="relative aspect-video overflow-hidden">
-                                <img
+                                <Image
                                     src={course.image}
                                     alt={course.title}
+                                    fill
+                                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                                     className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 />
                                 <div className="absolute left-2 top-2">
@@ -192,7 +246,7 @@ export default function CoursesPage() {
                     </div>
                     <h3 className="text-xl font-bold">No courses found</h3>
                     <p className="mt-2 text-muted-foreground">
-                        Try adjusting your search or filters to find what you're looking for.
+                        Try adjusting your search or filters to find what you&apos;re looking for.
                     </p>
                     <Button
                         variant="link"
@@ -206,4 +260,3 @@ export default function CoursesPage() {
         </div>
     )
 }
-

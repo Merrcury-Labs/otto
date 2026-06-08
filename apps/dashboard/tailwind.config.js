@@ -66,6 +66,19 @@ export default {
           'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
           border: 'hsl(var(--sidebar-border))',
           ring: 'hsl(var(--sidebar-ring))'
+        },
+        surface: {
+          '100': 'hsl(var(--surface-100))',
+          '200': 'hsl(var(--surface-200))',
+          '300': 'hsl(var(--surface-300))',
+          '400': 'hsl(var(--surface-400))',
+          '500': 'hsl(var(--surface-500))',
+        },
+        brand: {
+          accent: 'hsl(var(--color-accent))',
+          error: 'hsl(var(--color-error))',
+          success: 'hsl(var(--success))',
+          gold: 'hsl(var(--color-gold))',
         }
       }
     }

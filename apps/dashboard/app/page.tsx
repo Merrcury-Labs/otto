@@ -124,8 +124,8 @@ export default function Dashboard() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      published: "bg-[#1f8a65] text-white",
-      draft: "bg-[#c08532] text-white",
+      published: "bg-brand-success text-white",
+      draft: "bg-brand-gold text-white",
       archived: "bg-muted text-muted-foreground",
     };
 
@@ -143,10 +143,10 @@ export default function Dashboard() {
   return (
     <div className="space-y-6 px-4">
       <div>
-        <h1 className="text-3xl font-normal tracking-tight" style={{ color: '#26251e', letterSpacing: '-0.11px' }}>
+        <h1 className="text-3xl font-normal tracking-tight text-foreground" style={{ letterSpacing: '-0.11px' }}>
           Dashboard
         </h1>
-        <p className="text-base" style={{ color: 'rgba(38, 37, 30, 0.55)' }}>
+        <p className="text-base text-muted-foreground">
           Manage your courses and track your teaching progress.
         </p>
       </div>
@@ -156,26 +156,25 @@ export default function Dashboard() {
         {stats.map((stat) => (
           <Card
             key={stat.title}
-            className="cursor-card hover:cursor-card-hover transition-all duration-200"
-            style={{ backgroundColor: '#e6e5e0', borderRadius: '8px' }}
+            className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle
-                className="text-sm font-medium"
-                style={{ color: '#26251e', letterSpacing: '-0.11px' }}
+                className="text-sm font-medium text-foreground"
+                style={{ letterSpacing: '-0.11px' }}
               >
                 {stat.title}
               </CardTitle>
-              <stat.icon className="h-4 w-4" style={{ color: 'rgba(38, 37, 30, 0.55)' }} />
+              <stat.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div
-                className="text-2xl font-normal"
-                style={{ color: '#26251e', letterSpacing: '-0.11px' }}
+                className="text-2xl font-normal text-foreground"
+                style={{ letterSpacing: '-0.11px' }}
               >
                 {stat.value}
               </div>
-              <p className="text-xs" style={{ color: 'rgba(38, 37, 30, 0.55)' }}>
+              <p className="text-xs text-muted-foreground">
                 {stat.change}
               </p>
             </CardContent>
@@ -185,29 +184,23 @@ export default function Dashboard() {
 
       {/* Recent Courses Table */}
       <Card
-        className="cursor-card hover:cursor-card-hover transition-all duration-200"
-        style={{ backgroundColor: '#e6e5e0', borderRadius: '8px' }}
+        className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
       >
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle
-              className="text-xl font-normal"
-              style={{ color: '#26251e', letterSpacing: '-0.11px' }}
+              className="text-xl font-normal text-foreground"
+              style={{ letterSpacing: '-0.11px' }}
             >
               Recent Courses
             </CardTitle>
-            <CardDescription style={{ color: 'rgba(38, 37, 30, 0.55)' }}>
+            <CardDescription className="text-muted-foreground">
               Overview of your recently created and updated courses
             </CardDescription>
           </div>
           <button
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium cursor-btn-hover focus-warm transition-all duration-150"
-            style={{
-              backgroundColor: '#ebeae5',
-              color: '#26251e',
-              borderRadius: '8px',
-              letterSpacing: 'normal',
-            }}
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground rounded-lg"
+            style={{ letterSpacing: 'normal' }}
           >
             <Plus className="h-4 w-4" />
             Create Course
@@ -216,44 +209,38 @@ export default function Dashboard() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow style={{ borderBottom: '1px solid rgba(38, 37, 30, 0.1)' }}>
+              <TableRow className="border-b border-border/10">
                 <TableHead
-                  className="font-medium"
-                  style={{ color: '#26251e' }}
+                  className="font-medium text-foreground"
                 >
                   Course Title
                 </TableHead>
                 <TableHead
-                  className="font-medium"
-                  style={{ color: '#26251e' }}
+                  className="font-medium text-foreground"
                 >
                   Status
                 </TableHead>
                 <TableHead
-                  className="font-medium"
-                  style={{ color: '#26251e' }}
+                  className="font-medium text-foreground"
                 >
                   Quizzes
                 </TableHead>
                 <TableHead
-                  className="font-medium"
-                  style={{ color: '#26251e' }}
+                  className="font-medium text-foreground"
                 >
                   Students
                 </TableHead>
                 <TableHead
-                  className="font-medium"
-                  style={{ color: '#26251e' }}
+                  className="font-medium text-foreground"
                 >
                   Created
                 </TableHead>
                 <TableHead
-                  className="font-medium"
-                  style={{ color: '#26251e' }}
+                  className="font-medium text-foreground"
                 >
                   Last Updated
                 </TableHead>
-                <TableHead className="text-right font-medium" style={{ color: '#26251e' }}>
+                <TableHead className="text-right font-medium text-foreground">
                   Actions
                 </TableHead>
               </TableRow>
@@ -262,47 +249,42 @@ export default function Dashboard() {
               {recentCourses.map((course) => (
                 <TableRow
                   key={course.id}
-                  style={{ borderBottom: '1px solid rgba(38, 37, 30, 0.1)' }}
-                  className="hover:bg-[#ebeae5] transition-colors duration-150"
+                  className="border-b border-border/10 hover:bg-accent transition-colors duration-150"
                 >
                   <TableCell
-                    className="font-medium"
-                    style={{ color: '#26251e' }}
+                    className="font-medium text-foreground"
                   >
                     {course.title}
                   </TableCell>
                   <TableCell>{getStatusBadge(course.status)}</TableCell>
-                  <TableCell style={{ color: '#26251e' }}>
+                  <TableCell className="text-foreground">
                     {course.quizzes}
                   </TableCell>
-                  <TableCell style={{ color: '#26251e' }}>
+                  <TableCell className="text-foreground">
                     {course.students.toLocaleString()}
                   </TableCell>
-                  <TableCell style={{ color: '#26251e' }}>
+                  <TableCell className="text-foreground">
                     {course.created}
                   </TableCell>
-                  <TableCell style={{ color: 'rgba(38, 37, 30, 0.55)' }}>
+                  <TableCell className="text-muted-foreground">
                     {course.lastUpdated}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
-                        style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                        className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md text-muted-foreground"
                         title="View"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <button
-                        className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
-                        style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                        className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md text-muted-foreground"
                         title="Edit"
                       >
                         <PencilSimple className="h-4 w-4" />
                       </button>
                       <button
-                        className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
-                        style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                        className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md text-muted-foreground"
                         title="Delete"
                       >
                         <Trash className="h-4 w-4" />
@@ -319,70 +301,63 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card
-          className="cursor-card hover:cursor-card-hover transition-all duration-200"
-          style={{ backgroundColor: '#e6e5e0', borderRadius: '8px' }}
+          className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
             <CardTitle
-              className="text-lg font-normal"
-              style={{ color: '#26251e', letterSpacing: '-0.11px' }}
+              className="text-lg font-normal text-foreground"
+              style={{ letterSpacing: '-0.11px' }}
             >
               Quick Actions
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-[#ebeae5]">
+            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-accent">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ backgroundColor: '#f7f7f4', color: '#26251e' }}
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100 text-foreground"
               >
                 <Plus className="h-5 w-5" />
               </div>
               <div>
-                <div className="font-medium" style={{ color: '#26251e' }}>
+                <div className="font-medium text-foreground">
                   Create New Course
                 </div>
                 <div
-                  className="text-sm"
-                  style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                  className="text-sm text-muted-foreground"
                 >
                   Start building a new course
                 </div>
               </div>
             </button>
-            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-[#ebeae5]">
+            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-accent">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ backgroundColor: '#f7f7f4', color: '#26251e' }}
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100 text-foreground"
               >
                 <FileText className="h-5 w-5" />
               </div>
               <div>
-                <div className="font-medium" style={{ color: '#26251e' }}>
+                <div className="font-medium text-foreground">
                   Create Quiz
                 </div>
                 <div
-                  className="text-sm"
-                  style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                  className="text-sm text-muted-foreground"
                 >
                   Add quizzes to existing courses
                 </div>
               </div>
             </button>
-            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-[#ebeae5]">
+            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-accent">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ backgroundColor: '#f7f7f4', color: '#26251e' }}
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100 text-foreground"
               >
                 <Users className="h-5 w-5" />
               </div>
               <div>
-                <div className="font-medium" style={{ color: '#26251e' }}>
+                <div className="font-medium text-foreground">
                   Manage Students
                 </div>
                 <div
-                  className="text-sm"
-                  style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                  className="text-sm text-muted-foreground"
                 >
                   View and manage enrolled students
                 </div>
@@ -393,17 +368,16 @@ export default function Dashboard() {
 
         {/* Course Progress */}
         <Card
-          className="cursor-card hover:cursor-card-hover transition-all duration-200"
-          style={{ backgroundColor: '#e6e5e0', borderRadius: '8px' }}
+          className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
             <CardTitle
-              className="text-lg font-normal"
-              style={{ color: '#26251e', letterSpacing: '-0.11px' }}
+              className="text-lg font-normal text-foreground"
+              style={{ letterSpacing: '-0.11px' }}
             >
               Course Progress
             </CardTitle>
-            <CardDescription style={{ color: 'rgba(38, 37, 30, 0.55)' }}>
+            <CardDescription className="text-muted-foreground">
               Completion rates by course
             </CardDescription>
           </CardHeader>
@@ -412,27 +386,23 @@ export default function Dashboard() {
               <div key={course.id} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div
-                    className="text-sm font-medium"
-                    style={{ color: '#26251e' }}
+                    className="text-sm font-medium text-foreground"
                   >
                     {course.title}
                   </div>
                   <div
-                    className="text-sm"
-                    style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                    className="text-sm text-muted-foreground"
                   >
                     {Math.floor(Math.random() * 30 + 70)}% complete
                   </div>
                 </div>
                 <div
-                  className="h-2 w-full rounded-full"
-                  style={{ backgroundColor: '#f7f7f4' }}
+                  className="h-2 w-full rounded-full bg-surface-100"
                 >
                   <div
-                    className="h-2 rounded-full transition-all duration-200"
+                    className="h-2 rounded-full transition-all duration-200 bg-primary"
                     style={{
                       width: `${Math.floor(Math.random() * 30 + 70)}%`,
-                      backgroundColor: '#26251e',
                     }}
                   />
                 </div>
@@ -443,17 +413,16 @@ export default function Dashboard() {
 
         {/* Weekly Activity */}
         <Card
-          className="cursor-card hover:cursor-card-hover transition-all duration-200"
-          style={{ backgroundColor: '#e6e5e0', borderRadius: '8px' }}
+          className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
             <CardTitle
-              className="text-lg font-normal"
-              style={{ color: '#26251e', letterSpacing: '-0.11px' }}
+              className="text-lg font-normal text-foreground"
+              style={{ letterSpacing: '-0.11px' }}
             >
               Weekly Activity
             </CardTitle>
-            <CardDescription style={{ color: 'rgba(38, 37, 30, 0.55)' }}>
+            <CardDescription className="text-muted-foreground">
               Student engagement this week
             </CardDescription>
           </CardHeader>
@@ -468,15 +437,13 @@ export default function Dashboard() {
                       className="flex flex-col items-center gap-2 flex-1"
                     >
                       <div
-                        className="w-full rounded-t-lg transition-all duration-200 hover:opacity-80"
+                        className="w-full rounded-t-lg transition-all duration-200 hover:opacity-80 bg-foreground/20"
                         style={{
                           height: `${heights[index]}%`,
-                          backgroundColor: 'rgba(38, 37, 30, 0.2)',
                         }}
                       />
                       <div
-                        className="text-xs"
-                        style={{ color: 'rgba(38, 37, 30, 0.55)' }}
+                        className="text-xs text-muted-foreground"
                       >
                         {day}
                       </div>

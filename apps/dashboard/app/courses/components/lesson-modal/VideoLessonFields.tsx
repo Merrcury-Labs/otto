@@ -12,8 +12,7 @@ export function VideoLessonFields({
   return (
     <div>
       <label
-        className="block text-sm font-medium mb-2"
-        style={{ color: "#26251e" }}
+        className="block text-sm font-medium mb-2 text-foreground"
       >
         Video URL *
       </label>
@@ -22,15 +21,10 @@ export function VideoLessonFields({
         value={lessonFormData.url || ""}
         onChange={(e) => onUrlChange(e.target.value)}
         placeholder="https://youtube.com/watch?v=..."
-        className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-        style={{
-          backgroundColor: "#f7f7f4",
-          borderColor: "rgba(38, 37, 30, 0.1)",
-          color: "#26251e",
-        }}
+        className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
         required
       />
-      <p className="text-xs mt-2" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+      <p className="text-xs mt-2 text-muted-foreground">
         Paste YouTube, Vimeo, or any video hosting platform link
       </p>
     </div>

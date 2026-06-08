@@ -95,13 +95,11 @@ export default function LessonModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/20"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-lg shadow-2xl"
-        style={{ backgroundColor: "#e6e5e0" }}
+        className="w-full max-w-lg rounded-lg shadow-2xl bg-card"
         onClick={(e) => e.stopPropagation()}
       >
         <LessonModalHeader lessonType={lessonType} onClose={onClose} />

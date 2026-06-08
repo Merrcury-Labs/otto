@@ -19,8 +19,7 @@ function QuestionHeader({
     <div className="flex items-start justify-between mb-3">
       <div className="flex-1">
         <div
-          className="text-xs font-medium mb-1"
-          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+          className="text-xs font-medium mb-1 text-muted-foreground"
         >
           Question {index + 1}
         </div>
@@ -33,20 +32,14 @@ function QuestionHeader({
             })
           }
           placeholder="Enter your question..."
-          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-          style={{
-            backgroundColor: "#e6e5e0",
-            borderColor: "rgba(38, 37, 30, 0.1)",
-            color: "#26251e",
-          }}
+          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
         />
       </div>
       <Button
         type="button"
         variant="ghost"
         onClick={() => onRemove(question.id)}
-        className="cursor-btn-hover focus-warm transition-all duration-150"
-        style={{ color: "#cf2d56" }}
+        className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
       >
         <Trash className="h-4 w-4" />
       </Button>
@@ -61,8 +54,7 @@ function HintField({
   return (
     <div>
       <div
-        className="text-xs font-medium mb-1"
-        style={{ color: "rgba(38, 37, 30, 0.55)" }}
+        className="text-xs font-medium mb-1 text-muted-foreground"
       >
         Hint (Optional)
       </div>
@@ -75,12 +67,7 @@ function HintField({
           })
         }
         placeholder="Add a hint for students..."
-        className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-        style={{
-          backgroundColor: "#e6e5e0",
-          borderColor: "rgba(38, 37, 30, 0.1)",
-          color: "#26251e",
-        }}
+        className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
       />
     </div>
   );
@@ -95,8 +82,7 @@ function MultipleChoiceQuestion(props: QuizQuestionCardProps) {
 
       <div className="space-y-2 mb-3">
         <div
-          className="text-xs font-medium"
-          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+          className="text-xs font-medium text-muted-foreground"
         >
           Answer Options
         </div>
@@ -111,15 +97,9 @@ function MultipleChoiceQuestion(props: QuizQuestionCardProps) {
               }
               className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
                 question.correctAnswer === optionIndex
-                  ? "bg-[#26251e] text-white"
-                  : "bg-[#e6e5e0] text-[#26251e] border"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-foreground border-border/20"
               }`}
-              style={{
-                borderColor:
-                  question.correctAnswer === optionIndex
-                    ? "transparent"
-                    : "rgba(38, 37, 30, 0.2)",
-              }}
             >
               {question.correctAnswer === optionIndex && (
                 <Check className="h-3 w-3" />
@@ -136,12 +116,7 @@ function MultipleChoiceQuestion(props: QuizQuestionCardProps) {
                 });
               }}
               placeholder={`Option ${optionIndex + 1}`}
-              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
             />
           </div>
         ))}
@@ -161,8 +136,7 @@ function DragDropQuestion(props: QuizQuestionCardProps) {
 
       <div className="mb-3">
         <div
-          className="text-xs font-medium mb-2"
-          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+          className="text-xs font-medium mb-2 text-muted-foreground"
         >
           Items to Match/Order
         </div>
@@ -170,17 +144,11 @@ function DragDropQuestion(props: QuizQuestionCardProps) {
           {question.options.map((option, optionIndex) => (
             <div
               key={optionIndex}
-              className={`p-3 rounded-md border-2 cursor-move ${
+              className={`p-3 rounded-md cursor-move ${
                 question.correctItems?.includes(optionIndex)
-                  ? "border-[#26251e]"
-                  : "border-transparent"
+                  ? "bg-surface-300 border-foreground"
+                  : "bg-card border-border/10"
               }`}
-              style={{
-                backgroundColor: "#e6e5e0",
-                borderColor: question.correctItems?.includes(optionIndex)
-                  ? "#26251e"
-                  : "rgba(38, 37, 30, 0.1)",
-              }}
             >
               <div className="flex items-center gap-2">
                 <ArrowsLeftRight className="h-4 w-4" />
@@ -195,12 +163,7 @@ function DragDropQuestion(props: QuizQuestionCardProps) {
                     });
                   }}
                   placeholder={`Item ${optionIndex + 1}`}
-                  className="flex-1 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#ebeae5",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                    color: "#26251e",
-                  }}
+                  className="flex-1 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 border border-border/10 text-foreground"
                 />
               </div>
             </div>
@@ -222,8 +185,7 @@ function CheckboxQuestion(props: QuizQuestionCardProps) {
 
       <div className="space-y-2 mb-3">
         <div
-          className="text-xs font-medium"
-          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+          className="text-xs font-medium text-muted-foreground"
         >
           Answer Options (Select all correct)
         </div>
@@ -246,16 +208,9 @@ function CheckboxQuestion(props: QuizQuestionCardProps) {
               className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
                 Array.isArray(question.correctAnswer) &&
                 question.correctAnswer.includes(optionIndex)
-                  ? "bg-[#26251e] text-white border-[#26251e]"
-                  : "bg-[#e6e5e0] text-[#26251e] border"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-foreground border-border/20"
               }`}
-              style={{
-                borderColor:
-                  Array.isArray(question.correctAnswer) &&
-                  question.correctAnswer.includes(optionIndex)
-                    ? "#26251e"
-                    : "rgba(38, 37, 30, 0.2)",
-              }}
             >
               {Array.isArray(question.correctAnswer) &&
                 question.correctAnswer.includes(optionIndex) && (
@@ -273,12 +228,7 @@ function CheckboxQuestion(props: QuizQuestionCardProps) {
                 });
               }}
               placeholder={`Option ${optionIndex + 1}`}
-              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#e6e5e0",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
             />
           </div>
         ))}
@@ -298,8 +248,7 @@ function TrueFalseQuestion(props: QuizQuestionCardProps) {
 
       <div className="mb-3">
         <div
-          className="text-xs font-medium mb-2"
-          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+          className="text-xs font-medium mb-2 text-muted-foreground"
         >
           Correct Answer
         </div>
@@ -313,15 +262,9 @@ function TrueFalseQuestion(props: QuizQuestionCardProps) {
             }
             className={`flex-1 p-4 rounded-lg cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
               question.answer === "True"
-                ? "bg-[#26251e] text-white border-[#26251e]"
-                : "bg-[#e6e5e0] text-[#26251e] border"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-foreground border-border/20"
             }`}
-            style={{
-              borderColor:
-                question.answer === "True"
-                  ? "#26251e"
-                  : "rgba(38, 37, 30, 0.2)",
-            }}
           >
             <Check className="h-4 w-4 mr-2" />
             True
@@ -335,15 +278,9 @@ function TrueFalseQuestion(props: QuizQuestionCardProps) {
             }
             className={`flex-1 p-4 rounded-lg cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
               question.answer === "False"
-                ? "bg-[#26251e] text-white border-[#26251e]"
-                : "bg-[#e6e5e0] text-[#26251e] border"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card text-foreground border-border/20"
             }`}
-            style={{
-              borderColor:
-                question.answer === "False"
-                  ? "#26251e"
-                  : "rgba(38, 37, 30, 0.2)",
-            }}
           >
             <X className="h-4 w-4 mr-2" />
             False
@@ -361,11 +298,7 @@ export function QuizQuestionCard(props: QuizQuestionCardProps) {
 
   return (
     <div
-      className="border rounded-lg p-4"
-      style={{
-        backgroundColor: "#f7f7f4",
-        borderColor: "rgba(38, 37, 30, 0.1)",
-      }}
+      className="border rounded-lg p-4 bg-surface-100 border-border/10"
     >
       {question.type === "multiple-choice" && (
         <MultipleChoiceQuestion {...props} />

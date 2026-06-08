@@ -35,6 +35,9 @@ importers:
       next:
         specifier: 16.1.5
         version: 16.1.5(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react:
         specifier: ^19.2.0
         version: 19.2.0
@@ -200,6 +203,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      graphql:
+        specifier: ^16.13.2
+        version: 16.13.2
       lucide-react:
         specifier: ^0.575.0
         version: 0.575.0(react@19.2.0)

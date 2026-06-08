@@ -4,121 +4,124 @@
 
 @layer base {
   :root {
-    /* Cursor-inspired warm minimalism theme */
-    --background: #f2f1ed; /* Warm cream */
-    --foreground: #26251e; /* Warm near-black with yellow undertone */
+    /* Cursor-inspired warm minimalism theme — HSL channel values */
+    --background: 37 16% 94%;
+    --foreground: 28 12% 11%;
 
     /* Surface scale */
-    --surface-100: #f7f7f4;
-    --surface-200: #f2f1ed;
-    --surface-300: #ebeae5;
-    --surface-400: #e6e5e0;
-    --surface-500: #e1e0db;
+    --surface-100: 60 10% 97%;
+    --surface-200: 37 16% 94%;
+    --surface-300: 38 12% 92%;
+    --surface-400: 38 12% 90%;
+    --surface-500: 38 12% 88%;
 
     /* Card & container colors */
-    --card: #e6e5e0;
-    --card-foreground: #26251e;
-    --popover: #f2f1ed;
-    --popover-foreground: #26251e;
+    --card: 38 12% 90%;
+    --card-foreground: 28 12% 11%;
+    --popover: 37 16% 94%;
+    --popover-foreground: 28 12% 11%;
 
     /* Primary brand colors */
-    --primary: #26251e; /* Warm dark for primary text/buttons */
-    --primary-foreground: #f2f1ed; /* Cream for text on primary */
+    --primary: 28 12% 11%;
+    --primary-foreground: 37 16% 94%;
 
     /* Secondary colors */
-    --secondary: #e6e5e0;
-    --secondary-foreground: #26251e;
+    --secondary: 38 12% 90%;
+    --secondary-foreground: 28 12% 11%;
 
     /* Muted text colors */
-    --muted: #f7f7f4;
-    --muted-foreground: rgba(38, 37, 30, 0.55); /* 55% warm brown */
+    --muted: 60 10% 97%;
+    --muted-foreground: 28 12% 40%;
 
     /* Accent colors */
-    --accent: #f2f1ed;
-    --accent-foreground: #26251e;
+    --accent: 37 16% 94%;
+    --accent-foreground: 28 12% 11%;
 
     /* Semantic colors */
-    --destructive: #cf2d56; /* Warm crimson-rose */
-    --destructive-foreground: #f2f1ed;
-    --success: #1f8a65; /* Muted teal-green */
+    --destructive: 348 74% 51%;
+    --destructive-foreground: 37 16% 94%;
+    --success: 171 65% 33%;
 
-    /* Border colors - using rgba fallback for compatibility */
-    --border: rgba(38, 37, 30, 0.1); /* 10% warm brown */
-    --border-primary: rgba(38, 37, 30, 0.1);
-    --border-medium: rgba(38, 37, 30, 0.2);
-    --border-strong: rgba(38, 37, 30, 0.55);
+    /* Border colors — store full-opacity HSL, use Tailwind alpha modifier (e.g. border-border/10) */
+    --border: 28 12% 80%;
+    --border-primary: 28 12% 80%;
+    --border-medium: 28 12% 60%;
+    --border-strong: 28 12% 40%;
 
     /* Input colors */
-    --input: rgba(38, 37, 30, 0.1);
-    --ring: rgba(38, 37, 30, 0.55);
+    --input: 28 12% 80%;
+    --ring: 28 12% 40%;
 
     /* Sidebar specific colors */
-    --sidebar: #e6e5e0;
-    --sidebar-foreground: #26251e;
-    --sidebar-primary: #26251e;
-    --sidebar-primary-foreground: #f2f1ed;
-    --sidebar-accent: #ebeae5;
-    --sidebar-accent-foreground: #26251e;
-    --sidebar-border: rgba(38, 37, 30, 0.1);
-    --sidebar-ring: rgba(38, 37, 30, 0.55);
+    --sidebar: 38 12% 90%;
+    --sidebar-foreground: 28 12% 11%;
+    --sidebar-primary: 28 12% 11%;
+    --sidebar-primary-foreground: 37 16% 94%;
+    --sidebar-accent: 38 12% 92%;
+    --sidebar-accent-foreground: 28 12% 11%;
+    --sidebar-border: 28 12% 80%;
+    --sidebar-ring: 28 12% 40%;
 
     /* Brand accent */
-    --color-accent: #f54e00; /* Cursor orange */
-    --color-error: #cf2d56; /* Hover state */
+    --color-accent: 16 100% 48%;
+    --color-error: 348 74% 51%;
+    --color-gold: 32 64% 48%;
 
     /* Spacing & radius */
     --radius: 8px;
   }
 
   .dark {
-    --background: #26251e;
-    --foreground: #f2f1ed;
+    --background: 28 12% 8%;
+    --foreground: 37 16% 94%;
 
-    --surface-100: #2a2a25;
-    --surface-200: #26251e;
-    --surface-300: #22221d;
-    --surface-400: #1e1e1a;
-    --surface-500: #1a1a17;
+    --surface-100: 28 12% 14%;
+    --surface-200: 28 12% 8%;
+    --surface-300: 28 12% 12%;
+    --surface-400: 28 12% 12%;
+    --surface-500: 28 12% 16%;
 
-    --card: #22221d;
-    --card-foreground: #f2f1ed;
-    --popover: #26251e;
-    --popover-foreground: #f2f1ed;
+    --card: 28 12% 12%;
+    --card-foreground: 37 16% 94%;
+    --popover: 28 12% 8%;
+    --popover-foreground: 37 16% 94%;
 
-    --primary: #f2f1ed;
-    --primary-foreground: #26251e;
+    --primary: 37 16% 94%;
+    --primary-foreground: 28 12% 11%;
 
-    --secondary: #2a2a25;
-    --secondary-foreground: #f2f1ed;
+    --secondary: 28 12% 16%;
+    --secondary-foreground: 37 16% 94%;
 
-    --muted: #2a2a25;
-    --muted-foreground: rgba(242, 241, 237, 0.55);
+    --muted: 28 12% 16%;
+    --muted-foreground: 37 16% 60%;
 
-    --accent: #26251e;
-    --accent-foreground: #f2f1ed;
+    --accent: 28 12% 12%;
+    --accent-foreground: 37 16% 94%;
 
-    --destructive: #cf2d56;
-    --destructive-foreground: #f2f1ed;
+    --destructive: 348 74% 51%;
+    --destructive-foreground: 37 16% 94%;
+    --success: 171 65% 33%;
 
-    --border: rgba(242, 241, 237, 0.1);
-    --border-primary: rgba(242, 241, 237, 0.1);
-    --border-medium: rgba(242, 241, 237, 0.2);
-    --border-strong: rgba(242, 241, 237, 0.55);
+    --border: 37 16% 20%;
+    --border-primary: 37 16% 20%;
+    --border-medium: 37 16% 30%;
+    --border-strong: 37 16% 40%;
 
-    --input: rgba(242, 241, 237, 0.1);
-    --ring: rgba(242, 241, 237, 0.55);
+    --input: 37 16% 20%;
+    --ring: 16 100% 48%;
 
-    --sidebar: #22221d;
-    --sidebar-foreground: #f2f1ed;
-    --sidebar-primary: #f2f1ed;
-    --sidebar-primary-foreground: #26251e;
-    --sidebar-accent: #2a2a25;
-    --sidebar-accent-foreground: #f2f1ed;
-    --sidebar-border: rgba(242, 241, 237, 0.1);
-    --sidebar-ring: rgba(242, 241, 237, 0.55);
+    --sidebar: 28 12% 12%;
+    --sidebar-foreground: 37 16% 94%;
+    --sidebar-primary: 37 16% 94%;
+    --sidebar-primary-foreground: 28 12% 11%;
+    --sidebar-accent: 28 12% 16%;
+    --sidebar-accent-foreground: 37 16% 94%;
+    --sidebar-border: 37 16% 20%;
+    --sidebar-ring: 16 100% 48%;
 
-    --color-accent: #f54e00;
-    --color-error: #cf2d56;
+    --color-accent: 16 100% 48%;
+    --color-error: 348 74% 51%;
+    --color-gold: 32 64% 48%;
   }
 }
 
@@ -144,7 +147,7 @@
 
   /* Warm minimalism button hover - signature interaction */
   .cursor-btn-hover:hover {
-    color: var(--color-error);
+    color: var(--color-accent);
   }
 
   /* Card shadow with warm oklab-like border */

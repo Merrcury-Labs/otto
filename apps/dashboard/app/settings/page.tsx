@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   Card,
   CardContent,
@@ -15,10 +17,20 @@ import {
   Database,
   Trash,
   SignOut,
+  Sun,
+  Moon,
+  Desktop,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const settingsSections = [
     {
       id: "profile",
@@ -113,8 +125,7 @@ export default function SettingsPage() {
         {
           label: "Theme",
           value: "Light",
-          type: "select",
-          options: ["Light", "Dark", "System"],
+          type: "theme",
         },
         {
           label: "Language",
@@ -155,16 +166,22 @@ export default function SettingsPage() {
     },
   ];
 
+  const themeOptions = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+    { value: "system", label: "System", icon: Desktop },
+  ] as const;
+
   return (
     <div className="space-y-6 px-4">
       <div>
         <h1
-          className="text-3xl font-normal tracking-tight"
-          style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+          className="text-3xl font-normal tracking-tight text-foreground"
+          style={{ letterSpacing: "-0.11px" }}
         >
           Settings
         </h1>
-        <p className="text-base" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+        <p className="text-base text-muted-foreground">
           Manage your account settings and preferences
         </p>
       </div>
@@ -172,20 +189,16 @@ export default function SettingsPage() {
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Settings Navigation */}
         <div className="lg:col-span-1">
-          <Card
-            className="cursor-card"
-            style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
-          >
+          <Card className="cursor-card bg-card rounded-lg">
             <CardContent className="p-4">
               <nav className="space-y-1">
                 {settingsSections.map((section) => (
                   <button
                     key={section.id}
-                    className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left cursor-btn-hover focus-warm transition-all duration-150 hover:bg-[#ebeae5]"
-                    style={{ color: "#26251e" }}
+                    className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left cursor-btn-hover focus-warm transition-all duration-150 hover:bg-accent text-foreground"
                   >
-                    <section.icon className="h-5 w-5" style={{ color: "#26251e" }} />
-                    <span className="font-medium" style={{ color: "#26251e" }}>
+                    <section.icon className="h-5 w-5 text-foreground" />
+                    <span className="font-medium text-foreground">
                       {section.title}
                     </span>
                   </button>
@@ -195,23 +208,18 @@ export default function SettingsPage() {
           </Card>
 
           {/* Quick Actions */}
-          <Card
-            className="cursor-card mt-6"
-            style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
-          >
+          <Card className="cursor-card mt-6 bg-card rounded-lg">
             <CardContent className="p-4 space-y-2">
               <Button
                 variant="ghost"
-                className="w-full justify-start cursor-btn-hover focus-warm transition-all duration-150"
-                style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                className="w-full justify-start cursor-btn-hover focus-warm transition-all duration-150 text-muted-foreground"
               >
                 <SignOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
               <Button
                 variant="ghost"
-                className="w-full justify-start cursor-btn-hover focus-warm transition-all duration-150"
-                style={{ color: "#cf2d56" }}
+                className="w-full justify-start cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
               >
                 <Trash className="h-4 w-4 mr-2" />
                 Delete Account
@@ -225,30 +233,21 @@ export default function SettingsPage() {
           {settingsSections.map((section) => (
             <Card
               key={section.id}
-              className="cursor-card hover:cursor-card-hover transition-all duration-200"
-              style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+              className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
             >
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: "#f7f7f4" }}
-                  >
-                    <section.icon
-                      className="h-5 w-5"
-                      style={{ color: "#26251e" }}
-                    />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100">
+                    <section.icon className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <CardTitle
-                      className="text-xl font-normal"
-                      style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                      className="text-xl font-normal text-foreground"
+                      style={{ letterSpacing: "-0.11px" }}
                     >
                       {section.title}
                     </CardTitle>
-                    <CardDescription
-                      style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                    >
+                    <CardDescription className="text-muted-foreground">
                       {section.description}
                     </CardDescription>
                   </div>
@@ -259,34 +258,25 @@ export default function SettingsPage() {
                   {section.items.map((item, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between py-3 border-b"
-                      style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}
+                      className="flex items-center justify-between py-3 border-b border-border/10"
                     >
                       <div>
-                        <div
-                          className="font-medium"
-                          style={{ color: "#26251e" }}
-                        >
+                        <div className="font-medium text-foreground">
                           {item.label}
                         </div>
-                        {item.type !== "toggle" && (
-                          <div
-                            className="text-sm mt-1"
-                            style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                          >
+                        {item.type !== "toggle" && item.type !== "theme" && (
+                          <div className="text-sm mt-1 text-muted-foreground">
                             {item.value}
                           </div>
                         )}
                       </div>
                       {item.type === "toggle" && (
                         <button
-                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-btn-hover focus-warm`}
-                          style={{
-                            backgroundColor:
-                              item.value === "enabled"
-                                ? "#26251e"
-                                : "#f7f7f4",
-                          }}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-btn-hover focus-warm ${
+                            item.value === "enabled"
+                              ? "bg-primary"
+                              : "bg-surface-100"
+                          }`}
                         >
                           <span
                             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -297,14 +287,31 @@ export default function SettingsPage() {
                           />
                         </button>
                       )}
+                      {item.type === "theme" && mounted && (
+                        <div className="flex items-center gap-1 rounded-lg bg-surface-100 p-1">
+                          {themeOptions.map((opt) => {
+                            const Icon = opt.icon;
+                            const isActive = theme === opt.value;
+                            return (
+                              <button
+                                key={opt.value}
+                                onClick={() => setTheme(opt.value)}
+                                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150 cursor-btn-hover focus-warm ${
+                                  isActive
+                                    ? "bg-surface-300 text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:bg-accent"
+                                }`}
+                              >
+                                <Icon className="h-4 w-4" weight={isActive ? "fill" : "regular"} />
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                       {item.type === "select" && (
                         <select
-                          className="px-3 py-2 rounded-md text-sm cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{
-                            backgroundColor: "#f7f7f4",
-                            borderColor: "rgba(38, 37, 30, 0.1)",
-                            color: "#26251e",
-                          }}
+                          className="px-3 py-2 rounded-md text-sm cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                         >
                           {item.options?.map((option) => (
                             <option key={option} value={option}>
@@ -316,12 +323,7 @@ export default function SettingsPage() {
                       {item.type === "action" && (
                         <Button
                           variant="outline"
-                          className="cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{
-                            backgroundColor: "#f7f7f4",
-                            borderColor: "rgba(38, 37, 30, 0.1)",
-                            color: "#26251e",
-                          }}
+                          className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                         >
                           {item.label}
                         </Button>
@@ -329,19 +331,13 @@ export default function SettingsPage() {
                       {item.type === "danger" && (
                         <Button
                           variant="outline"
-                          className="cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{
-                            backgroundColor: "#cf2d56",
-                            borderColor: "#cf2d56",
-                            color: "#f2f1ed",
-                          }}
+                          className="cursor-btn-hover focus-warm transition-all duration-150 bg-destructive border-destructive text-destructive-foreground"
                         >
                           {item.label}
                         </Button>
                       )}
                       {item.type === "info" && (
-                        <button className="text-sm cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                        <button className="text-sm cursor-btn-hover focus-warm transition-all duration-150 text-muted-foreground">
                           View →
                         </button>
                       )}
@@ -356,21 +352,12 @@ export default function SettingsPage() {
           <div className="flex justify-end gap-3">
             <Button
               variant="outline"
-              className="cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#f7f7f4",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
             >
               Cancel
             </Button>
             <Button
-              className="cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#ebeae5",
-                color: "#26251e",
-              }}
+              className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
             >
               Save Changes
             </Button>

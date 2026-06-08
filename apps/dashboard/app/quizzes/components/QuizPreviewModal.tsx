@@ -76,30 +76,21 @@ function QuestionPreviewCard({
 
   return (
     <div
-      className="rounded-xl border p-5"
-      style={{
-        backgroundColor: "#f7f7f4",
-        borderColor: "rgba(38, 37, 30, 0.1)",
-      }}
+      className="rounded-xl border p-5 bg-surface-100 border-border/10"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div
-            className="mb-2 text-xs font-medium uppercase tracking-wide"
-            style={{ color: "rgba(38, 37, 30, 0.55)" }}
+            className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground"
           >
             Question {index + 1} • {questionTypeLabels[question.type]}
           </div>
-          <h3 className="text-base font-medium" style={{ color: "#26251e" }}>
+          <h3 className="text-base font-medium text-foreground">
             {question.question || `Untitled ${question.type} question`}
           </h3>
         </div>
         <div
-          className="rounded-full px-3 py-1 text-xs"
-          style={{
-            backgroundColor: "#ebeae5",
-            color: "#26251e",
-          }}
+          className="rounded-full px-3 py-1 text-xs bg-surface-300 text-foreground"
         >
           {question.points} pt
         </div>
@@ -112,25 +103,16 @@ function QuestionPreviewCard({
               key={optionIndex}
               type="button"
               onClick={() => setSelectedOption(optionIndex)}
-              className="flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150"
-              style={{
-                backgroundColor:
-                  selectedOption === optionIndex ? "#ebeae5" : "#e6e5e0",
-                borderColor:
-                  selectedOption === optionIndex
-                    ? "#26251e"
-                    : "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150 ${
+                selectedOption === optionIndex
+                  ? "bg-surface-300 border-foreground text-foreground"
+                  : "bg-card border-border/10 text-foreground"
+              }`}
             >
               <span
-                className="flex h-5 w-5 items-center justify-center rounded-full border"
-                style={{
-                  borderColor: "#26251e",
-                  backgroundColor:
-                    selectedOption === optionIndex ? "#26251e" : "transparent",
-                  color: selectedOption === optionIndex ? "#fff" : "#26251e",
-                }}
+                className={`flex h-5 w-5 items-center justify-center rounded-full border border-foreground ${
+                  selectedOption === optionIndex ? "bg-primary text-primary-foreground" : "text-foreground"
+                }`}
               >
                 {selectedOption === optionIndex && <Check className="h-3 w-3" />}
               </span>
@@ -155,20 +137,16 @@ function QuestionPreviewCard({
                       : [...currentOptions, optionIndex]
                   )
                 }
-                className="flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150"
-                style={{
-                  backgroundColor: isSelected ? "#ebeae5" : "#e6e5e0",
-                  borderColor: isSelected ? "#26251e" : "rgba(38, 37, 30, 0.1)",
-                  color: "#26251e",
-                }}
+                className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150 ${
+                  isSelected
+                    ? "bg-surface-300 border-foreground text-foreground"
+                    : "bg-card border-border/10 text-foreground"
+                }`}
               >
                 <span
-                  className="flex h-5 w-5 items-center justify-center rounded border"
-                  style={{
-                    borderColor: "#26251e",
-                    backgroundColor: isSelected ? "#26251e" : "transparent",
-                    color: isSelected ? "#fff" : "#26251e",
-                  }}
+                  className={`flex h-5 w-5 items-center justify-center rounded border border-foreground ${
+                    isSelected ? "bg-primary text-primary-foreground" : "text-foreground"
+                  }`}
                 >
                   {isSelected && <Check className="h-3 w-3" />}
                 </span>
@@ -186,16 +164,11 @@ function QuestionPreviewCard({
               key={optionIndex}
               type="button"
               onClick={() => setSelectedOption(optionIndex)}
-              className="rounded-lg border px-4 py-4 text-left transition-all duration-150"
-              style={{
-                backgroundColor:
-                  selectedOption === optionIndex ? "#ebeae5" : "#e6e5e0",
-                borderColor:
-                  selectedOption === optionIndex
-                    ? "#26251e"
-                    : "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className={`rounded-lg border px-4 py-4 text-left transition-all duration-150 ${
+                selectedOption === optionIndex
+                  ? "bg-surface-300 border-foreground text-foreground"
+                  : "bg-card border-border/10 text-foreground"
+              }`}
             >
               {option || (optionIndex === 0 ? "True" : "False")}
             </button>
@@ -206,11 +179,7 @@ function QuestionPreviewCard({
       {question.type === "drag-drop-category" && (
         <div className="space-y-4">
           <div
-            className="rounded-lg border-2 border-dashed p-4"
-            style={{
-              backgroundColor: "#e6e5e0",
-              borderColor: "rgba(38, 37, 30, 0.15)",
-            }}
+            className="rounded-lg border-2 border-dashed p-4 bg-card border-border/15"
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => {
               event.preventDefault();
@@ -219,8 +188,7 @@ function QuestionPreviewCard({
             }}
           >
             <div
-              className="mb-3 text-xs font-medium uppercase tracking-wide"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground"
             >
               Available Answers
             </div>
@@ -232,11 +200,7 @@ function QuestionPreviewCard({
                   onDragStart={(event) =>
                     event.dataTransfer.setData("text/plain", optionIndex.toString())
                   }
-                  className="flex items-center gap-2 rounded-full px-3 py-2"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    color: "#26251e",
-                  }}
+                  className="flex items-center gap-2 rounded-full px-3 py-2 bg-surface-100 text-foreground"
                 >
                   <ArrowsLeftRight className="h-4 w-4" />
                   <span className="text-sm">
@@ -251,11 +215,7 @@ function QuestionPreviewCard({
             {(question.categories || []).map((category, categoryIndex) => (
               <div
                 key={categoryIndex}
-                className="rounded-lg border p-4"
-                style={{
-                  backgroundColor: "#e6e5e0",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                }}
+                className="rounded-lg border p-4 bg-card border-border/10"
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
                   event.preventDefault();
@@ -266,8 +226,7 @@ function QuestionPreviewCard({
                 }}
               >
                 <div
-                  className="mb-3 text-sm font-medium"
-                  style={{ color: "#26251e" }}
+                  className="mb-3 text-sm font-medium text-foreground"
                 >
                   {category || `Category ${categoryIndex + 1}`}
                 </div>
@@ -279,11 +238,7 @@ function QuestionPreviewCard({
                       return (
                         <div
                           key={optionIndex}
-                          className="flex items-center justify-between rounded-md px-3 py-2"
-                          style={{
-                            backgroundColor: "#f7f7f4",
-                            color: "#26251e",
-                          }}
+                          className="flex items-center justify-between rounded-md px-3 py-2 bg-surface-100 text-foreground"
                         >
                           <span className="text-sm">
                             {question.options[optionIndex] ||
@@ -292,8 +247,7 @@ function QuestionPreviewCard({
                           <button
                             type="button"
                             onClick={() => returnItemToPool(optionIndex)}
-                            className="text-xs underline"
-                            style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                            className="text-xs underline text-muted-foreground"
                           >
                             Remove
                           </button>
@@ -312,17 +266,11 @@ function QuestionPreviewCard({
           {orderedItems.map((optionIndex, orderIndex) => (
             <div
               key={optionIndex}
-              className="flex items-center gap-3 rounded-lg border px-4 py-3"
-              style={{
-                backgroundColor: "#e6e5e0",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className="flex items-center gap-3 rounded-lg border px-4 py-3 bg-card border-border/10 text-foreground"
             >
               <DotsSixVertical className="h-4 w-4" />
               <span
-                className="flex h-6 w-6 items-center justify-center rounded-full text-xs"
-                style={{ backgroundColor: "#f7f7f4" }}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-xs bg-surface-100"
               >
                 {orderIndex + 1}
               </span>
@@ -334,12 +282,8 @@ function QuestionPreviewCard({
                   type="button"
                   disabled={orderIndex === 0}
                   onClick={() => moveOrderedItem(orderIndex, orderIndex - 1)}
-                  className="rounded px-2 py-1 text-xs"
-                  style={{
-                    backgroundColor: orderIndex === 0 ? "#ebeae5" : "#f7f7f4",
-                    color: "#26251e",
-                    opacity: orderIndex === 0 ? 0.5 : 1,
-                  }}
+                  className="rounded px-2 py-1 text-xs bg-surface-300 text-foreground"
+                  style={{ opacity: orderIndex === 0 ? 0.5 : 1 }}
                 >
                   Up
                 </button>
@@ -347,15 +291,8 @@ function QuestionPreviewCard({
                   type="button"
                   disabled={orderIndex === orderedItems.length - 1}
                   onClick={() => moveOrderedItem(orderIndex, orderIndex + 1)}
-                  className="rounded px-2 py-1 text-xs"
-                  style={{
-                    backgroundColor:
-                      orderIndex === orderedItems.length - 1
-                        ? "#ebeae5"
-                        : "#f7f7f4",
-                    color: "#26251e",
-                    opacity: orderIndex === orderedItems.length - 1 ? 0.5 : 1,
-                  }}
+                  className="rounded px-2 py-1 text-xs bg-surface-300 text-foreground"
+                  style={{ opacity: orderIndex === orderedItems.length - 1 ? 0.5 : 1 }}
                 >
                   Down
                 </button>
@@ -367,11 +304,7 @@ function QuestionPreviewCard({
 
       {question.hint && (
         <div
-          className="mt-4 rounded-md px-3 py-2 text-sm"
-          style={{
-            backgroundColor: "#ebeae5",
-            color: "rgba(38, 37, 30, 0.75)",
-          }}
+          className="mt-4 rounded-md px-3 py-2 text-sm bg-surface-300 text-muted-foreground"
         >
           Hint: {question.hint}
         </div>
@@ -394,29 +327,25 @@ export function QuizPreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/20"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-5xl overflow-hidden rounded-lg shadow-2xl"
-        style={{ backgroundColor: "#e6e5e0" }}
+        className="w-full max-w-5xl overflow-hidden rounded-lg shadow-2xl bg-card"
         onClick={(event) => event.stopPropagation()}
       >
         <div
-          className="flex items-center justify-between border-b p-6"
-          style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}
+          className="flex items-center justify-between border-b p-6 border-border/10"
         >
           <div>
             <h2
-              className="text-xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Quiz Preview
             </h2>
             <p
-              className="mt-1 text-sm"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="mt-1 text-sm text-muted-foreground"
             >
               Review the quiz as a student would see it
             </p>
@@ -425,8 +354,7 @@ export function QuizPreviewModal({
             type="button"
             variant="ghost"
             onClick={onClose}
-            className="cursor-btn-hover focus-warm transition-all duration-150"
-            style={{ color: "#26251e" }}
+            className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
             aria-label="Close quiz preview"
           >
             <X className="h-5 w-5" />
@@ -437,29 +365,23 @@ export function QuizPreviewModal({
           <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
             <div className="space-y-4">
               <div
-                className="rounded-xl border p-5"
-                style={{
-                  backgroundColor: "#f7f7f4",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                }}
+                className="rounded-xl border p-5 bg-surface-100 border-border/10"
               >
                 <div className="mb-4 flex items-start gap-3">
                   <div
-                    className="flex h-10 w-10 items-center justify-center rounded-lg"
-                    style={{ backgroundColor: "#ebeae5" }}
+                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-300"
                   >
-                    <Brain className="h-5 w-5" style={{ color: "#26251e" }} />
+                    <Brain className="h-5 w-5 text-foreground" />
                   </div>
                   <div>
                     <h3
-                      className="mb-2 text-2xl font-normal"
-                      style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                      className="mb-2 text-2xl font-normal text-foreground"
+                      style={{ letterSpacing: "-0.11px" }}
                     >
                       {quiz.title || "Untitled Quiz"}
                     </h3>
                     <p
-                      className="text-sm leading-6"
-                      style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                      className="text-sm leading-6 text-muted-foreground"
                     >
                       {quiz.description || "Your quiz description will appear here."}
                     </p>
@@ -478,12 +400,7 @@ export function QuizPreviewModal({
                   ))
                 ) : (
                   <div
-                    className="rounded-xl border p-5 text-sm"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                      color: "rgba(38, 37, 30, 0.55)",
-                    }}
+                    className="rounded-xl border p-5 text-sm bg-surface-100 border-border/10 text-muted-foreground"
                   >
                     Add questions to preview the student experience.
                   </div>
@@ -493,21 +410,15 @@ export function QuizPreviewModal({
 
             <div className="space-y-4">
               <div
-                className="rounded-xl border p-5"
-                style={{
-                  backgroundColor: "#f7f7f4",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                }}
+                className="rounded-xl border p-5 bg-surface-100 border-border/10"
               >
                 <h4
-                  className="mb-4 text-lg font-medium"
-                  style={{ color: "#26251e" }}
+                  className="mb-4 text-lg font-medium text-foreground"
                 >
                   Quiz Details
                 </h4>
                 <div
-                  className="space-y-3 text-sm"
-                  style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                  className="space-y-3 text-sm text-muted-foreground"
                 >
                   <div className="flex items-center justify-between">
                     <span>Questions</span>
@@ -529,15 +440,10 @@ export function QuizPreviewModal({
               </div>
 
               <div
-                className="rounded-xl border p-5"
-                style={{
-                  backgroundColor: "#f7f7f4",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                }}
+                className="rounded-xl border p-5 bg-surface-100 border-border/10"
               >
                 <h4
-                  className="mb-4 text-lg font-medium"
-                  style={{ color: "#26251e" }}
+                  className="mb-4 text-lg font-medium text-foreground"
                 >
                   Question Mix
                 </h4>
@@ -551,11 +457,7 @@ export function QuizPreviewModal({
                       return (
                         <div
                           key={type}
-                          className="flex items-center justify-between rounded-md px-3 py-2"
-                          style={{
-                            backgroundColor: "#ebeae5",
-                            color: "#26251e",
-                          }}
+                          className="flex items-center justify-between rounded-md px-3 py-2 bg-surface-300 text-foreground"
                         >
                           <span className="text-sm">{questionTypeLabels[type]}</span>
                           <span className="text-sm font-medium">{count}</span>

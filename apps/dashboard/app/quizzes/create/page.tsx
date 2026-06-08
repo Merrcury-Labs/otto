@@ -107,30 +107,21 @@ function QuestionPreviewCard({
 
   return (
     <div
-      className="rounded-xl border p-5"
-      style={{
-        backgroundColor: "#f7f7f4",
-        borderColor: "rgba(38, 37, 30, 0.1)",
-      }}
+      className="rounded-xl border p-5 bg-surface-100 border-border/10"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div
-            className="mb-2 text-xs font-medium uppercase tracking-wide"
-            style={{ color: "rgba(38, 37, 30, 0.55)" }}
+            className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground"
           >
             Question {index + 1}
           </div>
-          <h3 className="text-base font-medium" style={{ color: "#26251e" }}>
+          <h3 className="text-base font-medium text-foreground">
             {question.question || `Untitled ${question.type} question`}
           </h3>
         </div>
         <div
-          className="rounded-full px-3 py-1 text-xs"
-          style={{
-            backgroundColor: "#ebeae5",
-            color: "#26251e",
-          }}
+          className="rounded-full px-3 py-1 text-xs bg-surface-300 text-foreground"
         >
           {question.points} pt
         </div>
@@ -143,25 +134,18 @@ function QuestionPreviewCard({
               key={optionIndex}
               type="button"
               onClick={() => setSelectedOption(optionIndex)}
-              className="flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150"
-              style={{
-                backgroundColor:
-                  selectedOption === optionIndex ? "#ebeae5" : "#e6e5e0",
-                borderColor:
-                  selectedOption === optionIndex
-                    ? "#26251e"
-                    : "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150 ${
+                selectedOption === optionIndex
+                  ? "bg-surface-300 border-foreground text-foreground"
+                  : "bg-card border-border/10 text-foreground"
+              }`}
             >
               <span
-                className="flex h-5 w-5 items-center justify-center rounded-full border"
-                style={{
-                  borderColor: "#26251e",
-                  backgroundColor:
-                    selectedOption === optionIndex ? "#26251e" : "transparent",
-                  color: selectedOption === optionIndex ? "#fff" : "#26251e",
-                }}
+                className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                  selectedOption === optionIndex
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : "border-foreground text-foreground"
+                }`}
               >
                 {selectedOption === optionIndex && <Check className="h-3 w-3" />}
               </span>
@@ -186,20 +170,18 @@ function QuestionPreviewCard({
                       : [...currentOptions, optionIndex]
                   )
                 }
-                className="flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150"
-                style={{
-                  backgroundColor: isSelected ? "#ebeae5" : "#e6e5e0",
-                  borderColor: isSelected ? "#26251e" : "rgba(38, 37, 30, 0.1)",
-                  color: "#26251e",
-                }}
+                className={`flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-all duration-150 ${
+                  isSelected
+                    ? "bg-surface-300 border-foreground text-foreground"
+                    : "bg-card border-border/10 text-foreground"
+                }`}
               >
                 <span
-                  className="flex h-5 w-5 items-center justify-center rounded border"
-                  style={{
-                    borderColor: "#26251e",
-                    backgroundColor: isSelected ? "#26251e" : "transparent",
-                    color: isSelected ? "#fff" : "#26251e",
-                  }}
+                  className={`flex h-5 w-5 items-center justify-center rounded border ${
+                    isSelected
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-foreground text-foreground"
+                  }`}
                 >
                   {isSelected && <Check className="h-3 w-3" />}
                 </span>
@@ -217,16 +199,11 @@ function QuestionPreviewCard({
               key={optionIndex}
               type="button"
               onClick={() => setSelectedOption(optionIndex)}
-              className="rounded-lg border px-4 py-4 text-left transition-all duration-150"
-              style={{
-                backgroundColor:
-                  selectedOption === optionIndex ? "#ebeae5" : "#e6e5e0",
-                borderColor:
-                  selectedOption === optionIndex
-                    ? "#26251e"
-                    : "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className={`rounded-lg border px-4 py-4 text-left transition-all duration-150 ${
+                selectedOption === optionIndex
+                  ? "bg-surface-300 border-foreground text-foreground"
+                  : "bg-card border-border/10 text-foreground"
+              }`}
             >
               {option || (optionIndex === 0 ? "True" : "False")}
             </button>
@@ -237,11 +214,7 @@ function QuestionPreviewCard({
       {question.type === "drag-drop-category" && (
         <div className="space-y-4">
           <div
-            className="rounded-lg border-2 border-dashed p-4"
-            style={{
-              backgroundColor: "#e6e5e0",
-              borderColor: "rgba(38, 37, 30, 0.15)",
-            }}
+            className="rounded-lg border-2 border-dashed p-4 bg-card border-border/15"
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
@@ -251,8 +224,7 @@ function QuestionPreviewCard({
             }}
           >
             <div
-              className="mb-3 text-xs font-medium uppercase tracking-wide"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+              className="mb-3 text-xs font-medium uppercase tracking-wide text-muted-foreground"
             >
               Available Answers
             </div>
@@ -264,11 +236,7 @@ function QuestionPreviewCard({
                   onDragStart={(e) =>
                     e.dataTransfer.setData("text/plain", optionIndex.toString())
                   }
-                  className="flex items-center gap-2 rounded-full px-3 py-2"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    color: "#26251e",
-                  }}
+                  className="flex items-center gap-2 rounded-full px-3 py-2 bg-surface-100 text-foreground"
                 >
                   <ArrowsLeftRight className="h-4 w-4" />
                   <span className="text-sm">
@@ -283,11 +251,7 @@ function QuestionPreviewCard({
             {(question.categories || []).map((category, categoryIndex) => (
               <div
                 key={categoryIndex}
-                className="rounded-lg border p-4"
-                style={{
-                  backgroundColor: "#e6e5e0",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                }}
+                className="rounded-lg border p-4 bg-card border-border/10"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
@@ -297,8 +261,7 @@ function QuestionPreviewCard({
                 }}
               >
                 <div
-                  className="mb-3 text-sm font-medium"
-                  style={{ color: "#26251e" }}
+                  className="mb-3 text-sm font-medium text-foreground"
                 >
                   {category || `Category ${categoryIndex + 1}`}
                 </div>
@@ -317,11 +280,7 @@ function QuestionPreviewCard({
                               optionIndex.toString()
                             )
                           }
-                          className="flex items-center justify-between rounded-md px-3 py-2"
-                          style={{
-                            backgroundColor: "#f7f7f4",
-                            color: "#26251e",
-                          }}
+                          className="flex items-center justify-between rounded-md px-3 py-2 bg-surface-100 text-foreground"
                         >
                           <div className="flex items-center gap-2">
                             <ArrowsLeftRight className="h-4 w-4" />
@@ -333,8 +292,7 @@ function QuestionPreviewCard({
                           <button
                             type="button"
                             onClick={() => returnItemToPool(optionIndex)}
-                            className="text-xs underline"
-                            style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                            className="text-xs underline text-muted-foreground"
                           >
                             Remove
                           </button>
@@ -353,16 +311,10 @@ function QuestionPreviewCard({
           {orderedItems.map((optionIndex, orderIndex) => (
             <div
               key={optionIndex}
-              className="flex items-center gap-3 rounded-lg border px-4 py-3"
-              style={{
-                backgroundColor: "#e6e5e0",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "#26251e",
-              }}
+              className="flex items-center gap-3 rounded-lg border px-4 py-3 bg-card border-border/10 text-foreground"
             >
               <span
-                className="flex h-6 w-6 items-center justify-center rounded-full text-xs"
-                style={{ backgroundColor: "#f7f7f4" }}
+                className="flex h-6 w-6 items-center justify-center rounded-full text-xs bg-surface-100"
               >
                 {orderIndex + 1}
               </span>
@@ -374,10 +326,10 @@ function QuestionPreviewCard({
                   type="button"
                   disabled={orderIndex === 0}
                   onClick={() => moveOrderedItem(orderIndex, orderIndex - 1)}
-                  className="rounded px-2 py-1 text-xs"
+                  className={`rounded px-2 py-1 text-xs text-foreground ${
+                    orderIndex === 0 ? "bg-surface-300" : "bg-surface-100"
+                  }`}
                   style={{
-                    backgroundColor: orderIndex === 0 ? "#ebeae5" : "#f7f7f4",
-                    color: "#26251e",
                     opacity: orderIndex === 0 ? 0.5 : 1,
                   }}
                 >
@@ -387,12 +339,12 @@ function QuestionPreviewCard({
                   type="button"
                   disabled={orderIndex === orderedItems.length - 1}
                   onClick={() => moveOrderedItem(orderIndex, orderIndex + 1)}
-                  className="rounded px-2 py-1 text-xs"
+                  className={`rounded px-2 py-1 text-xs text-foreground ${
+                    orderIndex === orderedItems.length - 1 ? "bg-surface-300" : "bg-surface-100"
+                  }`}
                   style={{
-                    backgroundColor:
-                      orderIndex === orderedItems.length - 1 ? "#ebeae5" : "#f7f7f4",
-                    color: "#26251e",
-                    opacity: orderIndex === orderedItems.length - 1 ? 0.5 : 1,
+                    opacity:
+                      orderIndex === orderedItems.length - 1 ? 0.5 : 1,
                   }}
                 >
                   Down
@@ -405,11 +357,7 @@ function QuestionPreviewCard({
 
       {question.hint && (
         <div
-          className="mt-4 rounded-md px-3 py-2 text-sm"
-          style={{
-            backgroundColor: "#ebeae5",
-            color: "rgba(38, 37, 30, 0.75)",
-          }}
+          className="mt-4 rounded-md px-3 py-2 text-sm bg-surface-300 text-muted-foreground"
         >
           Hint: {question.hint}
         </div>
@@ -629,8 +577,7 @@ export default function CreateQuizPage() {
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          className="cursor-btn-hover focus-warm transition-all duration-150"
-          style={{ color: "#26251e" }}
+          className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
           onClick={() => window.history.back()}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -638,12 +585,12 @@ export default function CreateQuizPage() {
         </Button>
         <div>
           <h1
-            className="text-3xl font-normal tracking-tight"
-            style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+            className="text-3xl font-normal tracking-tight text-foreground"
+            style={{ letterSpacing: "-0.11px" }}
           >
             Create Quiz
           </h1>
-          <p className="text-base" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <p className="text-base text-muted-foreground">
             Design questions and set scoring for your quiz
           </p>
         </div>
@@ -652,25 +599,23 @@ export default function CreateQuizPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Quiz Information */}
         <Card
-          className="cursor-card hover:cursor-card-hover transition-all duration-200"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
             <div className="flex items-center gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ backgroundColor: "#f7f7f4" }}
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
               >
-                <Brain className="h-5 w-5" style={{ color: "#26251e" }} />
+                <Brain className="h-5 w-5 text-foreground" />
               </div>
               <div>
                 <CardTitle
-                  className="text-xl font-normal"
-                  style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                  className="text-xl font-normal text-foreground"
+                  style={{ letterSpacing: "-0.11px" }}
                 >
                   Quiz Information
                 </CardTitle>
-                <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                <CardDescription className="text-muted-foreground">
                   Basic details about your quiz
                 </CardDescription>
               </div>
@@ -678,7 +623,7 @@ export default function CreateQuizPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "#26251e" }}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 Quiz Title *
               </label>
               <input
@@ -686,18 +631,13 @@ export default function CreateQuizPage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 placeholder="Enter quiz title"
-                className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                style={{
-                  backgroundColor: "#f7f7f4",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                  color: "#26251e",
-                }}
+                className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "#26251e" }}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 Quiz Description *
               </label>
               <textarea
@@ -705,43 +645,33 @@ export default function CreateQuizPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Describe what this quiz covers..."
                 rows={3}
-                className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none"
-                style={{
-                  backgroundColor: "#f7f7f4",
-                  borderColor: "rgba(38, 37, 30, 0.1)",
-                  color: "#26251e",
-                }}
+                className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none bg-surface-100 border border-border/10 text-foreground"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "#26251e" }}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 Time Limit (optional)
               </label>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" style={{ color: "rgba(38, 37, 30, 0.55)" }} />
+                <Clock className="h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={formData.duration}
                   onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                   placeholder="e.g., 15 minutes"
-                  className="flex-1 px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                    color: "#26251e",
-                  }}
+                  className="flex-1 px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: "#26251e" }}>
+              <label className="block text-sm font-medium mb-2 text-foreground">
                 Assign to Course (optional)
               </label>
               <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" style={{ color: "rgba(38, 37, 30, 0.55)" }} />
+                <BookOpen className="h-4 w-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={formData.courseTitle || ""}
@@ -749,12 +679,7 @@ export default function CreateQuizPage() {
                     setFormData({ ...formData, courseTitle: e.target.value })
                   }
                   placeholder="Search and select a course..."
-                  className="flex-1 px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                    color: "#26251e",
-                  }}
+                  className="flex-1 px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                 />
               </div>
             </div>
@@ -763,26 +688,24 @@ export default function CreateQuizPage() {
 
         {/* Questions Section */}
         <Card
-          className="cursor-card hover:cursor-card-hover transition-all duration-200"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "#f7f7f4" }}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
                 >
-                  <ListChecks className="h-5 w-5" style={{ color: "#26251e" }} />
+                  <ListChecks className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
                   <CardTitle
-                    className="text-xl font-normal"
-                    style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                    className="text-xl font-normal text-foreground"
+                    style={{ letterSpacing: "-0.11px" }}
                   >
                     Questions ({formData.questions.length})
                   </CardTitle>
-                  <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                  <CardDescription className="text-muted-foreground">
                     Total Points: {totalPoints}
                   </CardDescription>
                 </div>
@@ -791,11 +714,7 @@ export default function CreateQuizPage() {
                 <Button
                   type="button"
                   onClick={() => setIsPreviewOpen(true)}
-                  className="cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#ebeae5",
-                    color: "#26251e",
-                  }}
+                  className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
                 >
                   Preview Quiz
                 </Button>
@@ -806,8 +725,7 @@ export default function CreateQuizPage() {
             {/* Add Question Type Selector */}
             <div className="space-y-3">
               <div
-                className="text-xs font-medium uppercase tracking-wider"
-                style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
               >
                 Question Type
               </div>
@@ -819,8 +737,8 @@ export default function CreateQuizPage() {
                     onClick={() => setNewQuestionType(type)}
                     className={`p-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-left ${
                       newQuestionType === type
-                        ? "bg-[#26251e] text-white"
-                        : "bg-[#f7f7f4] text-[#26251e]"
+                        ? "bg-primary text-white"
+                        : "bg-surface-100 text-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
@@ -837,11 +755,7 @@ export default function CreateQuizPage() {
               <Button
                 type="button"
                 onClick={addQuestion}
-                className="w-full cursor-btn-hover focus-warm transition-all duration-150"
-                style={{
-                  backgroundColor: "#ebeae5",
-                  color: "#26251e",
-                }}
+                className="w-full cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add {questionTypeLabels[newQuestionType]} Question
@@ -854,18 +768,13 @@ export default function CreateQuizPage() {
                 {formData.questions.map((question, index) => (
                   <div
                     key={question.id}
-                    className="border rounded-lg p-4"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                    }}
+                    className="border rounded-lg p-4 bg-surface-100 border-border/10"
                   >
                     {/* Question Header */}
                     <div className="flex items-start gap-3 mb-4">
                       <div className="flex-1">
                         <div
-                          className="flex items-center gap-2 mb-2"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="flex items-center gap-2 mb-2 text-muted-foreground"
                         >
                           <span className="text-xs font-medium">Question {index + 1}</span>
                           <span className="text-xs">•</span>
@@ -882,17 +791,12 @@ export default function CreateQuizPage() {
                             })
                           }
                           placeholder="Enter your question..."
-                          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{
-                            backgroundColor: "#e6e5e0",
-                            borderColor: "rgba(38, 37, 30, 0.1)",
-                            color: "#26251e",
-                          }}
+                          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                         />
                       </div>
                       <div className="flex gap-2">
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-md" style={{ backgroundColor: "#e6e5e0" }}>
-                          <Tag className="h-4 w-4" style={{ color: "rgba(38, 37, 30, 0.55)" }} />
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-card">
+                          <Tag className="h-4 w-4 text-muted-foreground" />
                           <input
                             type="number"
                             min="1"
@@ -903,14 +807,9 @@ export default function CreateQuizPage() {
                                 points: parseInt(e.target.value) || 1,
                               })
                             }
-                            className="w-16 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-center"
-                            style={{
-                              backgroundColor: "#ebeae5",
-                              borderColor: "rgba(38, 37, 30, 0.1)",
-                              color: "#26251e",
-                            }}
+                            className="w-16 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-center bg-surface-300 border border-border/10 text-foreground"
                           />
-                          <span className="text-xs" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                          <span className="text-xs text-muted-foreground">
                             pts
                           </span>
                         </div>
@@ -918,8 +817,7 @@ export default function CreateQuizPage() {
                           type="button"
                           variant="ghost"
                           onClick={() => removeQuestion(question.id)}
-                          className="cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{ color: "#cf2d56" }}
+                          className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
@@ -930,8 +828,7 @@ export default function CreateQuizPage() {
                     {question.type === "multiple-choice" && (
                       <div className="space-y-2">
                         <div
-                          className="text-xs font-medium"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-xs font-medium text-muted-foreground"
                         >
                           Answer Options
                         </div>
@@ -946,15 +843,9 @@ export default function CreateQuizPage() {
                               }
                               className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
                                 question.correctAnswer === optionIndex
-                                  ? "bg-[#26251e] text-white"
-                                  : "bg-[#e6e5e0] text-[#26251e] border"
+                                  ? "bg-primary text-white border-primary"
+                                  : "bg-card text-foreground border-border/20"
                               }`}
-                              style={{
-                                borderColor:
-                                  question.correctAnswer === optionIndex
-                                    ? "transparent"
-                                    : "rgba(38, 37, 30, 0.2)",
-                              }}
                             >
                               {question.correctAnswer === optionIndex && (
                                 <Check className="h-3 w-3" />
@@ -971,12 +862,7 @@ export default function CreateQuizPage() {
                                 });
                               }}
                               placeholder={`Option ${optionIndex + 1}`}
-                              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                              style={{
-                                backgroundColor: "#e6e5e0",
-                                borderColor: "rgba(38, 37, 30, 0.1)",
-                                color: "#26251e",
-                              }}
+                              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                             />
                             {question.options.length > 1 && (
                               <Button
@@ -984,8 +870,7 @@ export default function CreateQuizPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeOption(question.id, optionIndex)}
-                                className="cursor-btn-hover focus-warm transition-all duration-150"
-                                style={{ color: "#cf2d56" }}
+                                className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -998,12 +883,7 @@ export default function CreateQuizPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => addOption(question.id)}
-                            className="cursor-btn-hover focus-warm transition-all duration-150"
-                            style={{
-                              backgroundColor: "#e6e5e0",
-                              borderColor: "rgba(38, 37, 30, 0.1)",
-                              color: "#26251e",
-                            }}
+                            className="cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                           >
                             <Plus className="h-3 w-3 mr-1" />
                             Add Option
@@ -1015,8 +895,7 @@ export default function CreateQuizPage() {
                     {question.type === "checkbox" && (
                       <div className="space-y-2">
                         <div
-                          className="text-xs font-medium"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-xs font-medium text-muted-foreground"
                         >
                           Answer Options (Select all that apply)
                         </div>
@@ -1039,16 +918,9 @@ export default function CreateQuizPage() {
                               className={`w-6 h-6 rounded-md flex items-center justify-center cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
                                 Array.isArray(question.correctAnswer) &&
                                 question.correctAnswer.includes(optionIndex)
-                                  ? "bg-[#26251e] text-white border-[#26251e]"
-                                  : "bg-[#e6e5e0] text-[#26251e] border"
+                                  ? "bg-primary text-white border-primary"
+                                  : "bg-card text-foreground border-border/20"
                               }`}
-                              style={{
-                                borderColor:
-                                  Array.isArray(question.correctAnswer) &&
-                                  question.correctAnswer.includes(optionIndex)
-                                    ? "#26251e"
-                                    : "rgba(38, 37, 30, 0.2)",
-                              }}
                             >
                               {Array.isArray(question.correctAnswer) &&
                                 question.correctAnswer.includes(optionIndex) && (
@@ -1066,12 +938,7 @@ export default function CreateQuizPage() {
                                 });
                               }}
                               placeholder={`Option ${optionIndex + 1}`}
-                              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                              style={{
-                                backgroundColor: "#e6e5e0",
-                                borderColor: "rgba(38, 37, 30, 0.1)",
-                                color: "#26251e",
-                              }}
+                              className="flex-1 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                             />
                             {question.options.length > 2 && (
                               <Button
@@ -1079,8 +946,7 @@ export default function CreateQuizPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeOption(question.id, optionIndex)}
-                                className="cursor-btn-hover focus-warm transition-all duration-150"
-                                style={{ color: "#cf2d56" }}
+                                className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                               >
                                 <X className="h-3 w-3" />
                               </Button>
@@ -1093,12 +959,7 @@ export default function CreateQuizPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => addOption(question.id)}
-                            className="cursor-btn-hover focus-warm transition-all duration-150"
-                            style={{
-                              backgroundColor: "#e6e5e0",
-                              borderColor: "rgba(38, 37, 30, 0.1)",
-                              color: "#26251e",
-                            }}
+                            className="cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                           >
                             <Plus className="h-3 w-3 mr-1" />
                             Add Option
@@ -1110,8 +971,7 @@ export default function CreateQuizPage() {
                     {question.type === "true-false" && (
                       <div>
                         <div
-                          className="text-xs font-medium mb-2"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-xs font-medium mb-2 text-muted-foreground"
                         >
                           Correct Answer
                         </div>
@@ -1125,15 +985,9 @@ export default function CreateQuizPage() {
                             }
                             className={`flex-1 p-4 rounded-lg cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
                               question.correctAnswer === 0
-                                ? "bg-[#26251e] text-white border-[#26251e]"
-                                : "bg-[#e6e5e0] text-[#26251e] border"
+                                ? "bg-primary text-white border-primary"
+                                : "bg-card text-foreground border-border/20"
                             }`}
-                            style={{
-                              borderColor:
-                                question.correctAnswer === 0
-                                  ? "#26251e"
-                                  : "rgba(38, 37, 30, 0.2)",
-                            }}
                           >
                             <Check className="h-4 w-4 mr-2" />
                             True
@@ -1147,15 +1001,9 @@ export default function CreateQuizPage() {
                             }
                             className={`flex-1 p-4 rounded-lg cursor-btn-hover focus-warm transition-all duration-150 border-2 ${
                               question.correctAnswer === 1
-                                ? "bg-[#26251e] text-white border-[#26251e]"
-                                : "bg-[#e6e5e0] text-[#26251e] border"
+                                ? "bg-primary text-white border-primary"
+                                : "bg-card text-foreground border-border/20"
                             }`}
-                            style={{
-                              borderColor:
-                                question.correctAnswer === 1
-                                  ? "#26251e"
-                                  : "rgba(38, 37, 30, 0.2)",
-                            }}
                           >
                             <X className="h-4 w-4 mr-2" />
                             False
@@ -1170,19 +1018,16 @@ export default function CreateQuizPage() {
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <div
-                              className="text-xs font-medium"
-                              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                              className="text-xs font-medium text-muted-foreground"
                             >
                               Categories
                             </div>
                             {question.categories && (
                               <div
-                                className="flex items-center gap-2 px-3 py-2 rounded-md"
-                                style={{ backgroundColor: "#e6e5e0" }}
+                                className="flex items-center gap-2 px-3 py-2 rounded-md bg-card"
                               >
                                 <span
-                                  className="text-xs"
-                                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                  className="text-xs text-muted-foreground"
                                 >
                                   Number of categories
                                 </span>
@@ -1197,12 +1042,7 @@ export default function CreateQuizPage() {
                                       parseInt(e.target.value, 10) || MIN_CATEGORY_COUNT
                                     )
                                   }
-                                  className="w-16 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-center text-sm"
-                                  style={{
-                                    backgroundColor: "#ebeae5",
-                                    borderColor: "rgba(38, 37, 30, 0.1)",
-                                    color: "#26251e",
-                                  }}
+                                  className="w-16 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-center text-sm bg-surface-300 border border-border/10 text-foreground"
                                 />
                               </div>
                             )}
@@ -1212,11 +1052,7 @@ export default function CreateQuizPage() {
                               {question.categories.map((category, catIndex) => (
                                 <div
                                   key={catIndex}
-                                  className="rounded-md border-2 p-3"
-                                  style={{
-                                    backgroundColor: "#e6e5e0",
-                                    borderColor: "rgba(38, 37, 30, 0.1)",
-                                  }}
+                                  className="rounded-md border-2 p-3 bg-card border-border/10"
                                   onDragOver={(e) => {
                                     e.preventDefault();
                                   }}
@@ -1236,23 +1072,13 @@ export default function CreateQuizPage() {
                                       updateCategory(question.id, catIndex, e.target.value)
                                     }
                                     placeholder="Category name"
-                                    className="w-full px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                                    style={{
-                                      backgroundColor: "#ebeae5",
-                                      borderColor: "rgba(38, 37, 30, 0.1)",
-                                      color: "#26251e",
-                                    }}
+                                    className="w-full px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-surface-300 border border-border/10 text-foreground"
                                   />
                                   <div
-                                    className="mt-3 min-h-24 rounded-md border-2 border-dashed p-3"
-                                    style={{
-                                      backgroundColor: "#ebeae5",
-                                      borderColor: "rgba(38, 37, 30, 0.15)",
-                                    }}
+                                    className="mt-3 min-h-24 rounded-md border-2 border-dashed p-3 bg-surface-300 border-border/15"
                                   >
                                     <div
-                                      className="mb-2 text-xs font-medium"
-                                      style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                      className="mb-2 text-xs font-medium text-muted-foreground"
                                     >
                                       Drop answers here
                                     </div>
@@ -1276,18 +1102,11 @@ export default function CreateQuizPage() {
                                                 optionIndex.toString()
                                               );
                                             }}
-                                            className="flex items-center justify-between rounded-md px-3 py-2"
-                                            style={{
-                                              backgroundColor: "#f7f7f4",
-                                              color: "#26251e",
-                                            }}
+                                            className="flex items-center justify-between rounded-md px-3 py-2 bg-surface-100 text-foreground"
                                           >
                                             <div className="flex items-center gap-2">
                                               <ArrowsLeftRight
-                                                className="h-4 w-4"
-                                                style={{
-                                                  color: "rgba(38, 37, 30, 0.55)",
-                                                }}
+                                                className="h-4 w-4 text-muted-foreground"
                                               />
                                               <span className="text-sm">
                                                 {option || `Item ${optionIndex + 1}`}
@@ -1303,8 +1122,7 @@ export default function CreateQuizPage() {
                                                   optionIndex
                                                 )
                                               }
-                                              className="cursor-btn-hover focus-warm transition-all duration-150"
-                                              style={{ color: "#26251e" }}
+                                              className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
                                             >
                                               <X className="h-3 w-3" />
                                             </Button>
@@ -1321,17 +1139,12 @@ export default function CreateQuizPage() {
                         {/* Items to Categorize */}
                         <div className="space-y-2">
                           <div
-                            className="text-xs font-medium"
-                            style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                            className="text-xs font-medium text-muted-foreground"
                           >
                             Items to Categorize
                           </div>
                           <div
-                            className="rounded-md border-2 border-dashed p-3"
-                            style={{
-                              backgroundColor: "#e6e5e0",
-                              borderColor: "rgba(38, 37, 30, 0.15)",
-                            }}
+                            className="rounded-md border-2 border-dashed p-3 bg-card border-border/15"
                             onDragOver={(e) => {
                               e.preventDefault();
                             }}
@@ -1345,8 +1158,7 @@ export default function CreateQuizPage() {
                             }}
                           >
                             <div
-                              className="mb-3 text-xs font-medium"
-                              style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                              className="mb-3 text-xs font-medium text-muted-foreground"
                             >
                               Drag items from here into the right category box
                             </div>
@@ -1361,18 +1173,14 @@ export default function CreateQuizPage() {
                                       optionIndex.toString()
                                     );
                                   }}
-                                  className="flex items-center gap-2 rounded-md border-2 p-2"
-                                  style={{
-                                    backgroundColor: "#f7f7f4",
-                                    borderColor:
-                                      question.categoryMapping?.[optionIndex] !== undefined
-                                        ? "#26251e"
-                                        : "rgba(38, 37, 30, 0.1)",
-                                  }}
+                                  className={`flex items-center gap-2 rounded-md border-2 p-2 bg-surface-100 ${
+                                    question.categoryMapping?.[optionIndex] !== undefined
+                                      ? "border-foreground"
+                                      : "border-border/10"
+                                  }`}
                                 >
                                   <ArrowsLeftRight
-                                    className="h-4 w-4"
-                                    style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                    className="h-4 w-4 text-muted-foreground"
                                   />
                                   <input
                                     type="text"
@@ -1385,20 +1193,11 @@ export default function CreateQuizPage() {
                                       });
                                     }}
                                     placeholder={`Item ${optionIndex + 1}`}
-                                    className="flex-1 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                                    style={{
-                                      backgroundColor: "#ebeae5",
-                                      borderColor: "rgba(38, 37, 30, 0.1)",
-                                      color: "#26251e",
-                                    }}
+                                    className="flex-1 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 border border-border/10 text-foreground"
                                   />
                                   {question.categoryMapping?.[optionIndex] !== undefined && (
                                     <span
-                                      className="rounded-full px-2 py-1 text-xs"
-                                      style={{
-                                        backgroundColor: "#ebeae5",
-                                        color: "#26251e",
-                                      }}
+                                      className="rounded-full px-2 py-1 text-xs bg-surface-300 text-foreground"
                                     >
                                       {
                                         question.categories?.[
@@ -1413,8 +1212,7 @@ export default function CreateQuizPage() {
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => removeOption(question.id, optionIndex)}
-                                      className="cursor-btn-hover focus-warm transition-all duration-150"
-                                      style={{ color: "#cf2d56" }}
+                                      className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                                     >
                                       <X className="h-3 w-3" />
                                     </Button>
@@ -1430,12 +1228,7 @@ export default function CreateQuizPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => addOption(question.id)}
-                            className="cursor-btn-hover focus-warm transition-all duration-150"
-                            style={{
-                              backgroundColor: "#e6e5e0",
-                              borderColor: "rgba(38, 37, 30, 0.1)",
-                              color: "#26251e",
-                            }}
+                            className="cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                           >
                             <Plus className="h-3 w-3 mr-1" />
                             Add Item
@@ -1447,8 +1240,7 @@ export default function CreateQuizPage() {
                     {question.type === "drag-drop-order" && (
                       <div className="space-y-2">
                         <div
-                          className="text-xs font-medium"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-xs font-medium text-muted-foreground"
                         >
                           Items to Order (Drag to arrange in correct order)
                         </div>
@@ -1456,17 +1248,12 @@ export default function CreateQuizPage() {
                           {question.options.map((option, optionIndex) => (
                             <div
                               key={optionIndex}
-                              className="flex items-center gap-2 p-3 rounded-md border-2 cursor-move"
-                              style={{
-                                backgroundColor: "#e6e5e0",
-                                borderColor: "rgba(38, 37, 30, 0.1)",
-                              }}
+                              className="flex items-center gap-2 p-3 rounded-md border-2 cursor-move bg-card border-border/10"
                             >
                               <DotsSixVertical
-                                className="h-5 w-5"
-                                style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                className="h-5 w-5 text-muted-foreground"
                               />
-                              <span className="text-sm font-medium w-6" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                              <span className="text-sm font-medium w-6 text-muted-foreground">
                                 {optionIndex + 1}.
                               </span>
                               <input
@@ -1480,12 +1267,7 @@ export default function CreateQuizPage() {
                                   });
                                 }}
                                 placeholder={`Step ${optionIndex + 1}`}
-                                className="flex-1 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                                style={{
-                                  backgroundColor: "#ebeae5",
-                                  borderColor: "rgba(38, 37, 30, 0.1)",
-                                  color: "#26251e",
-                                }}
+                                className="flex-1 px-2 py-1 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 border border-border/10 text-foreground"
                               />
                               {question.options.length > 2 && (
                                 <Button
@@ -1493,8 +1275,7 @@ export default function CreateQuizPage() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => removeOption(question.id, optionIndex)}
-                                  className="cursor-btn-hover focus-warm transition-all duration-150"
-                                  style={{ color: "#cf2d56" }}
+                                  className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                                 >
                                   <X className="h-3 w-3" />
                                 </Button>
@@ -1508,12 +1289,7 @@ export default function CreateQuizPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => addOption(question.id)}
-                            className="cursor-btn-hover focus-warm transition-all duration-150"
-                            style={{
-                              backgroundColor: "#e6e5e0",
-                              borderColor: "rgba(38, 37, 30, 0.1)",
-                              color: "#26251e",
-                            }}
+                            className="cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                           >
                             <Plus className="h-3 w-3 mr-1" />
                             Add Step
@@ -1525,8 +1301,7 @@ export default function CreateQuizPage() {
                     {/* Hint Field */}
                     <div className="mt-4">
                       <div
-                        className="text-xs font-medium mb-1"
-                        style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                        className="text-xs font-medium mb-1 text-muted-foreground"
                       >
                         Hint (Optional)
                       </div>
@@ -1539,12 +1314,7 @@ export default function CreateQuizPage() {
                           })
                         }
                         placeholder="Add a hint for students..."
-                        className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          borderColor: "rgba(38, 37, 30, 0.1)",
-                          color: "#26251e",
-                        }}
+                        className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                       />
                     </div>
                   </div>
@@ -1552,20 +1322,17 @@ export default function CreateQuizPage() {
               </div>
             ) : (
               <div
-                className="text-center py-12 border-2 border-dashed rounded-lg"
-                style={{ borderColor: "rgba(38, 37, 30, 0.2)" }}
+                className="text-center py-12 border-2 border-dashed rounded-lg border-border/20"
               >
                 <ListChecks
-                  className="h-12 w-12 mx-auto mb-4"
-                  style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                  className="h-12 w-12 mx-auto mb-4 text-muted-foreground"
                 />
                 <h3
-                  className="text-lg font-medium mb-2"
-                  style={{ color: "#26251e" }}
+                  className="text-lg font-medium mb-2 text-foreground"
                 >
                   No questions yet
                 </h3>
-                <p className="mb-4" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                <p className="mb-4 text-muted-foreground">
                   Select a question type and add your first question
                 </p>
               </div>
@@ -1579,25 +1346,19 @@ export default function CreateQuizPage() {
             type="button"
             onClick={() => window.history.back()}
             variant="outline"
-            className="cursor-btn-hover focus-warm transition-all duration-150"
-            style={{
-              backgroundColor: "#f7f7f4",
-              borderColor: "rgba(38, 37, 30, 0.1)",
-              color: "#26251e",
-            }}
+            className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={!isQuizReady || formData.questions.length === 0}
-            className="cursor-btn-hover focus-warm transition-all duration-150"
+            className={`cursor-btn-hover focus-warm transition-all duration-150 ${
+              isQuizReady && formData.questions.length > 0
+                ? "bg-surface-300 text-foreground"
+                : "bg-card text-foreground"
+            }`}
             style={{
-              backgroundColor:
-                isQuizReady && formData.questions.length > 0
-                  ? "#ebeae5"
-                  : "#e6e5e0",
-              color: "#26251e",
               opacity:
                 isQuizReady && formData.questions.length > 0 ? 1 : 0.6,
               cursor:
@@ -1613,29 +1374,25 @@ export default function CreateQuizPage() {
 
       {isPreviewOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/20"
           onClick={() => setIsPreviewOpen(false)}
         >
           <div
-            className="w-full max-w-5xl overflow-hidden rounded-lg shadow-2xl"
-            style={{ backgroundColor: "#e6e5e0" }}
+            className="w-full max-w-5xl overflow-hidden rounded-lg shadow-2xl bg-card"
             onClick={(e) => e.stopPropagation()}
           >
             <div
-              className="flex items-center justify-between border-b p-6"
-              style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}
+              className="flex items-center justify-between border-b p-6 border-border/10"
             >
               <div>
                 <h2
-                  className="text-xl font-normal"
-                  style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                  className="text-xl font-normal text-foreground"
+                  style={{ letterSpacing: "-0.11px" }}
                 >
                   Quiz Preview
                 </h2>
                 <p
-                  className="mt-1 text-sm"
-                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                  className="mt-1 text-sm text-muted-foreground"
                 >
                   Review the quiz as a student would see it
                 </p>
@@ -1644,8 +1401,7 @@ export default function CreateQuizPage() {
                 type="button"
                 variant="ghost"
                 onClick={() => setIsPreviewOpen(false)}
-                className="cursor-btn-hover focus-warm transition-all duration-150"
-                style={{ color: "#26251e" }}
+                className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -1655,21 +1411,16 @@ export default function CreateQuizPage() {
               <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
                 <div className="space-y-4">
                   <div
-                    className="rounded-xl border p-5"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                    }}
+                    className="rounded-xl border p-5 bg-surface-100 border-border/10"
                   >
                     <h3
-                      className="mb-2 text-2xl font-normal"
-                      style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                      className="mb-2 text-2xl font-normal text-foreground"
+                      style={{ letterSpacing: "-0.11px" }}
                     >
                       {formData.title || "Untitled Quiz"}
                     </h3>
                     <p
-                      className="text-sm leading-6"
-                      style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                      className="text-sm leading-6 text-muted-foreground"
                     >
                       {formData.description ||
                         "Your quiz description will appear here."}
@@ -1687,12 +1438,7 @@ export default function CreateQuizPage() {
                       ))
                     ) : (
                       <div
-                        className="rounded-xl border p-5 text-sm"
-                        style={{
-                          backgroundColor: "#f7f7f4",
-                          borderColor: "rgba(38, 37, 30, 0.1)",
-                          color: "rgba(38, 37, 30, 0.55)",
-                        }}
+                        className="rounded-xl border p-5 text-sm bg-surface-100 border-border/10 text-muted-foreground"
                       >
                         Add questions to preview the student experience.
                       </div>
@@ -1702,21 +1448,15 @@ export default function CreateQuizPage() {
 
                 <div className="space-y-4">
                   <div
-                    className="rounded-xl border p-5"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                    }}
+                    className="rounded-xl border p-5 bg-surface-100 border-border/10"
                   >
                     <h4
-                      className="mb-4 text-lg font-medium"
-                      style={{ color: "#26251e" }}
+                      className="mb-4 text-lg font-medium text-foreground"
                     >
                       Quiz Details
                     </h4>
                     <div
-                      className="space-y-3 text-sm"
-                      style={{ color: "rgba(38, 37, 30, 0.75)" }}
+                      className="space-y-3 text-sm text-muted-foreground"
                     >
                       <div className="flex items-center justify-between">
                         <span>Questions</span>
@@ -1738,15 +1478,10 @@ export default function CreateQuizPage() {
                   </div>
 
                   <div
-                    className="rounded-xl border p-5"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                    }}
+                    className="rounded-xl border p-5 bg-surface-100 border-border/10"
                   >
                     <h4
-                      className="mb-4 text-lg font-medium"
-                      style={{ color: "#26251e" }}
+                      className="mb-4 text-lg font-medium text-foreground"
                     >
                       Question Mix
                     </h4>
@@ -1761,11 +1496,7 @@ export default function CreateQuizPage() {
                         return (
                           <div
                             key={type}
-                            className="flex items-center justify-between rounded-md px-3 py-2"
-                            style={{
-                              backgroundColor: "#ebeae5",
-                              color: "#26251e",
-                            }}
+                            className="flex items-center justify-between rounded-md px-3 py-2 bg-surface-300 text-foreground"
                           >
                             <span className="text-sm">{questionTypeLabels[type]}</span>
                             <span className="text-sm font-medium">{count}</span>

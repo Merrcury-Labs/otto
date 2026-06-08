@@ -33,17 +33,17 @@ import type { Course } from "./types";
 export default function CoursesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("published");
   const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "published":
-        return <CheckCircle className="h-5 w-5" style={{ color: "#1f8a65" }} />;
+        return <CheckCircle className="h-5 w-5 text-brand-success" />;
       case "draft":
-        return <Circle className="h-5 w-5" style={{ color: "#c08532" }} />;
+        return <Circle className="h-5 w-5 text-brand-gold" />;
       case "archived":
-        return <XCircle className="h-5 w-5" style={{ color: "rgba(38, 37, 30, 0.4)" }} />;
+        return <XCircle className="h-5 w-5 text-muted-foreground" />;
       default:
         return null;
     }
@@ -51,8 +51,8 @@ export default function CoursesPage() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      published: "bg-[#1f8a65] text-white",
-      draft: "bg-[#c08532] text-white",
+      published: "bg-brand-success text-white",
+      draft: "bg-brand-gold text-white",
       archived: "bg-muted text-muted-foreground",
     };
 
@@ -77,40 +77,31 @@ export default function CoursesPage() {
   });
 
   const CourseCard = ({ course }: { course: Course }) => (
-    <Card
-      className="cursor-card hover:cursor-card-hover transition-all duration-200 group"
-      style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
-    >
+    <Card className="cursor-card hover:cursor-card-hover transition-all duration-200 group bg-card rounded-lg">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <CardTitle
-                className="text-lg font-normal"
-                style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                className="text-lg font-normal text-foreground"
+                style={{ letterSpacing: "-0.11px" }}
               >
                 {course.title}
               </CardTitle>
               {getStatusIcon(course.status)}
             </div>
-            <CardDescription
-              className="line-clamp-2"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            >
+            <CardDescription className="line-clamp-2 text-muted-foreground">
               {course.description}
             </CardDescription>
           </div>
           <button className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md opacity-0 group-hover:opacity-100">
-            <DotsThreeVertical
-              className="h-5 w-5"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            />
+            <DotsThreeVertical className="h-5 w-5 text-muted-foreground" />
           </button>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="flex items-center gap-4 text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <Users className="h-4 w-4" />
               <span>{course.students} students</span>
@@ -127,21 +118,15 @@ export default function CoursesPage() {
 
           <div className="space-y-1">
             <div className="flex items-center justify-between text-sm">
-              <span style={{ color: "#26251e" }}>Progress</span>
-              <span style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+              <span className="text-foreground">Progress</span>
+              <span className="text-muted-foreground">
                 {course.progress}%
               </span>
             </div>
-            <div
-              className="h-2 w-full rounded-full"
-              style={{ backgroundColor: "#f7f7f4" }}
-            >
+            <div className="h-2 w-full rounded-full bg-surface-100">
               <div
-                className="h-2 rounded-full transition-all duration-200"
-                style={{
-                  width: `${course.progress}%`,
-                  backgroundColor: "#26251e",
-                }}
+                className="h-2 rounded-full transition-all duration-200 bg-primary"
+                style={{ width: `${course.progress}%` }}
               />
             </div>
           </div>
@@ -149,10 +134,7 @@ export default function CoursesPage() {
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-2">
               {getStatusBadge(course.status)}
-              <span
-                className="text-xs"
-                style={{ color: "rgba(38, 37, 30, 0.55)" }}
-              >
+              <span className="text-xs text-muted-foreground">
                 Updated {course.updatedAt}
               </span>
             </div>
@@ -164,10 +146,7 @@ export default function CoursesPage() {
                 title="View"
                 aria-label={`Preview ${course.title}`}
               >
-                <Eye
-                  className="h-4 w-4"
-                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                />
+                <Eye className="h-4 w-4 text-muted-foreground" />
               </button>
               <a
                 href={`/courses/${course.id}/edit`}
@@ -175,19 +154,13 @@ export default function CoursesPage() {
                 title="Edit"
                 aria-label={`Edit ${course.title}`}
               >
-                <PencilSimple
-                  className="h-4 w-4"
-                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                />
+                <PencilSimple className="h-4 w-4 text-muted-foreground" />
               </a>
               <button
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
                 title="Delete"
               >
-                <Trash
-                  className="h-4 w-4"
-                  style={{ color: "rgba(38, 37, 30, 0.55)" }}
-                />
+                <Trash className="h-4 w-4 text-muted-foreground" />
               </button>
             </div>
           </div>
@@ -198,27 +171,23 @@ export default function CoursesPage() {
 
   const CourseRow = ({ course }: { course: Course }) => (
     <div
-      className="flex items-center gap-4 p-4 border-b cursor-btn-hover focus-warm transition-all duration-150 hover:bg-[#ebeae5]"
-      style={{ borderColor: "rgba(38, 37, 30, 0.1)" }}
+      className="flex items-center gap-4 p-4 border-b cursor-btn-hover focus-warm transition-all duration-150 hover:bg-accent border-border/10"
     >
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <h3
-            className="font-medium"
-            style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+            className="font-medium text-foreground"
+            style={{ letterSpacing: "-0.11px" }}
           >
             {course.title}
           </h3>
           {getStatusIcon(course.status)}
         </div>
-        <p
-          className="text-sm mt-1 line-clamp-1"
-          style={{ color: "rgba(38, 37, 30, 0.55)" }}
-        >
+        <p className="text-sm mt-1 line-clamp-1 text-muted-foreground">
           {course.description}
         </p>
       </div>
-      <div className="flex items-center gap-4 text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground">
         <div className="flex items-center gap-1.5 min-w-[80px]">
           <Users className="h-4 w-4" />
           <span>{course.students}</span>
@@ -233,10 +202,10 @@ export default function CoursesPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="w-24">
-            <div className="h-2 w-full rounded-full" style={{ backgroundColor: "#f7f7f4" }}>
+            <div className="h-2 w-full rounded-full bg-surface-100">
               <div
-                className="h-2 rounded-full"
-                style={{ width: `${course.progress}%`, backgroundColor: "#26251e" }}
+                className="h-2 rounded-full bg-primary"
+                style={{ width: `${course.progress}%` }}
               />
             </div>
           </div>
@@ -251,10 +220,7 @@ export default function CoursesPage() {
             title="View"
             aria-label={`Preview ${course.title}`}
           >
-            <Eye
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            />
+            <Eye className="h-4 w-4 text-muted-foreground" />
           </button>
           <a
             href={`/courses/${course.id}/edit`}
@@ -262,19 +228,13 @@ export default function CoursesPage() {
             title="Edit"
             aria-label={`Edit ${course.title}`}
           >
-            <PencilSimple
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            />
+            <PencilSimple className="h-4 w-4 text-muted-foreground" />
           </a>
           <button
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
             title="Delete"
           >
-            <Trash
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            />
+            <Trash className="h-4 w-4 text-muted-foreground" />
           </button>
         </div>
       </div>
@@ -287,22 +247,18 @@ export default function CoursesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1
-            className="text-3xl font-normal tracking-tight"
-            style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+            className="text-3xl font-normal tracking-tight text-foreground"
+            style={{ letterSpacing: "-0.11px" }}
           >
             Courses
           </h1>
-          <p className="text-base" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <p className="text-base text-muted-foreground">
             Manage and create your educational content
           </p>
         </div>
         <Button
           asChild
-          className="cursor-btn-hover focus-warm transition-all duration-150"
-          style={{
-            backgroundColor: "#ebeae5",
-            color: "#26251e",
-          }}
+          className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
         >
           <a href="/courses/create">
             <Plus className="h-4 w-4 mr-2" />
@@ -313,101 +269,77 @@ export default function CoursesPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
-        >
+        <Card className="cursor-card bg-card rounded-lg">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Total Courses
             </CardTitle>
-            <FileText
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            />
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {courses.length}
             </div>
           </CardContent>
         </Card>
-        <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
-        >
+        <Card className="cursor-card bg-card rounded-lg">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Published
             </CardTitle>
-            <CheckCircle
-              className="h-4 w-4"
-              style={{ color: "#1f8a65" }}
-            />
+            <CheckCircle className="h-4 w-4 text-brand-success" />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {courses.filter((c) => c.status === "published").length}
             </div>
           </CardContent>
         </Card>
-        <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
-        >
+        <Card className="cursor-card bg-card rounded-lg">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Total Students
             </CardTitle>
-            <Users
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            />
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {courses.reduce((acc, course) => acc + course.students, 0)}
             </div>
           </CardContent>
         </Card>
-        <Card
-          className="cursor-card"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
-        >
+        <Card className="cursor-card bg-card rounded-lg">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle
-              className="text-sm font-medium"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-sm font-medium text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               Avg. Progress
             </CardTitle>
-            <TrendUp
-              className="h-4 w-4"
-              style={{ color: "rgba(38, 37, 30, 0.55)" }}
-            />
+            <TrendUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div
-              className="text-2xl font-normal"
-              style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+              className="text-2xl font-normal text-foreground"
+              style={{ letterSpacing: "-0.11px" }}
             >
               {Math.round(
                 courses.reduce((acc, course) => acc + course.progress, 0) /
@@ -422,32 +354,19 @@ export default function CoursesPage() {
       {/* Filters and Search */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
-          <MagnifyingGlass
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
-            style={{ color: "rgba(38, 37, 30, 0.55)" }}
-          />
+          <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search courses..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-            style={{
-              backgroundColor: "#f7f7f4",
-              borderColor: "rgba(38, 37, 30, 0.1)",
-              color: "#26251e",
-            }}
+            className="w-full pl-10 pr-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-          style={{
-            backgroundColor: "#f7f7f4",
-            borderColor: "rgba(38, 37, 30, 0.1)",
-            color: "#26251e",
-          }}
+          className="px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
         >
           <option value="all">All Status</option>
           <option value="published">Published</option>
@@ -459,8 +378,8 @@ export default function CoursesPage() {
             onClick={() => setViewMode("grid")}
             className={`p-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 ${
               viewMode === "grid"
-                ? "bg-[#26251e] text-white"
-                : "bg-[#f7f7f4] text-[#26251e]"
+                ? "bg-primary text-white"
+                : "bg-surface-100 text-foreground"
             }`}
           >
             <GridFour className="h-5 w-5" />
@@ -469,8 +388,8 @@ export default function CoursesPage() {
             onClick={() => setViewMode("list")}
             className={`p-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 ${
               viewMode === "list"
-                ? "bg-[#26251e] text-white"
-                : "bg-[#f7f7f4] text-[#26251e]"
+                ? "bg-primary text-white"
+                : "bg-surface-100 text-foreground"
             }`}
           >
             <List className="h-5 w-5" />
@@ -495,9 +414,9 @@ export default function CoursesPage() {
             )
           )
         ) : (
-          <div className="text-center py-12" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <div className="text-center py-12 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2" style={{ color: "#26251e" }}>
+            <h3 className="text-lg font-medium mb-2 text-foreground">
               No courses found
             </h3>
             <p>Try adjusting your search or filter criteria</p>
@@ -508,34 +427,21 @@ export default function CoursesPage() {
       {/* Pagination */}
       {filteredCourses.length > 0 && (
         <div className="flex items-center justify-between">
-          <p
-            className="text-sm"
-            style={{ color: "rgba(38, 37, 30, 0.55)" }}
-          >
+          <p className="text-sm text-muted-foreground">
             Showing {filteredCourses.length} of {courses.length} courses
           </p>
           <div className="flex gap-2">
             <Button
               variant="outline"
               disabled
-              className="cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#f7f7f4",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "rgba(38, 37, 30, 0.4)",
-              }}
+              className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border-border/10 text-muted-foreground"
             >
               Previous
             </Button>
             <Button
               variant="outline"
               disabled
-              className="cursor-btn-hover focus-warm transition-all duration-150"
-              style={{
-                backgroundColor: "#f7f7f4",
-                borderColor: "rgba(38, 37, 30, 0.1)",
-                color: "rgba(38, 37, 30, 0.4)",
-              }}
+              className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border-border/10 text-muted-foreground"
             >
               Next
             </Button>

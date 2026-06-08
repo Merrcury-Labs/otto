@@ -18,23 +18,14 @@ export function LessonModalFooter({
         type="button"
         variant="outline"
         onClick={onClose}
-        className="cursor-btn-hover focus-warm transition-all duration-150"
-        style={{
-          backgroundColor: "#f7f7f4",
-          borderColor: "rgba(38, 37, 30, 0.1)",
-          color: "#26251e",
-        }}
+        className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
       >
         Cancel
       </Button>
       <Button
         type="button"
         onClick={onSave}
-        className="cursor-btn-hover focus-warm transition-all duration-150"
-        style={{
-          backgroundColor: "#ebeae5",
-          color: "#26251e",
-        }}
+        className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
       >
         {getLessonTypeLabel(lessonType)}
       </Button>

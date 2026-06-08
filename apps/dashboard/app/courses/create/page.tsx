@@ -240,8 +240,7 @@ export default function CreateCoursePage() {
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          className="cursor-btn-hover focus-warm transition-all duration-150"
-          style={{ color: "#26251e" }}
+          className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
           onClick={() => window.history.back()}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -249,12 +248,12 @@ export default function CreateCoursePage() {
         </Button>
         <div>
           <h1
-            className="text-3xl font-normal tracking-tight"
-            style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+            className="text-3xl font-normal tracking-tight text-foreground"
+            style={{ letterSpacing: "-0.11px" }}
           >
             Create Course
           </h1>
-          <p className="text-base" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+          <p className="text-base text-muted-foreground">
             Design and structure your new educational course
           </p>
         </div>
@@ -262,25 +261,23 @@ export default function CreateCoursePage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card
-          className="cursor-card hover:cursor-card-hover transition-all duration-200"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
             <div className="flex items-center gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-lg"
-                style={{ backgroundColor: "#f7f7f4" }}
+                className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
               >
-                <BookOpen className="h-5 w-5" style={{ color: "#26251e" }} />
+                <BookOpen className="h-5 w-5 text-foreground" />
               </div>
               <div>
                 <CardTitle
-                    className="text-xl font-normal"
-                    style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                    className="text-xl font-normal text-foreground"
+                    style={{ letterSpacing: "-0.11px" }}
                 >
                   Course Information
                 </CardTitle>
-                <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                <CardDescription className="text-muted-foreground">
                   Basic details about your course
                 </CardDescription>
               </div>
@@ -289,18 +286,13 @@ export default function CreateCoursePage() {
           <CardContent className="space-y-4">
             <div>
               <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: "#26251e" }}
+                className="block text-sm font-medium mb-2 text-foreground"
               >
                 Course Thumbnail *
               </label>
               <div className="space-y-3">
                 <div
-                  className="overflow-hidden rounded-lg border"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                  }}
+                  className="overflow-hidden rounded-lg border bg-surface-100 border-border/10"
                 >
                   {formData.thumbnail ? (
                     <Image
@@ -315,12 +307,10 @@ export default function CreateCoursePage() {
                     <div className="flex h-48 items-center justify-center">
                       <div className="text-center">
                         <BookOpen
-                          className="h-8 w-8 mx-auto mb-3"
-                          style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                          className="h-8 w-8 mx-auto mb-3 text-muted-foreground"
                         />
                         <p
-                          className="text-sm"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-sm text-muted-foreground"
                         >
                           Upload a thumbnail students will see before enrolling
                         </p>
@@ -331,11 +321,7 @@ export default function CreateCoursePage() {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <label
-                    className="inline-flex cursor-pointer items-center rounded-md px-4 py-2 text-sm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#ebeae5",
-                      color: "#26251e",
-                    }}
+                    className="inline-flex cursor-pointer items-center rounded-md px-4 py-2 text-sm transition-all duration-150 bg-surface-300 text-foreground"
                   >
                     <input
                       type="file"
@@ -357,12 +343,7 @@ export default function CreateCoursePage() {
                           thumbnail: "",
                         }))
                       }
-                      className="cursor-btn-hover focus-warm transition-all duration-150"
-                      style={{
-                        backgroundColor: "#f7f7f4",
-                        borderColor: "rgba(38, 37, 30, 0.1)",
-                        color: "#26251e",
-                      }}
+                      className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                     >
                       Remove
                     </Button>
@@ -373,8 +354,7 @@ export default function CreateCoursePage() {
 
             <div>
               <label
-                className="block text-sm font-medium mb-2"
-                style={{ color: "#26251e" }}
+                className="block text-sm font-medium mb-2 text-foreground"
               >
                 Course Prerequisites
               </label>
@@ -384,18 +364,13 @@ export default function CreateCoursePage() {
                     {formData.prerequisites.map((prerequisite) => (
                       <div
                         key={prerequisite}
-                        className="flex items-center justify-between rounded-md px-3 py-2"
-                        style={{
-                          backgroundColor: "#ebeae5",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center justify-between rounded-md px-3 py-2 bg-surface-300 text-foreground"
                       >
                         <span className="text-sm">{prerequisite}</span>
                         <button
                           type="button"
                           onClick={() => removePrerequisite(prerequisite)}
-                          className="transition-colors"
-                          style={{ color: "#26251e" }}
+                          className="transition-colors text-foreground"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -416,21 +391,12 @@ export default function CreateCoursePage() {
                       }
                     }}
                     placeholder="Add a prerequisite, e.g. Basic JavaScript knowledge"
-                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                      color: "#26251e",
-                    }}
+                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                   />
                   <Button
                     type="button"
                     onClick={() => addPrerequisite(prerequisiteInput)}
-                    className="cursor-btn-hover focus-warm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#ebeae5",
-                      color: "#26251e",
-                    }}
+                    className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
                   >
                     Add
                   </Button>
@@ -440,8 +406,7 @@ export default function CreateCoursePage() {
 
             <div>
               <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: "#26251e" }}
+                  className="block text-sm font-medium mb-2 text-foreground"
                 >
                   Course Title *
                 </label>
@@ -450,20 +415,14 @@ export default function CreateCoursePage() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Enter course title"
-                  className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                    color: "#26251e",
-                  }}
+                  className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                   required
               />
             </div>
 
             <div>
               <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: "#26251e" }}
+                  className="block text-sm font-medium mb-2 text-foreground"
                 >
                   Course Description *
                 </label>
@@ -472,20 +431,14 @@ export default function CreateCoursePage() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Describe what students will learn in this course"
                   rows={4}
-                  className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none"
-                  style={{
-                    backgroundColor: "#f7f7f4",
-                    borderColor: "rgba(38, 37, 30, 0.1)",
-                    color: "#26251e",
-                  }}
+                  className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none bg-surface-100 border border-border/10 text-foreground"
                   required
               />
             </div>
 
             <div>
               <label
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: "#26251e" }}
+                  className="block text-sm font-medium mb-2 text-foreground"
                 >
                   Tags
                 </label>
@@ -495,19 +448,14 @@ export default function CreateCoursePage() {
                     {formData.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm cursor-btn-hover focus-warm transition-all duration-150"
-                        style={{
-                          backgroundColor: "#ebeae5",
-                          color: "#26251e",
-                        }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
                       >
                         <Tag className="h-3.5 w-3.5" />
                         {tag}
                         <button
                           type="button"
                           onClick={() => removeTag(tag)}
-                          className="ml-1 hover:text-red-600 transition-colors"
-                          style={{ color: "#26251e" }}
+                          className="ml-1 hover:text-red-600 transition-colors text-foreground"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -522,20 +470,11 @@ export default function CreateCoursePage() {
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
                     placeholder="Type to search or add tags..."
-                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                      color: "#26251e",
-                    }}
+                    className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                   />
                   {tagInput && (
                     <div
-                      className="border rounded-md p-3 mt-2 max-h-48 overflow-y-auto"
-                      style={{
-                        backgroundColor: "#f7f7f4",
-                        borderColor: "rgba(38, 37, 30, 0.1)",
-                      }}
+                      className="border rounded-md p-3 mt-2 max-h-48 overflow-y-auto bg-surface-100 border-border/10"
                     >
                       <div className="flex flex-wrap gap-2">
                         {availableTags
@@ -550,11 +489,7 @@ export default function CreateCoursePage() {
                               key={tag}
                               type="button"
                               onClick={() => addTag(tag)}
-                              className="px-3 py-1.5 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                              style={{
-                                backgroundColor: "#e6e5e0",
-                                color: "#26251e",
-                              }}
+                              className="px-3 py-1.5 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                             >
                               +{tag}
                             </button>
@@ -569,26 +504,24 @@ export default function CreateCoursePage() {
         </Card>
 
         <Card
-          className="cursor-card hover:cursor-card-hover transition-all duration-200"
-          style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+          className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "#f7f7f4" }}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
                 >
-                  <FileText className="h-5 w-5" style={{ color: "#26251e" }} />
+                  <FileText className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
                   <CardTitle
-                      className="text-xl font-normal"
-                      style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                      className="text-xl font-normal text-foreground"
+                      style={{ letterSpacing: "-0.11px" }}
                   >
                     Course Structure
                   </CardTitle>
-                  <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                  <CardDescription className="text-muted-foreground">
                     Organize your course into modules and lessons
                   </CardDescription>
                 </div>
@@ -596,11 +529,7 @@ export default function CreateCoursePage() {
               <Button
                 type="button"
                 onClick={addModule}
-                className="cursor-btn-hover focus-warm transition-all duration-150"
-                style={{
-                  backgroundColor: "#ebeae5",
-                  color: "#26251e",
-                }}
+                className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Module
@@ -610,31 +539,24 @@ export default function CreateCoursePage() {
           <CardContent>
             {formData.modules.length === 0 ? (
               <div
-                  className="text-center py-12 border-2 border-dashed rounded-lg"
-                  style={{ borderColor: "rgba(38, 37, 30, 0.2)" }}
+                  className="text-center py-12 border-2 border-dashed rounded-lg border-border/10"
                 >
                 <FileText
-                    className="h-12 w-8 mx-auto mb-4"
-                    style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                    className="h-12 w-8 mx-auto mb-4 text-muted-foreground"
                 />
                 <div>
                   <h3
-                      className="text-lg font-medium mb-2"
-                      style={{ color: "#26251e" }}
+                      className="text-lg font-medium mb-2 text-foreground"
                   >
                     No modules yet
                   </h3>
-                  <p className="mb-4" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                  <p className="mb-4 text-muted-foreground">
                     Start by creating your first module to structure your course
                   </p>
                   <Button
                       type="button"
                       onClick={addModule}
-                      className="cursor-btn-hover focus-warm transition-all duration-150"
-                      style={{
-                        backgroundColor: "#ebeae5",
-                        color: "#26251e",
-                      }}
+                      className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Create First Module
@@ -646,17 +568,12 @@ export default function CreateCoursePage() {
                 {formData.modules.map((module, moduleIndex) => (
                   <div
                     key={module.id}
-                    className="border rounded-lg p-4"
-                    style={{
-                      backgroundColor: "#f7f7f4",
-                      borderColor: "rgba(38, 37, 30, 0.1)",
-                    }}
+                    className="border rounded-lg p-4 bg-surface-100 border-border/10"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div
-                          className="text-xs font-medium mb-1"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-xs font-medium mb-1 text-muted-foreground"
                         >
                           Module {moduleIndex + 1}
                         </div>
@@ -667,12 +584,7 @@ export default function CreateCoursePage() {
                             updateModuleTitle(module.id, e.target.value)
                           }
                           placeholder={`Module ${moduleIndex + 1} Title`}
-                          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{
-                            backgroundColor: "#e6e5e0",
-                            borderColor: "rgba(38, 37, 30, 0.1)",
-                            color: "#26251e",
-                          }}
+                          className="w-full px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-card border border-border/10 text-foreground"
                         />
                       </div>
                       <div className="flex gap-2">
@@ -680,8 +592,7 @@ export default function CreateCoursePage() {
                           type="button"
                           variant="ghost"
                           onClick={() => removeModule(module.id)}
-                          className="cursor-btn-hover focus-warm transition-all duration-150"
-                          style={{ color: "#cf2d56" }}
+                          className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                         >
                           <Trash className="h-4 w-4" />
                         </Button>
@@ -693,21 +604,12 @@ export default function CreateCoursePage() {
                         {module.lessons.map((lesson) => (
                           <div
                             key={lesson.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border"
-                            style={{
-                              backgroundColor: "#ebeae5",
-                              borderColor: "rgba(38, 37, 30, 0.1)",
-                            }}
+                            className="flex items-center gap-3 p-3 rounded-lg border bg-surface-300 border-border/10"
                           >
                             <SplitVerticalIcon
-                              className="h-4 w-4 cursor-move"
-                              style={{ color: "rgba(38, 37, 30, 0.4)" }}
+                              className="h-4 w-4 cursor-move text-muted-foreground"
                             />
-                            <div className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape"
-                              style={{
-                                backgroundColor: "#f7f7f4",
-                                color: "#26251e",
-                              }}
+                            <div className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape bg-surface-100 text-foreground"
                             >
                               {lesson.type === "video" && <Video className="h-4 w-4" />}
                               {lesson.type === "text" && <FileText className="h-4 w-4" />}
@@ -717,14 +619,12 @@ export default function CreateCoursePage() {
                             </div>
                             <div className="flex-1">
                               <div
-                                className="text-sm font-medium"
-                                style={{ color: "#26251e" }}
+                                className="text-sm font-medium text-foreground"
                               >
                                 {lesson.title}
                               </div>
                               <div
-                                className="text-xs"
-                                style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                                className="text-xs text-muted-foreground"
                               >
                                 {lesson.duration && (
                                   <span className="block mb-1">{lesson.duration}</span>
@@ -747,8 +647,7 @@ export default function CreateCoursePage() {
                               type="button"
                               variant="ghost"
                               onClick={() => removeLesson(module.id, lesson.id)}
-                              className="cursor-btn-hover focus-warm transition-all duration-150"
-                              style={{ color: "#cf2d56" }}
+                              className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -761,11 +660,7 @@ export default function CreateCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "video")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <Video className="h-4 w-4" />
                         Add Video
@@ -773,11 +668,7 @@ export default function CreateCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "text")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <FileText className="h-4 w-4" />
                         Add Reading
@@ -785,11 +676,7 @@ export default function CreateCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "quiz")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <Check className="h-4 w-4" />
                         Add Quiz
@@ -797,11 +684,7 @@ export default function CreateCoursePage() {
                       <button
                         type="button"
                         onClick={() => openLessonModal(module.id, "code")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm"
-                        style={{
-                          backgroundColor: "#e6e5e0",
-                          color: "#26251e",
-                        }}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
                       >
                         <Code className="h-4 w-4" />
                         Add Exercise
@@ -816,36 +699,30 @@ export default function CreateCoursePage() {
 
         {formData.modules.length > 0 && (
           <Card
-            className="cursor-card hover:cursor-card-hover transition-all duration-200"
-            style={{ backgroundColor: "#e6e5e0", borderRadius: "8px" }}
+            className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
           >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-lg"
-                  style={{ backgroundColor: "#f7f7f4" }}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
                 >
-                  <BookOpen className="h-5 w-5" style={{ color: "#26251e" }} />
+                  <BookOpen className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
                   <CardTitle
-                      className="text-xl font-normal"
-                      style={{ color: "#26251e", letterSpacing: "-0.11px" }}
+                      className="text-xl font-normal text-foreground"
+                      style={{ letterSpacing: "-0.11px" }}
                   >
                     Course Preview
                   </CardTitle>
-                  <CardDescription style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                  <CardDescription className="text-muted-foreground">
                     See the course the way a student would
                   </CardDescription>
                 </div>
                 <Button
                   type="button"
                   onClick={() => setIsPreviewOpen(true)}
-                  className="cursor-btn-hover focus-warm transition-all duration-150"
-                  style={{
-                    backgroundColor: "#ebeae5",
-                    color: "#26251e",
-                  }}
+                  className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
                 >
                   Open Student Preview
                 </Button>
@@ -854,18 +731,15 @@ export default function CreateCoursePage() {
             <CardContent>
               <div className="space-y-4">
                 <div
-                  className="p-4 rounded-lg"
-                  style={{ backgroundColor: "#f7f7f4" }}
+                  className="p-4 rounded-lg bg-surface-100"
                 >
                   <div
-                    className="font-medium mb-2"
-                    style={{ color: "#26251e" }}
+                    className="font-medium mb-2 text-foreground"
                   >
                     {formData.title || "Untitled Course"}
                   </div>
                   <p
-                    className="text-sm mb-3"
-                    style={{ color: "rgba(38, 37, 30, 0.7)" }}
+                    className="text-sm mb-3 text-muted-foreground"
                   >
                     {formData.description || "Your course description will appear here."}
                   </p>
@@ -884,22 +758,14 @@ export default function CreateCoursePage() {
                       {formData.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 py-0.5 rounded-full text-xs pill-shape"
-                          style={{
-                            backgroundColor: "#ebeae5",
-                            color: "#26251e",
-                          }}
+                          className="px-2 py-0.5 rounded-full text-xs pill-shape bg-surface-300 text-foreground"
                         >
                           {tag}
                         </span>
                       ))}
                       {formData.tags.length > 3 && (
                         <span
-                          className="px-2 py-0.5 rounded-full text-xs pill-shape"
-                          style={{
-                            backgroundColor: "#ebeae5",
-                            color: "#26251e",
-                          }}
+                          className="px-2 py-0.5 rounded-full text-xs pill-shape bg-surface-300 text-foreground"
                         >
                           +{formData.tags.length - 3}
                         </span>
@@ -914,10 +780,9 @@ export default function CreateCoursePage() {
                       <span>{totalLessons} lessons</span>
                     </div>
                     {formData.prerequisites.length > 0 && (
-                      <div className="rounded-md p-3" style={{ backgroundColor: "#ebeae5" }}>
+                      <div className="rounded-md p-3 bg-surface-300">
                         <div
-                          className="text-xs font-medium uppercase tracking-wide mb-2"
-                          style={{ color: "rgba(38, 37, 30, 0.55)" }}
+                          className="text-xs font-medium uppercase tracking-wide mb-2 text-muted-foreground"
                         >
                           Prerequisites
                         </div>
@@ -925,8 +790,7 @@ export default function CreateCoursePage() {
                           {formData.prerequisites.slice(0, 3).map((prerequisite) => (
                             <div
                               key={prerequisite}
-                              className="text-sm"
-                              style={{ color: "#26251e" }}
+                              className="text-sm text-foreground"
                             >
                               {prerequisite}
                             </div>
@@ -938,22 +802,18 @@ export default function CreateCoursePage() {
                       {formData.modules.slice(0, 3).map((module, index) => (
                         <div
                           key={module.id}
-                          className="p-3 rounded-md border-l-2"
-                          style={{
-                            backgroundColor: "#ebeae5",
-                            borderColor: "#26251e",
-                          }}
+                          className="p-3 rounded-md border-l-2 bg-surface-300 border-primary"
                         >
-                          <div className="text-sm font-medium mb-1" style={{ color: "#26251e" }}>
+                          <div className="text-sm font-medium mb-1 text-foreground">
                             {module.title || `Module ${index + 1}`}
                           </div>
-                          <div className="text-xs" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                          <div className="text-xs text-muted-foreground">
                             {module.lessons.length} lessons
                           </div>
                         </div>
                       ))}
                     {formData.modules.length > 3 && (
-                      <div className="text-center py-3" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+                      <div className="text-center py-3 text-muted-foreground">
                         +{formData.modules.length - 3} more modules
                       </div>
                     )}
@@ -970,24 +830,15 @@ export default function CreateCoursePage() {
             type="button"
             onClick={() => window.history.back()}
             variant="outline"
-            className="cursor-btn-hover focus-warm transition-all duration-150"
-            style={{
-              backgroundColor: "#f7f7f4",
-              borderColor: "rgba(38, 37, 30, 0.1)",
-              color: "#26251e",
-            }}
+            className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
           >
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={!isCourseReady}
-            className="cursor-btn-hover focus-warm transition-all duration-150"
+            className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
             style={{
-              backgroundColor: isCourseReady
-                ? "#ebeae5"
-                : "#e6e5e0",
-              color: "#26251e",
               opacity: isCourseReady ? 1 : 0.6,
               cursor: isCourseReady ? "pointer" : "not-allowed",
             }}

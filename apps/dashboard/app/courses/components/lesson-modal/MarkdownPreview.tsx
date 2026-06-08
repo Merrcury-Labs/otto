@@ -24,8 +24,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
           href={match[3]}
           target="_blank"
           rel="noreferrer"
-          className="underline"
-          style={{ color: "#26251e" }}
+          className="underline text-foreground"
         >
           {match[2]}
         </a>
@@ -34,21 +33,20 @@ function renderInlineMarkdown(text: string): ReactNode[] {
       nodes.push(
         <code
           key={`${match.index}-code`}
-          className="rounded px-1 py-0.5 text-sm"
-          style={{ backgroundColor: "#e6e5e0", color: "#26251e" }}
+          className="rounded px-1 py-0.5 text-sm bg-card text-foreground"
         >
           {match[4]}
         </code>
       );
     } else if (match[5]) {
       nodes.push(
-        <strong key={`${match.index}-strong`} style={{ color: "#26251e" }}>
+        <strong key={`${match.index}-strong`} className="text-foreground">
           {match[5]}
         </strong>
       );
     } else if (match[6]) {
       nodes.push(
-        <em key={`${match.index}-em`} style={{ color: "#26251e" }}>
+        <em key={`${match.index}-em`} className="text-foreground">
           {match[6]}
         </em>
       );
@@ -66,7 +64,7 @@ function renderInlineMarkdown(text: string): ReactNode[] {
 
 function renderParagraph(text: string, key: string) {
   return (
-    <p key={key} className="my-3" style={{ color: "#26251e" }}>
+    <p key={key} className="my-3 text-foreground">
       {renderInlineMarkdown(text)}
     </p>
   );
@@ -75,7 +73,7 @@ function renderParagraph(text: string, key: string) {
 export function MarkdownPreview({ content }: MarkdownPreviewProps) {
   if (!content.trim()) {
     return (
-      <p className="text-sm" style={{ color: "rgba(38, 37, 30, 0.55)" }}>
+      <p className="text-sm text-muted-foreground">
         Nothing to preview yet. Start writing in markdown to see the lesson render.
       </p>
     );
@@ -109,8 +107,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       blocks.push(
         <pre
           key={`code-${index}`}
-          className="my-4 overflow-x-auto rounded-lg p-4 text-sm"
-          style={{ backgroundColor: "#e6e5e0", color: "#26251e" }}
+          className="my-4 overflow-x-auto rounded-lg p-4 text-sm bg-card text-foreground"
         >
           <code>{codeLines.join("\n")}</code>
         </pre>
@@ -124,8 +121,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       blocks.push(
         <h3
           key={`h3-${index}`}
-          className="mt-5 mb-2 text-xl font-semibold"
-          style={{ color: "#26251e" }}
+          className="mt-5 mb-2 text-xl font-semibold text-foreground"
         >
           {renderInlineMarkdown(trimmedLine.replace(/^###\s+/, ""))}
         </h3>
@@ -138,8 +134,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       blocks.push(
         <h2
           key={`h2-${index}`}
-          className="mt-6 mb-2 text-2xl font-semibold"
-          style={{ color: "#26251e" }}
+          className="mt-6 mb-2 text-2xl font-semibold text-foreground"
         >
           {renderInlineMarkdown(trimmedLine.replace(/^##\s+/, ""))}
         </h2>
@@ -152,8 +147,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       blocks.push(
         <h1
           key={`h1-${index}`}
-          className="mt-6 mb-3 text-3xl font-bold"
-          style={{ color: "#26251e" }}
+          className="mt-6 mb-3 text-3xl font-bold text-foreground"
         >
           {renderInlineMarkdown(trimmedLine.replace(/^#\s+/, ""))}
         </h1>
@@ -166,11 +160,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       blocks.push(
         <blockquote
           key={`quote-${index}`}
-          className="my-4 border-l-2 pl-4 italic"
-          style={{
-            borderColor: "rgba(38, 37, 30, 0.2)",
-            color: "rgba(38, 37, 30, 0.75)",
-          }}
+          className="my-4 border-l-2 pl-4 italic border-border/20 text-muted-foreground"
         >
           {renderInlineMarkdown(trimmedLine.replace(/^>\s+/, ""))}
         </blockquote>
@@ -193,7 +183,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       blocks.push(
         <ul key={`ul-${index}`} className="my-4 list-disc space-y-2 pl-5">
           {items.map((item, itemIndex) => (
-            <li key={`${index}-${itemIndex}`} style={{ color: "#26251e" }}>
+            <li key={`${index}-${itemIndex}`} className="text-foreground">
               {renderInlineMarkdown(item)}
             </li>
           ))}
@@ -216,7 +206,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
       blocks.push(
         <ol key={`ol-${index}`} className="my-4 list-decimal space-y-2 pl-5">
           {items.map((item, itemIndex) => (
-            <li key={`${index}-${itemIndex}`} style={{ color: "#26251e" }}>
+            <li key={`${index}-${itemIndex}`} className="text-foreground">
               {renderInlineMarkdown(item)}
             </li>
           ))}
