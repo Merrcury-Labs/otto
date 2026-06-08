@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -29,12 +29,44 @@ import { Button } from "@repo/ui/button";
 import { CoursePreviewModal } from "./components/CoursePreviewModal";
 import { courses } from "./data";
 import type { Course } from "./types";
+import { graphqlFetch } from "../../lib/graphql/client";
+import { adminCoursesQuery } from "../../lib/graphql/courses";
+
+type CourseStats = {
+  total: number;
+  published: number;
+  students: number;
+  averageProgress: number;
+};
+
+type AdminCoursesData = {
+  courses: Array<Omit<Course, "status"> & { status: Uppercase<Course["status"]> }>;
+  courseStats: CourseStats;
+};
+
+const fallbackCourseStats: CourseStats = {
+  total: courses.length,
+  published: courses.filter((course) => course.status === "published").length,
+  students: courses.reduce((acc, course) => acc + course.students, 0),
+  averageProgress: Math.round(
+    courses.reduce((acc, course) => acc + course.progress, 0) / courses.length
+  ),
+};
+
+const normalizeCourse = (
+  course: AdminCoursesData["courses"][number]
+): Course => ({
+  ...course,
+  status: course.status.toLowerCase() as Course["status"],
+});
 
 export default function CoursesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("published");
   const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
+  const [courseList, setCourseList] = useState<Course[]>(courses);
+  const [courseStats, setCourseStats] = useState<CourseStats>(fallbackCourseStats);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -67,14 +99,40 @@ export default function CoursesPage() {
     );
   };
 
-  const filteredCourses = courses.filter((course) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourses() {
+      const result = await graphqlFetch<AdminCoursesData>({
+        query: adminCoursesQuery,
+      });
+
+      if (isMounted) {
+        setCourseList(result.courses.map(normalizeCourse));
+        setCourseStats(result.courseStats);
+      }
+    }
+
+    loadCourses().catch(() => {
+      if (isMounted) {
+        setCourseList(courses);
+        setCourseStats(fallbackCourseStats);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredCourses = useMemo(() => courseList.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
       statusFilter === "all" || course.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [courseList, searchQuery, statusFilter]);
 
   const CourseCard = ({ course }: { course: Course }) => (
     <Card className="cursor-card hover:cursor-card-hover transition-all duration-200 group bg-card rounded-lg">
@@ -284,7 +342,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {courses.length}
+              {courseStats.total}
             </div>
           </CardContent>
         </Card>
@@ -303,7 +361,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {courses.filter((c) => c.status === "published").length}
+              {courseStats.published}
             </div>
           </CardContent>
         </Card>
@@ -322,7 +380,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {courses.reduce((acc, course) => acc + course.students, 0)}
+              {courseStats.students}
             </div>
           </CardContent>
         </Card>
@@ -341,11 +399,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {Math.round(
-                courses.reduce((acc, course) => acc + course.progress, 0) /
-                  courses.length
-              )}
-              %
+              {courseStats.averageProgress}%
             </div>
           </CardContent>
         </Card>
@@ -428,7 +482,7 @@ export default function CoursesPage() {
       {filteredCourses.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredCourses.length} of {courses.length} courses
+            Showing {filteredCourses.length} of {courseList.length} courses
           </p>
           <div className="flex gap-2">
             <Button

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -31,12 +31,68 @@ import { Button } from "@repo/ui/button";
 import { QuizPreviewModal } from "./components/QuizPreviewModal";
 import { quizzes } from "./data";
 import type { Quiz } from "./types";
+import { graphqlFetch } from "../../lib/graphql/client";
+import { adminQuizzesQuery } from "../../lib/graphql/quizzes";
+
+type QuizStats = {
+  total: number;
+  published: number;
+  attempts: number;
+  averageScore: number;
+};
+
+type GraphqlQuiz = Omit<Quiz, "status" | "questions"> & {
+  status: Uppercase<Quiz["status"]>;
+  questions: Array<
+    Omit<Quiz["questions"][number], "correctAnswer"> & {
+      correctAnswer?: string | null;
+    }
+  >;
+};
+
+type AdminQuizzesData = {
+  quizzes: GraphqlQuiz[];
+  quizStats: QuizStats;
+};
+
+const publishedQuizzes = quizzes.filter((quiz) => quiz.status === "published");
+
+const fallbackQuizStats: QuizStats = {
+  total: quizzes.length,
+  published: publishedQuizzes.length,
+  attempts: quizzes.reduce((acc, quiz) => acc + quiz.attempts, 0),
+  averageScore: Math.round(
+    publishedQuizzes.reduce((acc, quiz) => acc + quiz.avgScore, 0) /
+      Math.max(publishedQuizzes.length, 1)
+  ),
+};
+
+const parseCorrectAnswer = (value?: string | null) => {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = JSON.parse(value) as number | number[];
+
+  return parsed;
+};
+
+const normalizeQuiz = (quiz: GraphqlQuiz): Quiz => ({
+  ...quiz,
+  status: quiz.status.toLowerCase() as Quiz["status"],
+  questions: quiz.questions.map((question) => ({
+    ...question,
+    correctAnswer: parseCorrectAnswer(question.correctAnswer),
+  })),
+});
 
 export default function QuizzesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [previewQuiz, setPreviewQuiz] = useState<Quiz | null>(null);
+  const [quizList, setQuizList] = useState<Quiz[]>(quizzes);
+  const [quizStats, setQuizStats] = useState<QuizStats>(fallbackQuizStats);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -69,7 +125,33 @@ export default function QuizzesPage() {
     );
   };
 
-  const filteredQuizzes = quizzes.filter((quiz) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadQuizzes() {
+      const result = await graphqlFetch<AdminQuizzesData>({
+        query: adminQuizzesQuery,
+      });
+
+      if (isMounted) {
+        setQuizList(result.quizzes.map(normalizeQuiz));
+        setQuizStats(result.quizStats);
+      }
+    }
+
+    loadQuizzes().catch(() => {
+      if (isMounted) {
+        setQuizList(quizzes);
+        setQuizStats(fallbackQuizStats);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredQuizzes = useMemo(() => quizList.filter((quiz) => {
     const matchesSearch =
       quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quiz.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -77,7 +159,7 @@ export default function QuizzesPage() {
     const matchesStatus =
       statusFilter === "all" || quiz.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [quizList, searchQuery, statusFilter]);
 
   const QuizCard = ({ quiz }: { quiz: Quiz }) => (
     <Card
@@ -334,7 +416,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {quizzes.length}
+              {quizStats.total}
             </div>
           </CardContent>
         </Card>
@@ -357,7 +439,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {quizzes.filter((q) => q.status === "published").length}
+              {quizStats.published}
             </div>
           </CardContent>
         </Card>
@@ -380,7 +462,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {quizzes.reduce((acc, quiz) => acc + quiz.attempts, 0)}
+              {quizStats.attempts}
             </div>
           </CardContent>
         </Card>
@@ -403,13 +485,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {Math.round(
-                quizzes
-                  .filter((q) => q.status === "published")
-                  .reduce((acc, quiz) => acc + quiz.avgScore, 0) /
-                  Math.max(quizzes.filter((q) => q.status === "published").length, 1)
-              )}
-              %
+              {quizStats.averageScore}%
             </div>
           </CardContent>
         </Card>
@@ -496,7 +572,7 @@ export default function QuizzesPage() {
           <p
             className="text-sm text-muted-foreground"
           >
-            Showing {filteredQuizzes.length} of {quizzes.length} quizzes
+            Showing {filteredQuizzes.length} of {quizList.length} quizzes
           </p>
           <div className="flex gap-2">
             <Button
