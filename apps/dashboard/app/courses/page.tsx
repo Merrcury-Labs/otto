@@ -27,7 +27,6 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import { CoursePreviewModal } from "./components/CoursePreviewModal";
-import { courses } from "./data";
 import type { Course } from "./types";
 import { graphqlFetch } from "../../lib/graphql/client";
 import { adminCoursesQuery } from "../../lib/graphql/courses";
@@ -39,25 +38,64 @@ type CourseStats = {
   averageProgress: number;
 };
 
-type AdminCoursesData = {
-  courses: Array<Omit<Course, "status"> & { status: Uppercase<Course["status"]> }>;
-  courseStats: CourseStats;
+type BackendCourse = {
+  id: string;
+  title: string;
+  description: string;
+  tutor: string;
+  thumbnail?: string;
+  image?: string;
+  lessonCount: number;
+  level: string;
+  category: string;
+  prerequisites?: string;
+  students: number;
 };
 
-const fallbackCourseStats: CourseStats = {
+type AdminCoursesData = {
+  courses: BackendCourse[];
+};
+
+const emptyCourseStats: CourseStats = {
+  total: 0,
+  published: 0,
+  students: 0,
+  averageProgress: 0,
+};
+
+const parseLines = (value?: string) =>
+  value
+    ?.split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean) ?? [];
+
+const getCourseStats = (courses: Course[]): CourseStats => ({
   total: courses.length,
   published: courses.filter((course) => course.status === "published").length,
-  students: courses.reduce((acc, course) => acc + course.students, 0),
-  averageProgress: Math.round(
-    courses.reduce((acc, course) => acc + course.progress, 0) / courses.length
-  ),
-};
+  students: courses.reduce((total, course) => total + course.students, 0),
+  averageProgress: courses.length
+    ? Math.round(
+        courses.reduce((total, course) => total + course.progress, 0) /
+          courses.length
+      )
+    : 0,
+});
 
-const normalizeCourse = (
-  course: AdminCoursesData["courses"][number]
-): Course => ({
-  ...course,
-  status: course.status.toLowerCase() as Course["status"],
+const normalizeCourse = (course: BackendCourse): Course => ({
+  id: course.id,
+  title: course.title,
+  description: course.description,
+  status: "published",
+  students: course.students,
+  quizzes: 0,
+  progress: 0,
+  duration: `${course.lessonCount} lessons`,
+  createdAt: "",
+  updatedAt: "",
+  thumbnail: course.thumbnail || course.image || "",
+  prerequisites: parseLines(course.prerequisites),
+  tags: [course.category, course.level].filter(Boolean),
+  modules: [],
 });
 
 export default function CoursesPage() {
@@ -65,8 +103,10 @@ export default function CoursesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("published");
   const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
-  const [courseList, setCourseList] = useState<Course[]>(courses);
-  const [courseStats, setCourseStats] = useState<CourseStats>(fallbackCourseStats);
+  const [courseList, setCourseList] = useState<Course[]>([]);
+  const [courseStats, setCourseStats] = useState<CourseStats>(emptyCourseStats);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [courseError, setCourseError] = useState<string | null>(null);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -108,15 +148,25 @@ export default function CoursesPage() {
       });
 
       if (isMounted) {
-        setCourseList(result.courses.map(normalizeCourse));
-        setCourseStats(result.courseStats);
+        const courses = result.courses.map(normalizeCourse);
+
+        setCourseList(courses);
+        setCourseStats(getCourseStats(courses));
+        setCourseError(null);
       }
     }
 
-    loadCourses().catch(() => {
+    loadCourses().catch((error) => {
       if (isMounted) {
-        setCourseList(courses);
-        setCourseStats(fallbackCourseStats);
+        setCourseList([]);
+        setCourseStats(emptyCourseStats);
+        setCourseError(
+          error instanceof Error ? error.message : "Unable to load courses."
+        );
+      }
+    }).finally(() => {
+      if (isMounted) {
+        setIsLoadingCourses(false);
       }
     });
 
@@ -459,7 +509,22 @@ export default function CoursesPage() {
             : "space-y-2"
         }`}
       >
-        {filteredCourses.length > 0 ? (
+        {isLoadingCourses ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Loading courses
+            </h3>
+          </div>
+        ) : courseError ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Could not load courses
+            </h3>
+            <p>{courseError}</p>
+          </div>
+        ) : filteredCourses.length > 0 ? (
           filteredCourses.map((course) =>
             viewMode === "grid" ? (
               <CourseCard key={course.id} course={course} />

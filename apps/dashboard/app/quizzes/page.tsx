@@ -29,7 +29,6 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import { QuizPreviewModal } from "./components/QuizPreviewModal";
-import { quizzes } from "./data";
 import type { Quiz } from "./types";
 import { graphqlFetch } from "../../lib/graphql/client";
 import { adminQuizzesQuery } from "../../lib/graphql/quizzes";
@@ -55,16 +54,11 @@ type AdminQuizzesData = {
   quizStats: QuizStats;
 };
 
-const publishedQuizzes = quizzes.filter((quiz) => quiz.status === "published");
-
-const fallbackQuizStats: QuizStats = {
-  total: quizzes.length,
-  published: publishedQuizzes.length,
-  attempts: quizzes.reduce((acc, quiz) => acc + quiz.attempts, 0),
-  averageScore: Math.round(
-    publishedQuizzes.reduce((acc, quiz) => acc + quiz.avgScore, 0) /
-      Math.max(publishedQuizzes.length, 1)
-  ),
+const emptyQuizStats: QuizStats = {
+  total: 0,
+  published: 0,
+  attempts: 0,
+  averageScore: 0,
 };
 
 const parseCorrectAnswer = (value?: string | null) => {
@@ -91,8 +85,10 @@ export default function QuizzesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [previewQuiz, setPreviewQuiz] = useState<Quiz | null>(null);
-  const [quizList, setQuizList] = useState<Quiz[]>(quizzes);
-  const [quizStats, setQuizStats] = useState<QuizStats>(fallbackQuizStats);
+  const [quizList, setQuizList] = useState<Quiz[]>([]);
+  const [quizStats, setQuizStats] = useState<QuizStats>(emptyQuizStats);
+  const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
+  const [quizError, setQuizError] = useState<string | null>(null);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -136,13 +132,21 @@ export default function QuizzesPage() {
       if (isMounted) {
         setQuizList(result.quizzes.map(normalizeQuiz));
         setQuizStats(result.quizStats);
+        setQuizError(null);
       }
     }
 
-    loadQuizzes().catch(() => {
+    loadQuizzes().catch((error) => {
       if (isMounted) {
-        setQuizList(quizzes);
-        setQuizStats(fallbackQuizStats);
+        setQuizList([]);
+        setQuizStats(emptyQuizStats);
+        setQuizError(
+          error instanceof Error ? error.message : "Unable to load quizzes."
+        );
+      }
+    }).finally(() => {
+      if (isMounted) {
+        setIsLoadingQuizzes(false);
       }
     });
 
@@ -547,7 +551,22 @@ export default function QuizzesPage() {
             : "space-y-2"
         }`}
       >
-        {filteredQuizzes.length > 0 ? (
+        {isLoadingQuizzes ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Loading quizzes
+            </h3>
+          </div>
+        ) : quizError ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Could not load quizzes
+            </h3>
+            <p>{quizError}</p>
+          </div>
+        ) : filteredQuizzes.length > 0 ? (
           filteredQuizzes.map((quiz) =>
             viewMode === "grid" ? (
               <QuizCard key={quiz.id} quiz={quiz} />

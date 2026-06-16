@@ -1,37 +1,17 @@
 export const adminCoursesQuery = /* GraphQL */ `
-  query AdminCourses($status: ContentStatus, $search: String) {
-    courses(status: $status, search: $search) {
+  query AdminCourses {
+    courses {
       id
-      title
+      title: name
       description
-      status
-      students
-      quizzes
-      progress
-      duration
-      createdAt
-      updatedAt
+      tutor
       thumbnail
+      image
+      lessonCount
+      level
+      category
       prerequisites
-      tags
-      modules {
-        id
-        title
-        lessons {
-          id
-          title
-          type
-          duration
-          url
-          content
-        }
-      }
-    }
-    courseStats {
-      total
-      published
-      students
-      averageProgress
+      students: enrolledStudents
     }
   }
 `;

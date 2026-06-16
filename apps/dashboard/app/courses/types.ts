@@ -19,7 +19,7 @@ export interface CourseModule {
 }
 
 export interface Course {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   status: CourseStatus;
