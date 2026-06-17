@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CodeLessonFields } from "./lesson-modal/CodeLessonFields";
 import { LessonDetailsFields } from "./lesson-modal/LessonDetailsFields";
 import { LessonModalFooter } from "./lesson-modal/LessonModalFooter";
@@ -17,21 +17,33 @@ import { VideoLessonFields } from "./lesson-modal/VideoLessonFields";
 
 export type { LessonFormData, LessonModalProps, QuizQuestion, QuizType } from "./lesson-modal/types";
 
+const getInitialLessonFormData = (
+  lessonType: LessonModalProps["lessonType"]
+): LessonFormData => ({
+  title: "",
+  type: lessonType,
+  duration: "",
+  url: "",
+  content: "",
+  questions: [],
+  quizType: lessonType === "quiz" ? "multiple-choice" : undefined,
+});
+
 export default function LessonModal({
   isOpen,
   lessonType,
   onSave,
   onClose,
 }: LessonModalProps) {
-  const [lessonFormData, setLessonFormData] = useState<LessonFormData>({
-    title: "",
-    type: lessonType,
-    duration: "",
-    url: "",
-    content: "",
-    questions: [],
-    quizType: lessonType === "quiz" ? "multiple-choice" : undefined,
-  });
+  const [lessonFormData, setLessonFormData] = useState<LessonFormData>(
+    getInitialLessonFormData(lessonType)
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      setLessonFormData(getInitialLessonFormData(lessonType));
+    }
+  }, [isOpen, lessonType]);
 
   const addQuestion = () => {
     const quizType = lessonFormData.quizType || "multiple-choice";
