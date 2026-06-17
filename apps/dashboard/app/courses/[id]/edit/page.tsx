@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import {
@@ -27,8 +27,98 @@ import {
 } from "@repo/ui/card";
 import LessonModal, { LessonFormData } from "../../components/LessonModal";
 import { CoursePreviewModal } from "../../components/CoursePreviewModal";
-import { getCourseById } from "../../data";
 import type { CourseFormData, CourseStatus, Lesson } from "../../types";
+import { graphqlFetch } from "../../../../lib/graphql/client";
+import { adminCoursesQuery } from "../../../../lib/graphql/courses";
+
+type BackendCourse = {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail?: string;
+  image?: string;
+  level: string;
+  category: string;
+  prerequisites?: string;
+};
+
+type AdminCoursesData = {
+  courses: BackendCourse[];
+};
+
+const parseLines = (value?: string) =>
+  value
+    ?.split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean) ?? [];
+
+const getImageUrl = (value?: string) => {
+  const imageUrl = value
+    ?.match(/https?:\/\/\S+|\/\/\S+|\S+unsplash\.com\S*/i)?.[0]
+    .trim()
+    .replace(/[),.;]+$/, "");
+
+  if (!imageUrl) return "";
+  if (imageUrl.startsWith("//")) return `https:${imageUrl}`;
+  if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("data:")) {
+    return imageUrl;
+  }
+  if (imageUrl.includes("unsplash.com")) return `https://${imageUrl}`;
+
+  return imageUrl;
+};
+
+const getUnsplashPhotoId = (url: URL) => {
+  if (url.hostname !== "unsplash.com") return "";
+
+  const [, resource, slug] = url.pathname.split("/");
+
+  if (resource !== "photos" || !slug) return "";
+
+  return slug.split("-").at(-1) ?? "";
+};
+
+const getDisplayableImageUrl = (value: string) => {
+  if (!value) return "";
+  if (value.startsWith("data:image/") || value.startsWith("/")) return value;
+
+  try {
+    const url = new URL(value);
+    const imageHosts = ["images.unsplash.com", "plus.unsplash.com"];
+
+    if (
+      imageHosts.includes(url.hostname) ||
+      /\.(avif|gif|jpe?g|png|webp)$/i.test(url.pathname)
+    ) {
+      return value;
+    }
+
+    const unsplashPhotoId = getUnsplashPhotoId(url);
+
+    if (unsplashPhotoId) {
+      return `https://unsplash.com/photos/${unsplashPhotoId}/download?force=true&w=900`;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+
+const getCourseImageUrl = (course: BackendCourse) =>
+  [course.thumbnail, course.image]
+    .map(getImageUrl)
+    .map(getDisplayableImageUrl)
+    .find(Boolean) ?? "";
+
+const getCourseFormData = (course: BackendCourse): CourseFormData => ({
+  title: course.title,
+  description: course.description,
+  thumbnail: getCourseImageUrl(course),
+  prerequisites: parseLines(course.prerequisites),
+  tags: [course.category, course.level].filter(Boolean),
+  modules: [],
+});
 
 function getLessonIcon(type: Lesson["type"]) {
   if (type === "video") return <Video className="h-4 w-4" />;
@@ -39,34 +129,76 @@ function getLessonIcon(type: Lesson["type"]) {
 
 export default function EditCoursePage() {
   const params = useParams<{ id: string }>();
-  const courseId = Number(params.id);
-  const course = getCourseById(courseId);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
-  const initialFormData = useMemo<CourseFormData | null>(() => {
-    if (!course) return null;
-
-    return {
-      title: course.title,
-      description: course.description,
-      thumbnail: course.thumbnail,
-      prerequisites: course.prerequisites,
-      tags: course.tags,
-      modules: course.modules,
-    };
-  }, [course]);
-
-  const [formData, setFormData] = useState<CourseFormData | null>(
-    initialFormData
-  );
-  const [status, setStatus] = useState<CourseStatus>(
-    course?.status || "draft"
-  );
+  const [formData, setFormData] = useState<CourseFormData | null>(null);
+  const [status, setStatus] = useState<CourseStatus>("published");
+  const [isLoadingCourse, setIsLoadingCourse] = useState(true);
+  const [courseError, setCourseError] = useState<string | null>(null);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
 
-  if (!course || !formData) {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourse() {
+      const result = await graphqlFetch<AdminCoursesData>({
+        query: adminCoursesQuery,
+      });
+      const course = result.courses.find(
+        (item) => String(item.id) === params.id
+      );
+
+      if (!isMounted) return;
+
+      if (!course) {
+        setFormData(null);
+        setCourseError("Course not found.");
+        return;
+      }
+
+      setFormData(getCourseFormData(course));
+      setStatus("published");
+      setCourseError(null);
+    }
+
+    setIsLoadingCourse(true);
+    loadCourse()
+      .catch((error) => {
+        if (isMounted) {
+          setFormData(null);
+          setCourseError(
+            error instanceof Error ? error.message : "Unable to load course."
+          );
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingCourse(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [params.id]);
+
+  if (isLoadingCourse) {
+    return (
+      <div className="space-y-6 px-4">
+        <Card className="bg-card rounded-lg">
+          <CardContent className="py-12 text-center">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h1 className="text-xl font-medium text-foreground">
+              Loading course
+            </h1>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!formData) {
     return (
       <div className="space-y-6 px-4">
         <Button
@@ -88,7 +220,7 @@ export default function EditCoursePage() {
             <p
               className="mt-2 text-muted-foreground"
             >
-              This course may have been deleted or moved.
+              {courseError || "This course may have been deleted or moved."}
             </p>
           </CardContent>
         </Card>
@@ -276,7 +408,7 @@ export default function EditCoursePage() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     console.log("Updating course:", {
-      id: course.id,
+      id: params.id,
       status,
       ...formData,
     });

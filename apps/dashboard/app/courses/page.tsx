@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import {
   Card,
@@ -24,6 +25,7 @@ import {
   CheckCircle,
   Circle,
   XCircle,
+  BookOpen,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import { CoursePreviewModal } from "./components/CoursePreviewModal";
@@ -69,6 +71,65 @@ const parseLines = (value?: string) =>
     .map((item) => item.trim())
     .filter(Boolean) ?? [];
 
+const getImageUrl = (value?: string) => {
+  const imageUrl = value
+    ?.match(/https?:\/\/\S+|\/\/\S+|\S+unsplash\.com\S*/i)?.[0]
+    .trim()
+    .replace(/[),.;]+$/, "");
+
+  if (!imageUrl) return "";
+  if (imageUrl.startsWith("//")) return `https:${imageUrl}`;
+  if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("data:")) {
+    return imageUrl;
+  }
+  if (imageUrl.includes("unsplash.com")) return `https://${imageUrl}`;
+
+  return imageUrl;
+};
+
+const getUnsplashPhotoId = (url: URL) => {
+  if (url.hostname !== "unsplash.com") return "";
+
+  const [, resource, slug] = url.pathname.split("/");
+
+  if (resource !== "photos" || !slug) return "";
+
+  return slug.split("-").at(-1) ?? "";
+};
+
+const getDisplayableImageUrl = (value: string) => {
+  if (!value) return "";
+  if (value.startsWith("data:image/") || value.startsWith("/")) return value;
+
+  try {
+    const url = new URL(value);
+    const imageHosts = ["images.unsplash.com", "plus.unsplash.com"];
+
+    if (
+      imageHosts.includes(url.hostname) ||
+      /\.(avif|gif|jpe?g|png|webp)$/i.test(url.pathname)
+    ) {
+      return value;
+    }
+
+    const unsplashPhotoId = getUnsplashPhotoId(url);
+
+    if (unsplashPhotoId) {
+      return `https://unsplash.com/photos/${unsplashPhotoId}/download?force=true&w=900`;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+
+const getCourseImageUrl = (course: BackendCourse) =>
+  [course.thumbnail, course.image]
+    .map(getImageUrl)
+    .map(getDisplayableImageUrl)
+    .find(Boolean) ?? "";
+
 const getCourseStats = (courses: Course[]): CourseStats => ({
   total: courses.length,
   published: courses.filter((course) => course.status === "published").length,
@@ -92,7 +153,7 @@ const normalizeCourse = (course: BackendCourse): Course => ({
   duration: `${course.lessonCount} lessons`,
   createdAt: "",
   updatedAt: "",
-  thumbnail: course.thumbnail || course.image || "",
+  thumbnail: getCourseImageUrl(course),
   prerequisites: parseLines(course.prerequisites),
   tags: [course.category, course.level].filter(Boolean),
   modules: [],
@@ -185,7 +246,23 @@ export default function CoursesPage() {
   }), [courseList, searchQuery, statusFilter]);
 
   const CourseCard = ({ course }: { course: Course }) => (
-    <Card className="cursor-card hover:cursor-card-hover transition-all duration-200 group bg-card rounded-lg">
+    <Card className="cursor-card hover:cursor-card-hover transition-all duration-200 group overflow-hidden bg-card rounded-lg">
+      <div className="relative h-40 w-full bg-surface-100">
+        {course.thumbnail ? (
+          <Image
+            src={course.thumbnail}
+            alt={`${course.title} thumbnail`}
+            className="object-cover"
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <BookOpen className="h-8 w-8" />
+          </div>
+        )}
+      </div>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -281,6 +358,22 @@ export default function CoursesPage() {
     <div
       className="flex items-center gap-4 p-4 border-b cursor-btn-hover focus-warm transition-all duration-150 hover:bg-accent border-border/10"
     >
+      <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-md bg-surface-100">
+        {course.thumbnail ? (
+          <Image
+            src={course.thumbnail}
+            alt={`${course.title} thumbnail`}
+            className="object-cover"
+            fill
+            sizes="96px"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <BookOpen className="h-5 w-5" />
+          </div>
+        )}
+      </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <h3
