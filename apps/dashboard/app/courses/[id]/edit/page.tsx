@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
@@ -30,6 +30,7 @@ import { CoursePreviewModal } from "../../components/CoursePreviewModal";
 import type { CourseFormData, CourseStatus, Lesson } from "../../types";
 import { graphqlFetch } from "../../../../lib/graphql/client";
 import { adminCoursesQuery } from "../../../../lib/graphql/courses";
+import { saveCourse } from "../../persistence";
 
 type BackendCourse = {
   id: string;
@@ -129,11 +130,14 @@ function getLessonIcon(type: Lesson["type"]) {
 
 export default function EditCoursePage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [formData, setFormData] = useState<CourseFormData | null>(null);
   const [status, setStatus] = useState<CourseStatus>("published");
   const [isLoadingCourse, setIsLoadingCourse] = useState(true);
   const [courseError, setCourseError] = useState<string | null>(null);
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
@@ -405,13 +409,28 @@ export default function EditCoursePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log("Updating course:", {
-      id: params.id,
-      status,
-      ...formData,
-    });
+
+    if (!formData) return;
+
+    setIsSavingCourse(true);
+    setSaveError(null);
+
+    try {
+      await saveCourse(formData, {
+        id: params.id,
+        status,
+      });
+      router.push("/courses");
+      router.refresh();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Unable to update course."
+      );
+    } finally {
+      setIsSavingCourse(false);
+    }
   };
 
   return (
@@ -794,6 +813,12 @@ export default function EditCoursePage() {
           </CardContent>
         </Card>
 
+        {saveError && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {saveError}
+          </div>
+        )}
+
         <div className="flex justify-end gap-3">
           <Button
             type="button"
@@ -805,9 +830,10 @@ export default function EditCoursePage() {
           </Button>
           <Button
             type="submit"
+            disabled={isSavingCourse}
             className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
           >
-            Save Changes
+            {isSavingCourse ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>

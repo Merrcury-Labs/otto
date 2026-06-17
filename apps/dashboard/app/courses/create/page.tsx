@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -26,8 +27,10 @@ import { Button } from "@repo/ui/button";
 import LessonModal, { LessonFormData } from "../components/LessonModal";
 import { CoursePreviewModal } from "../components/CoursePreviewModal";
 import type { CourseFormData, CourseModule as Module, Lesson } from "../types";
+import { saveCourse } from "../persistence";
 
 export default function CreateCoursePage() {
+  const router = useRouter();
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
     description: "",
@@ -43,6 +46,8 @@ export default function CreateCoursePage() {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const availableTags = [
     "React",
@@ -221,9 +226,25 @@ export default function CreateCoursePage() {
     setCurrentModuleId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Creating course:", formData);
+
+    setIsSavingCourse(true);
+    setSaveError(null);
+
+    try {
+      await saveCourse(formData, {
+        status: "draft",
+      });
+      router.push("/courses");
+      router.refresh();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Unable to create course."
+      );
+    } finally {
+      setIsSavingCourse(false);
+    }
   };
 
   const totalLessons = formData.modules.reduce(
@@ -825,6 +846,12 @@ export default function CreateCoursePage() {
           </Card>
         )}
 
+        {saveError && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {saveError}
+          </div>
+        )}
+
         <div className="flex justify-end gap-3">
           <Button
             type="button"
@@ -836,14 +863,14 @@ export default function CreateCoursePage() {
           </Button>
           <Button
             type="submit"
-            disabled={!isCourseReady}
+            disabled={!isCourseReady || isSavingCourse}
             className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
             style={{
-              opacity: isCourseReady ? 1 : 0.6,
-              cursor: isCourseReady ? "pointer" : "not-allowed",
+              opacity: isCourseReady && !isSavingCourse ? 1 : 0.6,
+              cursor: isCourseReady && !isSavingCourse ? "pointer" : "not-allowed",
             }}
           >
-            Create Course
+            {isSavingCourse ? "Creating..." : "Create Course"}
           </Button>
         </div>
       </form>
