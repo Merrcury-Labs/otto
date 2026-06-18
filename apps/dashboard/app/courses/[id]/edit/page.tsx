@@ -25,7 +25,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/card";
-import LessonModal, { LessonFormData } from "../../components/LessonModal";
+import LessonModal, {
+  LessonFormData,
+  QuizQuestion,
+} from "../../components/LessonModal";
 import { CoursePreviewModal } from "../../components/CoursePreviewModal";
 import type { CourseFormData, CourseStatus, Lesson } from "../../types";
 import { graphqlFetch } from "../../../../lib/graphql/client";
@@ -41,6 +44,24 @@ type BackendCourse = {
   level: string;
   category: string;
   prerequisites?: string;
+  modules?: BackendModule[];
+};
+
+type BackendModule = {
+  id: string;
+  title: string;
+  description?: string;
+  order?: number;
+  lessons?: BackendLesson[];
+};
+
+type BackendLesson = {
+  id: string;
+  title: string;
+  content?: string;
+  videoUrl?: string | null;
+  length?: string;
+  sectionName?: string;
 };
 
 type AdminCoursesData = {
@@ -112,13 +133,88 @@ const getCourseImageUrl = (course: BackendCourse) =>
     .map(getDisplayableImageUrl)
     .find(Boolean) ?? "";
 
+const parseQuizQuestions = (content?: string) => {
+  if (!content) return null;
+
+  try {
+    const value = JSON.parse(content) as unknown;
+
+    return Array.isArray(value) ? (value as QuizQuestion[]) : null;
+  } catch {
+    return null;
+  }
+};
+
+const getLessonDuration = (length?: string) => {
+  if (!length) return "";
+
+  const [hours = "0", minutes = "0", seconds = "0"] = length.split(":");
+  const hourCount = Number(hours);
+  const minuteCount = Number(minutes);
+  const secondCount = Number(seconds);
+
+  if (hourCount) return `${hourCount} hr ${minuteCount} min`;
+  if (minuteCount) return `${minuteCount} min`;
+  if (secondCount) return `${secondCount} sec`;
+
+  return length;
+};
+
+const normalizeLesson = (lesson: BackendLesson): Lesson => {
+  const questions = parseQuizQuestions(lesson.content);
+
+  if (questions) {
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      type: "quiz",
+      duration: getLessonDuration(lesson.length),
+      questions,
+    };
+  }
+
+  if (lesson.videoUrl) {
+    return {
+      id: lesson.id,
+      title: lesson.title,
+      type: "video",
+      duration: getLessonDuration(lesson.length),
+      url: lesson.videoUrl,
+      content: lesson.content,
+    };
+  }
+
+  return {
+    id: lesson.id,
+    title: lesson.title,
+    type: "text",
+    duration: getLessonDuration(lesson.length),
+    content: lesson.content,
+  };
+};
+
+const normalizeModules = (modules?: BackendModule[]) =>
+  modules
+    ?.slice()
+    .sort((firstModule, secondModule) => {
+      const firstOrder = firstModule.order ?? 0;
+      const secondOrder = secondModule.order ?? 0;
+
+      return firstOrder - secondOrder || firstModule.title.localeCompare(secondModule.title);
+    })
+    .map((module) => ({
+      id: module.id,
+      title: module.title,
+      lessons: module.lessons?.map(normalizeLesson) ?? [],
+    })) ?? [];
+
 const getCourseFormData = (course: BackendCourse): CourseFormData => ({
   title: course.title,
   description: course.description,
   thumbnail: getCourseImageUrl(course),
   prerequisites: parseLines(course.prerequisites),
   tags: [course.category, course.level].filter(Boolean),
-  modules: [],
+  modules: normalizeModules(course.modules),
 });
 
 function getLessonIcon(type: Lesson["type"]) {
@@ -139,7 +235,9 @@ export default function EditCoursePage() {
   const [isSavingCourse, setIsSavingCourse] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
-  const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
+  const [currentModuleId, setCurrentModuleId] = useState<
+    Lesson["id"] | null
+  >(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
 
   useEffect(() => {
@@ -266,14 +364,14 @@ export default function EditCoursePage() {
     });
   };
 
-  const removeModule = (moduleId: number) => {
+  const removeModule = (moduleId: Lesson["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.filter((module) => module.id !== moduleId),
     });
   };
 
-  const updateModuleTitle = (moduleId: number, title: string) => {
+  const updateModuleTitle = (moduleId: Lesson["id"], title: string) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
@@ -282,7 +380,7 @@ export default function EditCoursePage() {
     });
   };
 
-  const openLessonModal = (moduleId: number, type: Lesson["type"]) => {
+  const openLessonModal = (moduleId: Lesson["id"], type: Lesson["type"]) => {
     setCurrentModuleId(moduleId);
     setLessonType(type);
     setIsLessonModalOpen(true);
@@ -341,7 +439,7 @@ export default function EditCoursePage() {
     setCurrentModuleId(null);
   };
 
-  const removeLesson = (moduleId: number, lessonId: number) => {
+  const removeLesson = (moduleId: Lesson["id"], lessonId: Lesson["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
@@ -356,8 +454,8 @@ export default function EditCoursePage() {
   };
 
   const updateLessonTitle = (
-    moduleId: number,
-    lessonId: number,
+    moduleId: Lesson["id"],
+    lessonId: Lesson["id"],
     title: string
   ) => {
     setFormData({
@@ -376,8 +474,8 @@ export default function EditCoursePage() {
   };
 
   const updateLessonDuration = (
-    moduleId: number,
-    lessonId: number,
+    moduleId: Lesson["id"],
+    lessonId: Lesson["id"],
     duration: string
   ) => {
     setFormData({

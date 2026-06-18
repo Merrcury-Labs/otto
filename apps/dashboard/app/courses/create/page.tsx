@@ -44,7 +44,9 @@ export default function CreateCoursePage() {
   const [prerequisiteInput, setPrerequisiteInput] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
+  const [currentModuleId, setCurrentModuleId] = useState<
+    Module["id"] | null
+  >(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
   const [isSavingCourse, setIsSavingCourse] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -121,14 +123,14 @@ export default function CreateCoursePage() {
     });
   };
 
-  const removeModule = (moduleId: number) => {
+  const removeModule = (moduleId: Module["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.filter((module) => module.id !== moduleId),
     });
   };
 
-  const updateModuleTitle = (moduleId: number, title: string) => {
+  const updateModuleTitle = (moduleId: Module["id"], title: string) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
@@ -137,13 +139,13 @@ export default function CreateCoursePage() {
     });
   };
 
-  const openLessonModal = (moduleId: number, type: Lesson["type"]) => {
+  const openLessonModal = (moduleId: Module["id"], type: Lesson["type"]) => {
     setCurrentModuleId(moduleId);
     setLessonType(type);
     setIsModalOpen(true);
   };
 
-  const removeLesson = (moduleId: number, lessonId: number) => {
+  const removeLesson = (moduleId: Module["id"], lessonId: Lesson["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>

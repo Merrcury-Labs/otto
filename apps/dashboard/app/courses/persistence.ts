@@ -1,4 +1,11 @@
-import type { CourseFormData, Lesson } from "./types";
+import type { CourseFormData, CourseModule, Lesson } from "./types";
+import { graphqlFetch } from "../../lib/graphql/client";
+import {
+  createCourseMutation,
+  createLessonMutation,
+  createModuleMutation,
+  updateCourseMutation,
+} from "../../lib/graphql/courses";
 
 type SaveCourseOptions = {
   id?: string;
@@ -8,18 +15,28 @@ type SaveCourseOptions = {
 const getLessonCount = (course: CourseFormData) =>
   course.modules.reduce((total, module) => total + module.lessons.length, 0);
 
-const getCoursePayload = (
-  course: CourseFormData,
-  { status = "draft" }: SaveCourseOptions = {}
-) => ({
+const getCoursePayload = (course: CourseFormData) => ({
   name: course.title,
   description: course.description,
+  tutor: "",
+  lessonCount: getLessonCount(course),
+  level: course.tags[1] ?? "",
+  category: course.tags[0] ?? "",
   thumbnail: course.thumbnail,
   image: course.thumbnail,
   prerequisites: course.prerequisites.join("\n"),
+});
+
+const getUpdateCoursePayload = (course: CourseFormData) => ({
+  name: course.title,
+  description: course.description,
+  tutor: "",
+  thumbnail: course.thumbnail,
+  image: course.thumbnail,
+  lessonCount: getLessonCount(course),
   category: course.tags[0] ?? "",
   level: course.tags[1] ?? "",
-  status,
+  prerequisites: course.prerequisites.join("\n"),
 });
 
 const getDurationValue = (duration: string) => {
@@ -61,41 +78,30 @@ const getLessonContent = (lesson: Lesson) => {
 const getLessonPayload = (
   courseId: string,
   lesson: Lesson,
-  sectionName: string
+  sectionName: string,
+  moduleId: string | null
 ) => ({
-  course: courseId,
   title: lesson.title,
   content: getLessonContent(lesson),
-  video_url: lesson.type === "video" ? lesson.url || null : null,
   length: getDurationValue(lesson.duration || ""),
-  section_name: sectionName,
+  sectionName,
+  courseId,
+  moduleId,
+  videoUrl: lesson.type === "video" ? lesson.url || null : null,
 });
 
-const getErrorMessage = async (
-  response: Response,
-  fallback = "Unable to save course."
-) => {
-  const contentType = response.headers.get("content-type");
+const getModulePayload = (
+  courseId: string,
+  module: CourseModule,
+  moduleIndex: number
+) => ({
+  courseId,
+  title: module.title || `Module ${moduleIndex + 1}`,
+  description: "",
+  order: moduleIndex,
+});
 
-  if (!contentType?.includes("application/json")) {
-    return response.statusText || fallback;
-  }
-
-  const result = (await response.json()) as {
-    message?: string;
-    error?: string;
-    errors?: Array<{ message?: string }>;
-  };
-
-  return (
-    result.errors?.[0]?.message ||
-    result.message ||
-    result.error ||
-    fallback
-  );
-};
-
-const extractCourseId = (result: unknown): string | null => {
+const extractRecordId = (result: unknown): string | null => {
   if (!result || typeof result !== "object") return null;
 
   const record = result as Record<string, unknown>;
@@ -103,62 +109,103 @@ const extractCourseId = (result: unknown): string | null => {
 
   if (typeof id === "string" || typeof id === "number") return String(id);
 
-  return extractCourseId(record.course) ?? extractCourseId(record.data);
-};
+  for (const value of Object.values(record)) {
+    const nestedId = extractRecordId(value);
 
-const saveLessons = async (course: CourseFormData, courseId: string) => {
-  const lessonRequests = course.modules.flatMap((module, moduleIndex) => {
-    const sectionName = module.title || `Module ${moduleIndex + 1}`;
-
-    return module.lessons.map((lesson) =>
-      fetch("/api/lessons", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(getLessonPayload(courseId, lesson, sectionName)),
-      })
-    );
-  });
-
-  const responses = await Promise.all(lessonRequests);
-  const failedResponse = responses.find((response) => !response.ok);
-
-  if (failedResponse) {
-    throw new Error(
-      await getErrorMessage(failedResponse, "Unable to save lesson.")
-    );
+    if (nestedId) return nestedId;
   }
+
+  return null;
 };
 
-export async function saveCourse(course: CourseFormData, options: SaveCourseOptions = {}) {
-  const response = await fetch(
-    options.id ? `/api/courses/${options.id}` : "/api/courses",
-    {
-      method: options.id ? "PATCH" : "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(getCoursePayload(course, options)),
-    }
+const saveModules = async (course: CourseFormData, courseId: string) => {
+  return Promise.all(
+    course.modules.map(async (module, moduleIndex) => {
+      const payload = getModulePayload(courseId, module, moduleIndex);
+      const result = await graphqlFetch<unknown>({
+        query: createModuleMutation,
+        variables: payload,
+      });
+
+      return {
+        id: extractRecordId(result),
+        title: payload.title,
+      };
+    })
   );
+};
 
-  if (!response.ok) {
-    throw new Error(await getErrorMessage(response));
+const saveLessons = async (
+  course: CourseFormData,
+  courseId: string,
+  savedModules: Array<{ id: string | null; title: string }>
+) => {
+  await Promise.all(
+    course.modules.flatMap((module, moduleIndex) => {
+      const sectionName =
+        savedModules[moduleIndex]?.title ||
+        module.title ||
+        `Module ${moduleIndex + 1}`;
+      const moduleId = savedModules[moduleIndex]?.id ?? null;
+
+      return module.lessons.map((lesson) => {
+        const payload = getLessonPayload(
+          courseId,
+          lesson,
+          sectionName,
+          moduleId
+        );
+
+        return graphqlFetch<unknown>({
+          query: createLessonMutation,
+          variables: payload,
+        });
+      });
+    })
+  );
+};
+
+const saveCourseRecord = async (
+  course: CourseFormData,
+  options: SaveCourseOptions
+) => {
+  const payload = getCoursePayload(course);
+
+  if (options.id) {
+    return graphqlFetch<unknown>({
+      query: updateCourseMutation,
+      variables: {
+        id: options.id,
+        ...getUpdateCoursePayload(course),
+      },
+    });
   }
 
-  const contentType = response.headers.get("content-type");
-  const result = contentType?.includes("application/json")
-    ? await response.json()
-    : null;
-  const courseId = options.id ?? extractCourseId(result);
+  return graphqlFetch<unknown>({
+    query: createCourseMutation,
+    variables: payload,
+  });
+};
 
-  if (getLessonCount(course) > 0) {
+export async function saveCourse(
+  course: CourseFormData,
+  options: SaveCourseOptions = {}
+) {
+  const result = await saveCourseRecord(course, options);
+  const courseId = options.id ?? extractRecordId(result);
+
+  if (course.modules.length > 0) {
     if (!courseId) {
-      throw new Error("Course saved, but the response did not include a course id for lessons.");
+      throw new Error(
+        "Course saved, but the response did not include a course id for modules."
+      );
     }
 
-    await saveLessons(course, courseId);
+    const savedModules = await saveModules(course, courseId);
+
+    if (getLessonCount(course) > 0) {
+      await saveLessons(course, courseId, savedModules);
+    }
   }
 
   return result;
