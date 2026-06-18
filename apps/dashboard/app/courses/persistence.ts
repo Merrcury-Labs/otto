@@ -148,6 +148,12 @@ const saveLessons = async (
         `Module ${moduleIndex + 1}`;
       const moduleId = savedModules[moduleIndex]?.id ?? null;
 
+      if (module.lessons.length > 0 && !moduleId) {
+        throw new Error(
+          `Module "${sectionName}" saved, but the response did not include a module id for its lessons.`
+        );
+      }
+
       return module.lessons.map((lesson) => {
         const payload = getLessonPayload(
           courseId,

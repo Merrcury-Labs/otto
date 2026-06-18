@@ -62,6 +62,7 @@ type BackendLesson = {
   videoUrl?: string | null;
   length?: string;
   sectionName?: string;
+  order?: number;
 };
 
 type AdminCoursesData = {
@@ -205,7 +206,19 @@ const normalizeModules = (modules?: BackendModule[]) =>
     .map((module) => ({
       id: module.id,
       title: module.title,
-      lessons: module.lessons?.map(normalizeLesson) ?? [],
+      lessons:
+        module.lessons
+          ?.slice()
+          .sort((firstLesson, secondLesson) => {
+            const firstOrder = firstLesson.order ?? 0;
+            const secondOrder = secondLesson.order ?? 0;
+
+            return (
+              firstOrder - secondOrder ||
+              firstLesson.title.localeCompare(secondLesson.title)
+            );
+          })
+          .map(normalizeLesson) ?? [],
     })) ?? [];
 
 const getCourseFormData = (course: BackendCourse): CourseFormData => ({
@@ -815,94 +828,101 @@ export default function EditCoursePage() {
                       </Button>
                     </div>
 
-                    {module.lessons.length > 0 && (
-                      <div className="space-y-2 mb-4 ml-8">
-                        {module.lessons.map((lesson) => (
-                          <div
-                            key={lesson.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-surface-300 border-border/10"
-                          >
-                            <SplitVerticalIcon
-                              className="h-4 w-4 cursor-move text-muted-foreground"
-                            />
-                            <div
-                              className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape bg-surface-100 text-foreground"
-                            >
-                              {getLessonIcon(lesson.type)}
-                              {getLessonTypeLabel(lesson.type)}
-                            </div>
-                            <div className="grid flex-1 gap-2 md:grid-cols-[1fr_140px]">
-                              <input
-                                value={lesson.title}
-                                onChange={(event) =>
-                                  updateLessonTitle(
-                                    module.id,
-                                    lesson.id,
-                                    event.target.value
-                                  )
-                                }
-                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
-                              />
-                              <input
-                                value={lesson.duration || ""}
-                                onChange={(event) =>
-                                  updateLessonDuration(
-                                    module.id,
-                                    lesson.id,
-                                    event.target.value
-                                  )
-                                }
-                                placeholder="Duration"
-                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
-                              />
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => removeLesson(module.id, lesson.id)}
-                              className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
-                              aria-label={`Remove ${lesson.title}`}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                    <div className="ml-8 border-l-2 border-border/20 pl-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-xs font-medium uppercase text-muted-foreground">
+                          Lessons
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {module.lessons.length}
+                        </div>
                       </div>
-                    )}
 
-                    <div className="flex flex-wrap gap-2 ml-8">
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "video")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Video className="h-4 w-4" />
-                        Add Video
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "text")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Add Reading
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "quiz")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Check className="h-4 w-4" />
-                        Add Quiz
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "code")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Code className="h-4 w-4" />
-                        Add Exercise
-                      </button>
+                      {module.lessons.length > 0 && (
+                        <div className="mb-4 space-y-2">
+                          {module.lessons.map((lesson) => (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center gap-3 rounded-lg border bg-surface-300 p-3 border-border/10"
+                            >
+                              <SplitVerticalIcon className="h-4 w-4 cursor-move text-muted-foreground" />
+                              <div className="flex items-center gap-2 rounded px-2 py-1 text-xs font-medium pill-shape bg-surface-100 text-foreground">
+                                {getLessonIcon(lesson.type)}
+                                {getLessonTypeLabel(lesson.type)}
+                              </div>
+                              <div className="grid flex-1 gap-2 md:grid-cols-[1fr_140px]">
+                                <input
+                                  value={lesson.title}
+                                  onChange={(event) =>
+                                    updateLessonTitle(
+                                      module.id,
+                                      lesson.id,
+                                      event.target.value
+                                    )
+                                  }
+                                  className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
+                                />
+                                <input
+                                  value={lesson.duration || ""}
+                                  onChange={(event) =>
+                                    updateLessonDuration(
+                                      module.id,
+                                      lesson.id,
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="Duration"
+                                  className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeLesson(module.id, lesson.id)}
+                                className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
+                                aria-label={`Remove ${lesson.title}`}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "video")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Video className="h-4 w-4" />
+                          Add Video
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "text")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Add Reading
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "quiz")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Check className="h-4 w-4" />
+                          Add Quiz
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "code")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Code className="h-4 w-4" />
+                          Add Exercise
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

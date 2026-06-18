@@ -622,96 +622,100 @@ export default function CreateCoursePage() {
                       </div>
                     </div>
 
-                    {module.lessons.length > 0 && (
-                      <div className="space-y-2 mb-4 ml-8">
-                        {module.lessons.map((lesson) => (
-                          <div
-                            key={lesson.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-surface-300 border-border/10"
-                          >
-                            <SplitVerticalIcon
-                              className="h-4 w-4 cursor-move text-muted-foreground"
-                            />
-                            <div className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape bg-surface-100 text-foreground"
+                    <div className="ml-8 border-l-2 border-border/20 pl-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-xs font-medium uppercase text-muted-foreground">
+                          Lessons
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {module.lessons.length}
+                        </div>
+                      </div>
+
+                      {module.lessons.length > 0 && (
+                        <div className="mb-4 space-y-2">
+                          {module.lessons.map((lesson) => (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center gap-3 rounded-lg border bg-surface-300 p-3 border-border/10"
                             >
-                              {lesson.type === "video" && <Video className="h-4 w-4" />}
-                              {lesson.type === "text" && <FileText className="h-4 w-4" />}
-                              {lesson.type === "quiz" && <Check className="h-4 w-4" />}
-                              {lesson.type === "code" && <Code className="h-4 w-4" />}
-                              {lesson.title}
-                            </div>
-                            <div className="flex-1">
-                              <div
-                                className="text-sm font-medium text-foreground"
-                              >
+                              <SplitVerticalIcon className="h-4 w-4 cursor-move text-muted-foreground" />
+                              <div className="flex items-center gap-2 rounded px-2 py-1 text-xs font-medium pill-shape bg-surface-100 text-foreground">
+                                {lesson.type === "video" && <Video className="h-4 w-4" />}
+                                {lesson.type === "text" && <FileText className="h-4 w-4" />}
+                                {lesson.type === "quiz" && <Check className="h-4 w-4" />}
+                                {lesson.type === "code" && <Code className="h-4 w-4" />}
                                 {lesson.title}
                               </div>
-                              <div
-                                className="text-xs text-muted-foreground"
-                              >
-                                {lesson.duration && (
-                                  <span className="block mb-1">{lesson.duration}</span>
-                                )}
-                                {lesson.type === "video" && lesson.url && (
-                                  <span className="truncate block">{lesson.url}</span>
-                                )}
-                                {lesson.type === "text" && lesson.content && (
-                                  <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
-                                )}
-                                {lesson.type === "quiz" && lesson.questions && (
-                                  <span className="truncate block">{lesson.questions.length} questions</span>
-                                )}
-                                {lesson.type === "code" && lesson.content && (
-                                  <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
-                                )}
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-foreground">
+                                  {lesson.title}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {lesson.duration && (
+                                    <span className="block mb-1">{lesson.duration}</span>
+                                  )}
+                                  {lesson.type === "video" && lesson.url && (
+                                    <span className="truncate block">{lesson.url}</span>
+                                  )}
+                                  {lesson.type === "text" && lesson.content && (
+                                    <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
+                                  )}
+                                  {lesson.type === "quiz" && lesson.questions && (
+                                    <span className="truncate block">{lesson.questions.length} questions</span>
+                                  )}
+                                  {lesson.type === "code" && lesson.content && (
+                                    <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
+                                  )}
+                                </div>
                               </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeLesson(module.id, lesson.id)}
+                                className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => removeLesson(module.id, lesson.id)}
-                              className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
 
-                    <div className="flex flex-wrap gap-2 ml-8">
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "video")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Video className="h-4 w-4" />
-                        Add Video
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "text")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Add Reading
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "quiz")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Check className="h-4 w-4" />
-                        Add Quiz
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "code")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Code className="h-4 w-4" />
-                        Add Exercise
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "video")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Video className="h-4 w-4" />
+                          Add Video
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "text")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Add Reading
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "quiz")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Check className="h-4 w-4" />
+                          Add Quiz
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "code")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Code className="h-4 w-4" />
+                          Add Exercise
+                        </button>
+                      </div>
                   </div>
                 </div>
               ))}
