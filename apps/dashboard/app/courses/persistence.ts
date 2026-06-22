@@ -4,6 +4,8 @@ import {
   createCourseMutation,
   createLessonMutation,
   createModuleMutation,
+  updateLessonMutation,
+  updateModuleMutation,
   updateCourseMutation,
 } from "../../lib/graphql/courses";
 
@@ -101,6 +103,9 @@ const getModulePayload = (
   order: moduleIndex,
 });
 
+const getPersistedRecordId = (id: CourseModule["id"] | Lesson["id"]) =>
+  typeof id === "string" && id.trim().length > 0 ? id : null;
+
 const extractRecordId = (result: unknown): string | null => {
   if (!result || typeof result !== "object") return null;
 
@@ -122,6 +127,25 @@ const saveModules = async (course: CourseFormData, courseId: string) => {
   return Promise.all(
     course.modules.map(async (module, moduleIndex) => {
       const payload = getModulePayload(courseId, module, moduleIndex);
+      const existingModuleId = getPersistedRecordId(module.id);
+
+      if (existingModuleId) {
+        await graphqlFetch<unknown>({
+          query: updateModuleMutation,
+          variables: {
+            id: existingModuleId,
+            title: payload.title,
+            description: payload.description,
+            order: payload.order,
+          },
+        });
+
+        return {
+          id: existingModuleId,
+          title: payload.title,
+        };
+      }
+
       const result = await graphqlFetch<unknown>({
         query: createModuleMutation,
         variables: payload,
@@ -161,6 +185,17 @@ const saveLessons = async (
           sectionName,
           moduleId
         );
+        const existingLessonId = getPersistedRecordId(lesson.id);
+
+        if (existingLessonId) {
+          return graphqlFetch<unknown>({
+            query: updateLessonMutation,
+            variables: {
+              id: existingLessonId,
+              ...payload,
+            },
+          });
+        }
 
         return graphqlFetch<unknown>({
           query: createLessonMutation,

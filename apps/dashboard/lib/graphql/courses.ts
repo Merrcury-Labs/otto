@@ -116,6 +116,25 @@ export const createModuleMutation = /* GraphQL */ `
   }
 `;
 
+export const updateModuleMutation = /* GraphQL */ `
+  mutation UpdateModule(
+    $id: ID!
+    $title: String
+    $description: String
+    $order: Int
+  ) {
+    updateModule(
+      id: $id
+      title: $title
+      description: $description
+      order: $order
+    ) {
+      id
+      title
+    }
+  }
+`;
+
 export const createLessonMutation = /* GraphQL */ `
   mutation CreateLesson(
     $title: String!
@@ -127,6 +146,33 @@ export const createLessonMutation = /* GraphQL */ `
     $videoUrl: String
   ) {
     createLesson(
+      title: $title
+      content: $content
+      length: $length
+      sectionName: $sectionName
+      courseId: $courseId
+      moduleId: $moduleId
+      videoUrl: $videoUrl
+    ) {
+      id
+      title
+    }
+  }
+`;
+
+export const updateLessonMutation = /* GraphQL */ `
+  mutation UpdateLesson(
+    $id: ID!
+    $title: String
+    $content: String
+    $length: String
+    $sectionName: String
+    $courseId: ID
+    $moduleId: ID
+    $videoUrl: String
+  ) {
+    updateLesson(
+      id: $id
       title: $title
       content: $content
       length: $length
