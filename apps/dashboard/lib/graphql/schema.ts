@@ -1,3 +1,14 @@
+import {
+  adminCoursesQuery,
+  createCourseMutation,
+  createLessonMutation,
+  createModuleMutation,
+  updateCourseMutation,
+  updateLessonMutation,
+  updateModuleMutation,
+} from "./courses";
+import { adminQuizzesQuery } from "./quizzes";
+
 export type GraphqlRequestBody = {
   query?: string;
   variables?: Record<string, unknown>;
@@ -14,6 +25,25 @@ type ExecuteGraphqlOptions = {
 };
 
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8000";
+const MAX_GRAPHQL_QUERY_LENGTH = 12_000;
+const MAX_GRAPHQL_VARIABLES_LENGTH = 1_000_000;
+const GRAPHQL_REQUEST_TIMEOUT_MS = 15_000;
+
+const registeredOperations = new Map(
+  Object.entries({
+    AdminCourses: adminCoursesQuery,
+    AdminQuizzes: adminQuizzesQuery,
+    CreateCourse: createCourseMutation,
+    UpdateCourse: updateCourseMutation,
+    CreateModule: createModuleMutation,
+    UpdateModule: updateModuleMutation,
+    CreateLesson: createLessonMutation,
+    UpdateLesson: updateLessonMutation,
+  }).map(([operationName, query]) => [
+    operationName,
+    query.replace(/\s+/g, " ").trim(),
+  ]),
+);
 
 const getBackendGraphqlUrl = () => {
   if (process.env.BACKEND_GRAPHQL_URL) {
@@ -43,16 +73,72 @@ const getForwardedHeaders = (headers?: Headers) => {
   return forwardedHeaders;
 };
 
+const getOperationName = (body: GraphqlRequestBody) => {
+  if (body.operationName) return body.operationName;
+
+  return body.query?.match(
+    /\b(?:query|mutation)\s+([_A-Za-z][_0-9A-Za-z]*)/,
+  )?.[1];
+};
+
+const getGraphqlValidationError = (body: GraphqlRequestBody) => {
+  if (!body.query) return "GraphQL query is required.";
+  if (body.query.length > MAX_GRAPHQL_QUERY_LENGTH)
+    return "GraphQL query is too large.";
+  if (/\b__(?:schema|type)\b/.test(body.query))
+    return "GraphQL introspection is disabled.";
+
+  const operationName = getOperationName(body);
+  if (!operationName) return "GraphQL operationName is required.";
+
+  const registeredQuery = registeredOperations.get(operationName);
+  if (!registeredQuery) return "GraphQL operation is not registered.";
+
+  if (body.query.replace(/\s+/g, " ").trim() !== registeredQuery) {
+    return "GraphQL query does not match the registered operation.";
+  }
+
+  const variablesLength = JSON.stringify(body.variables ?? {}).length;
+  if (variablesLength > MAX_GRAPHQL_VARIABLES_LENGTH) {
+    return "GraphQL variables are too large.";
+  }
+
+  return null;
+};
+
+const graphqlErrorResult = (message: string) => ({
+  errors: [{ message }],
+});
+
+const sanitizeGraphqlResult = (result: GraphqlResponse): GraphqlResponse => {
+  if (!result.errors?.length) return result;
+
+  return {
+    data: result.data,
+    errors: result.errors.map(() => ({
+      message: "GraphQL request failed.",
+    })),
+  };
+};
+
 export async function executeGraphqlRequest(
   body: GraphqlRequestBody,
-  options: ExecuteGraphqlOptions = {}
+  options: ExecuteGraphqlOptions = {},
 ) {
-  if (!body.query) {
+  const validationError = getGraphqlValidationError(body);
+
+  if (validationError) {
     return {
-      result: { errors: [{ message: "GraphQL query is required." }] },
+      result: graphqlErrorResult(validationError),
       status: 400,
     };
   }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(
+    () => controller.abort(),
+    GRAPHQL_REQUEST_TIMEOUT_MS,
+  );
 
   try {
     const response = await fetch(getBackendGraphqlUrl(), {
@@ -60,6 +146,7 @@ export async function executeGraphqlRequest(
       headers: getForwardedHeaders(options.headers),
       body: JSON.stringify(body),
       cache: "no-store",
+      signal: controller.signal,
     });
 
     const contentType = response.headers.get("content-type");
@@ -68,31 +155,27 @@ export async function executeGraphqlRequest(
       : {
           errors: [
             {
-              message:
-                "Backend GraphQL endpoint returned a non-JSON response.",
+              message: "Backend GraphQL endpoint returned a non-JSON response.",
             },
           ],
         };
 
+    if (result.errors?.length) {
+      console.error("Backend GraphQL errors", result.errors);
+    }
+
     return {
-      result,
+      result: sanitizeGraphqlResult(result),
       status: response.status,
     };
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Unable to reach backend GraphQL endpoint.";
+    console.error("Unable to reach backend GraphQL endpoint", error);
 
     return {
-      result: {
-        errors: [
-          {
-            message,
-          },
-        ],
-      },
+      result: graphqlErrorResult("Unable to reach backend GraphQL endpoint."),
       status: 502,
     };
+  } finally {
+    clearTimeout(timeout);
   }
 }

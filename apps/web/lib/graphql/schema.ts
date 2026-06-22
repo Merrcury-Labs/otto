@@ -6,6 +6,12 @@ import {
   weeklyStats,
   userStats,
 } from "@/lib/data";
+import {
+  adminCoursesQuery,
+  courseQuery,
+  publishedCoursesQuery,
+} from "@/lib/graphql/courses";
+import { dashboardQuery, quizzesQuery } from "@/lib/graphql/quizzes";
 
 const schema = buildSchema(`
   enum CourseStatus {
@@ -27,6 +33,7 @@ const schema = buildSchema(`
     rating: Float!
     lessons: Int!
     image: String!
+    thumbnail: String
   }
 
   type Quiz {
@@ -100,6 +107,22 @@ export type GraphqlRequestBody = {
   operationName?: string;
 };
 
+const MAX_GRAPHQL_QUERY_LENGTH = 12_000;
+const MAX_GRAPHQL_VARIABLES_LENGTH = 250_000;
+
+const registeredOperations = new Map(
+  Object.entries({
+    PublishedCourses: publishedCoursesQuery,
+    AdminCourses: adminCoursesQuery,
+    Course: courseQuery,
+    Quizzes: quizzesQuery,
+    Dashboard: dashboardQuery,
+  }).map(([operationName, query]) => [
+    operationName,
+    query.replace(/\s+/g, " ").trim(),
+  ]),
+);
+
 const normalizeCourse = (course: (typeof courses)[number]) => ({
   ...course,
   status: course.status.toUpperCase(),
@@ -111,14 +134,19 @@ const rootValue = {
     const normalizedSearch = search?.trim().toLowerCase();
 
     return courses
-      .filter((course) => !normalizedStatus || course.status === normalizedStatus)
+      .filter(
+        (course) => !normalizedStatus || course.status === normalizedStatus,
+      )
       .filter(
         (course) =>
           !normalizedSearch ||
           course.title.toLowerCase().includes(normalizedSearch) ||
-          course.description.toLowerCase().includes(normalizedSearch)
+          course.description.toLowerCase().includes(normalizedSearch),
       )
-      .filter((course) => !category || category === "All" || course.category === category)
+      .filter(
+        (course) =>
+          !category || category === "All" || course.category === category,
+      )
       .filter((course) => !level || level === "All" || course.level === level)
       .map(normalizeCourse);
   },
@@ -131,14 +159,18 @@ const rootValue = {
     const normalizedSearch = search?.trim().toLowerCase();
 
     return quizzes
-      .filter((quiz) => completed === undefined || quiz.isCompleted === completed)
+      .filter(
+        (quiz) => completed === undefined || quiz.isCompleted === completed,
+      )
       .filter(
         (quiz) =>
           !normalizedSearch ||
           quiz.title.toLowerCase().includes(normalizedSearch) ||
-          quiz.category.toLowerCase().includes(normalizedSearch)
+          quiz.category.toLowerCase().includes(normalizedSearch),
       )
-      .filter((quiz) => !category || category === "All" || quiz.category === category);
+      .filter(
+        (quiz) => !category || category === "All" || quiz.category === category,
+      );
   },
   quizCategories() {
     return quizCategories;
@@ -151,17 +183,63 @@ const rootValue = {
   },
 };
 
+const getOperationName = (body: GraphqlRequestBody) => {
+  if (body.operationName) return body.operationName;
+
+  return body.query?.match(/\bquery\s+([_A-Za-z][_0-9A-Za-z]*)/)?.[1];
+};
+
+const getGraphqlValidationError = (body: GraphqlRequestBody) => {
+  if (!body.query) return "GraphQL query is required.";
+  if (body.query.length > MAX_GRAPHQL_QUERY_LENGTH)
+    return "GraphQL query is too large.";
+  if (/\b__(?:schema|type)\b/.test(body.query))
+    return "GraphQL introspection is disabled.";
+
+  const operationName = getOperationName(body);
+  if (!operationName) return "GraphQL operationName is required.";
+
+  const registeredQuery = registeredOperations.get(operationName);
+  if (!registeredQuery) return "GraphQL operation is not registered.";
+
+  if (body.query.replace(/\s+/g, " ").trim() !== registeredQuery) {
+    return "GraphQL query does not match the registered operation.";
+  }
+
+  const variablesLength = JSON.stringify(body.variables ?? {}).length;
+  if (variablesLength > MAX_GRAPHQL_VARIABLES_LENGTH) {
+    return "GraphQL variables are too large.";
+  }
+
+  return null;
+};
+
+const graphqlErrorResult = (message: string) => ({
+  errors: [{ message }],
+});
+
 export async function executeGraphqlRequest(body: GraphqlRequestBody) {
-  if (!body.query) {
+  const validationError = getGraphqlValidationError(body);
+
+  if (validationError) {
     return {
-      result: { errors: [{ message: "GraphQL query is required." }] },
+      result: graphqlErrorResult(validationError),
+      status: 400,
+    };
+  }
+
+  const query = body.query;
+
+  if (!query) {
+    return {
+      result: graphqlErrorResult("GraphQL query is required."),
       status: 400,
     };
   }
 
   const result = await graphql({
     schema,
-    source: body.query,
+    source: query,
     variableValues: body.variables,
     operationName: body.operationName,
     rootValue,
