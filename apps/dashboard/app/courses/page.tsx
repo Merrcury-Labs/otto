@@ -28,7 +28,6 @@ import {
   BookOpen,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
-import { CoursePreviewModal } from "./components/CoursePreviewModal";
 import type { Course } from "./types";
 import { graphqlFetch } from "../../lib/graphql/client";
 import { adminCoursesQuery } from "../../lib/graphql/courses";
@@ -163,7 +162,6 @@ export default function CoursesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("published");
-  const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
   const [courseList, setCourseList] = useState<Course[]>([]);
   const [courseStats, setCourseStats] = useState<CourseStats>(emptyCourseStats);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
@@ -324,15 +322,14 @@ export default function CoursesPage() {
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setPreviewCourse(course)}
+              <a
+                href={`/courses/${course.id}/preview`}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
-                title="View"
+                title="Preview"
                 aria-label={`Preview ${course.title}`}
               >
                 <Eye className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </a>
               <a
                 href={`/courses/${course.id}/edit`}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
@@ -414,15 +411,14 @@ export default function CoursesPage() {
         </div>
         {getStatusBadge(course.status)}
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setPreviewCourse(course)}
+          <a
+            href={`/courses/${course.id}/preview`}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
-            title="View"
+            title="Preview"
             aria-label={`Preview ${course.title}`}
           >
             <Eye className="h-4 w-4 text-muted-foreground" />
-          </button>
+          </a>
           <a
             href={`/courses/${course.id}/edit`}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
@@ -659,14 +655,6 @@ export default function CoursesPage() {
             </Button>
           </div>
         </div>
-      )}
-
-      {previewCourse && (
-        <CoursePreviewModal
-          course={previewCourse}
-          isOpen={Boolean(previewCourse)}
-          onClose={() => setPreviewCourse(null)}
-        />
       )}
     </div>
   );

@@ -41,179 +41,223 @@ a {
 
 @layer base {
   :root {
-    /* Cursor-inspired Color Palette */
-    --background: 37 16% 94%; /* #f2f1ed - Cursor Cream */
-    --foreground: 28 12% 11%; /* #26251e - Cursor Dark */
-    --card: 38 12% 90%; /* #e6e5e0 - Surface 400 */
-    --card-foreground: 28 12% 11%; /* #26251e - Cursor Dark */
-    --popover: 38 12% 90%; /* #e6e5e0 - Surface 400 */
-    --popover-foreground: 28 12% 11%; /* #26251e - Cursor Dark */
-    --primary: 16 100% 48%; /* #f54e00 - Cursor Orange */
-    --primary-foreground: 0 0% 100%; /* Pure White */
-    --secondary: 38 12% 92%; /* #ebeae5 - Surface 300 */
-    --secondary-foreground: 28 12% 11%; /* #26251e - Cursor Dark */
-    --muted: 38 12% 88%; /* #e1e0db - Surface 500 */
-    --muted-foreground: 28 12% 40%; /* rgba(38, 37, 30, 0.55) */
-    --accent: 16 100% 48%; /* #f54e00 - Cursor Orange */
-    --accent-foreground: 0 0% 100%; /* Pure White */
-    --destructive: 348 74% 51%; /* #cf2d56 - Error */
-    --destructive-foreground: 0 0% 100%; /* Pure White */
-    --border: 28 12% 10%; /* rgba(38, 37, 30, 0.1) */
-    --input: 28 12% 10%; /* rgba(38, 37, 30, 0.1) */
-    --ring: 16 100% 48%; /* #f54e00 - Cursor Orange */
+    /* Clay Design System — Color Palette */
+    --background: 40 100% 97%; /* #fffaf0 — canvas */
+    --foreground: 0 0% 4%; /* #0a0a0a — ink */
+    --card: 46 51% 92%; /* #f5f0e0 — surface-card */
+    --card-foreground: 0 0% 4%; /* #0a0a0a — ink */
+    --popover: 40 100% 97%; /* #fffaf0 — canvas */
+    --popover-foreground: 0 0% 4%; /* #0a0a0a — ink */
+    --primary: 0 0% 4%; /* #0a0a0a — near-black CTAs */
+    --primary-foreground: 0 0% 100%; /* #ffffff — on-primary */
+    --secondary: 43 64% 95%; /* #faf5e8 — surface-soft */
+    --secondary-foreground: 0 0% 4%; /* #0a0a0a — ink */
+    --muted: 46 34% 88%; /* #ebe6d6 — surface-strong */
+    --muted-foreground: 0 0% 42%; /* #6a6a6a — muted */
+    --accent: 0 0% 12%; /* #1f1f1f — primary-active */
+    --accent-foreground: 0 0% 100%; /* #ffffff — on-primary */
+    --destructive: 0 84% 60%; /* #ef4444 — error */
+    --destructive-foreground: 0 0% 100%; /* #ffffff */
+    --border: 0 0% 90%; /* #e5e5e5 — hairline */
+    --input: 0 0% 90%; /* #e5e5e5 — hairline */
+    --ring: 0 0% 4%; /* #0a0a0a — primary */
 
-    /* Surface Scale */
-    --surface-100: 60 10% 97%; /* #f7f7f4 */
-    --surface-200: 37 16% 94%; /* #f2f1ed */
-    --surface-300: 38 12% 92%; /* #ebeae5 */
-    --surface-400: 38 12% 90%; /* #e6e5e0 */
-    --surface-500: 38 12% 88%; /* #e1e0db */
+    /* Clay Surface Scale */
+    --surface-100: 40 100% 97%; /* #fffaf0 — canvas */
+    --surface-200: 43 64% 95%; /* #faf5e8 — surface-soft */
+    --surface-300: 46 51% 92%; /* #f5f0e0 — surface-card */
+    --surface-400: 46 34% 88%; /* #ebe6d6 — surface-strong */
+    --surface-500: 0 0% 94%; /* #f0f0f0 — hairline-soft */
 
-    /* Semantic Colors */
-    --color-error: 348 74% 51%; /* #cf2d56 */
-    --color-success: 171 65% 33%; /* #1f8a65 */
-    --color-accent: 16 100% 48%; /* #f54e00 */
-    --color-gold: 32 64% 48%; /* #c08532 */
+    /* Clay Semantic Colors */
+    --color-error: 0 84% 60%; /* #ef4444 */
+    --color-success: 142 71% 45%; /* #22c55e */
+    --color-accent: 0 0% 4%; /* #0a0a0a — same as primary */
+    --color-gold: 42 77% 60%; /* #e8b94a — brand-ochre */
 
-    /* Timeline Colors */
-    --color-thinking: 24 58% 75%; /* #dfa88f */
-    --color-grep: 111 28% 71%; /* #9fc9a2 */
-    --color-read: 211 25% 75%; /* #9fbbe0 */
-    --color-edit: 276 32% 76%; /* #c0a8dd */
+    /* Clay Brand Colors */
+    --brand-pink: 339 100% 65%; /* #ff4d8b */
+    --brand-teal: 180 38% 16%; /* #1a3a3a */
+    --brand-lavender: 256 67% 79%; /* #b8a4ed */
+    --brand-peach: 21 100% 76%; /* #ffb084 */
+    --brand-ochre: 42 77% 60%; /* #e8b94a */
+    --brand-mint: 161 36% 74%; /* #a4d4c5 */
+    --brand-coral: 6 100% 68%; /* #ff6b5a */
 
-    /* Border Colors */
-    --border-primary: rgba(38, 37, 30, 0.1); /* 10% warm brown */
-    --border-medium: rgba(38, 37, 30, 0.2); /* 20% warm brown */
-    --border-strong: rgba(38, 37, 30, 0.55); /* 55% warm brown */
+    /* Clay Text Colors */
+    --ink: 0 0% 4%; /* #0a0a0a */
+    --body: 0 0% 23%; /* #3a3a3a */
+    --body-strong: 0 0% 10%; /* #1a1a1a */
+    --muted-text: 0 0% 42%; /* #6a6a6a */
+    --muted-soft: 0 0% 60%; /* #9a9a9a */
+    --hairline: 0 0% 90%; /* #e5e5e5 */
+    --hairline-soft: 0 0% 94%; /* #f0f0f0 */
+    --canvas: 40 100% 97%; /* #fffaf0 */
+    --on-dark: 0 0% 100%; /* #ffffff */
 
-    /* Shadows */
-    --shadow-card: rgba(0,0,0,0.14) 0px 28px 70px, rgba(0,0,0,0.1) 0px 14px 32px, rgba(38, 37, 30, 0.1) 0px 0px 0px 1px;
+    /* Clay Border Colors */
+    --border-primary: #e5e5e5; /* hairline */
+    --border-medium: #d0d0d0;
+    --border-strong: #6a6a6a; /* muted */
+
+    /* Clay Shadows — no heavy shadows per design system */
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px #e5e5e5;
     --shadow-ambient: rgba(0,0,0,0.02) 0px 0px 16px, rgba(0,0,0,0.008) 0px 0px 8px;
-    --shadow-focus: rgba(0,0,0,0.1) 0px 4px 12px;
+    --shadow-focus: rgba(0,0,0,0.06) 0px 2px 8px;
 
-    /* Radius */
-    --radius: 0.5rem; /* 8px */
-    --radius-sm: 0.25rem; /* 4px */
-    --radius-md: 0.1875rem; /* 3px */
-    --radius-lg: 0.625rem; /* 10px */
-    --radius-full: 9999px; /* Full pill */
+    /* Clay Radius Scale */
+    --radius: 0.75rem; /* 12px — default for buttons/inputs */
+    --radius-xs: 0.375rem; /* 6px */
+    --radius-sm: 0.5rem; /* 8px */
+    --radius-md: 0.75rem; /* 12px */
+    --radius-lg: 1rem; /* 16px */
+    --radius-xl: 1.5rem; /* 24px */
+    --radius-pill: 9999px;
+    --radius-full: 9999px;
 
-    /* Sidebar Colors */
-    --sidebar-background: 37 16% 94%; /* #f2f1ed */
-    --sidebar-foreground: 28 12% 11%; /* #26251e */
-    --sidebar-primary: 28 12% 11%; /* #26251e */
-    --sidebar-primary-foreground: 0 0% 100%; /* Pure White */
-    --sidebar-accent: 38 12% 90%; /* #e6e5e0 */
-    --sidebar-accent-foreground: 28 12% 11%; /* #26251e */
-    --sidebar-border: 38 12% 88%; /* #e1e0db */
-    --sidebar-ring: 16 100% 48%; /* #f54e00 */
+    /* Sidebar Colors — surface-soft for warmth */
+    --sidebar-background: 43 64% 95%; /* #faf5e8 — surface-soft */
+    --sidebar-foreground: 0 0% 4%; /* #0a0a0a — ink */
+    --sidebar-primary: 0 0% 4%; /* #0a0a0a — ink */
+    --sidebar-primary-foreground: 0 0% 100%; /* #ffffff */
+    --sidebar-accent: 46 51% 92%; /* #f5f0e0 — surface-card hover */
+    --sidebar-accent-foreground: 0 0% 4%; /* #0a0a0a */
+    --sidebar-border: 0 0% 90%; /* #e5e5e5 — hairline */
+    --sidebar-ring: 0 0% 4%; /* #0a0a0a */
   }
 
   .dark {
-    /* Dark Mode - maintaining Cursor warmth */
-    --background: 28 12% 8%; /* Darker warm background */
-    --foreground: 37 16% 94%; /* #f2f1ed - Cursor Cream */
-    --card: 28 12% 12%; /* Darker card background */
-    --card-foreground: 37 16% 94%; /* #f2f1ed - Cursor Cream */
-    --popover: 28 12% 12%; /* Darker popover */
-    --popover-foreground: 37 16% 94%; /* #f2f1ed - Cursor Cream */
-    --primary: 16 100% 48%; /* #f54e00 - Cursor Orange */
-    --primary-foreground: 0 0% 100%; /* Pure White */
-    --secondary: 28 12% 16%; /* Darker secondary */
-    --secondary-foreground: 37 16% 94%; /* #f2f1ed - Cursor Cream */
-    --muted: 28 12% 20%; /* Darker muted */
-    --muted-foreground: 37 16% 60%; /* Lighter muted text */
-    --accent: 16 100% 48%; /* #f54e00 - Cursor Orange */
-    --accent-foreground: 0 0% 100%; /* Pure White */
-    --destructive: 348 74% 51%; /* #cf2d56 - Error */
-    --destructive-foreground: 0 0% 100%; /* Pure White */
-    --border: 37 16% 20%; /* Lighter border for dark mode */
-    --input: 37 16% 20%; /* Lighter input border */
-    --ring: 16 100% 48%; /* #f54e00 - Cursor Orange */
+    /* Clay Dark Mode — surface-dark base with teal tint */
+    --background: 180 44% 7%; /* #0a1a1a — surface-dark */
+    --foreground: 40 100% 97%; /* #fffaf0 — canvas as text */
+    --card: 180 24% 13%; /* #1a2a2a — surface-dark-elevated */
+    --card-foreground: 40 100% 97%; /* #fffaf0 */
+    --popover: 180 24% 13%; /* #1a2a2a */
+    --popover-foreground: 40 100% 97%;
+    --primary: 0 0% 100%; /* white primary in dark mode */
+    --primary-foreground: 0 0% 4%; /* near-black on white */
+    --secondary: 180 20% 18%;
+    --secondary-foreground: 40 100% 97%;
+    --muted: 180 15% 22%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 339 100% 65%; /* brand-pink as accent in dark mode */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%; /* #ef4444 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 339 100% 65%; /* brand-pink */
 
-    /* Sidebar Colors (Dark Mode) */
-    --sidebar-background: 28 12% 8%; /* Darker warm background */
-    --sidebar-foreground: 37 16% 94%; /* #f2f1ed - Cursor Cream */
-    --sidebar-primary: 16 100% 48%; /* #f54e00 - Cursor Orange */
-    --sidebar-primary-foreground: 0 0% 100%; /* Pure White */
-    --sidebar-accent: 28 12% 16%; /* Darker sidebar accent */
-    --sidebar-accent-foreground: 37 16% 94%; /* #f2f1ed - Cursor Cream */
-    --sidebar-border: 28 12% 20%; /* Darker sidebar border */
-    --sidebar-ring: 16 100% 48%; /* #f54e00 */
+    /* Surface Scale (Dark) */
+    --surface-100: 180 44% 7%; /* surface-dark */
+    --surface-200: 180 24% 13%; /* surface-dark-elevated */
+    --surface-300: 180 20% 18%;
+    --surface-400: 180 15% 22%;
+    --surface-500: 180 10% 28%;
+
+    /* Semantic (Dark) */
+    --color-error: 0 84% 60%;
+    --color-success: 142 71% 45%;
+    --color-accent: 339 100% 65%;
+    --color-gold: 42 77% 60%;
+
+    /* Border Colors (Dark) */
+    --border-primary: rgba(255,255,255,0.1);
+    --border-medium: rgba(255,255,255,0.15);
+    --border-strong: rgba(255,255,255,0.3);
+
+    /* Shadows (Dark) */
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05);
+    --shadow-ambient: rgba(0,0,0,0.1) 0px 0px 16px, rgba(0,0,0,0.05) 0px 0px 8px;
+    --shadow-focus: rgba(339 100% 65% / 0.2) 0px 2px 8px;
+
+    /* Sidebar Colors (Dark) */
+    --sidebar-background: 180 44% 7%; /* surface-dark */
+    --sidebar-foreground: 40 100% 97%;
+    --sidebar-primary: 0 0% 100%; /* white */
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 180 20% 18%;
+    --sidebar-accent-foreground: 40 100% 97%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 339 100% 65%;
   }
 }
 
 @layer base {
-  /* Cursor-inspired Typography System */
+  /* Clay Typography System — Inter throughout */
   :root {
     /* Font Families */
-    --font-display: "CursorGothic", "CursorGothic Fallback", system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    --font-serif: "jjannon", "Iowan Old Style", "Palatino Linotype", "URW Palladio L", "P052", ui-serif, "Georgia", "Cambria", "Times New Roman", Times, serif;
-    --font-mono: "berkeleyMono", ui-monospace, "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
-    --font-ui: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
+    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-    /* Typography Scale */
-    --text-hero: 4.5rem; /* 72px */
-    --text-hero-leading: 1.10;
-    --text-hero-tracking: -2.16px;
+    /* Display Scale — Inter weight 500, negative tracking (Plain Black substitute) */
+    --text-hero: 4.5rem; /* 72px — display-xl */
+    --text-hero-leading: 1;
+    --text-hero-tracking: -2.5px;
+    --text-hero-weight: 500;
 
-    --text-section: 2.25rem; /* 36px */
-    --text-section-leading: 1.20;
-    --text-section-tracking: -0.72px;
+    --text-section: 2.5rem; /* 40px — display-md */
+    --text-section-leading: 1.1;
+    --text-section-tracking: -1px;
 
-    --text-subheading: 1.63rem; /* 26px */
-    --text-subheading-leading: 1.25;
-    --text-subheading-tracking: -0.325px;
+    --text-subheading: 1.75rem; /* ~28px — display-sm */
+    --text-subheading-leading: 1.15;
+    --text-subheading-tracking: -0.5px;
 
-    --text-title-small: 1.38rem; /* 22px */
-    --text-title-small-leading: 1.30;
-    --text-title-small-tracking: -0.11px;
+    --text-title-small: 1.5rem; /* 24px — title-lg */
+    --text-title-small-leading: 1.3;
+    --text-title-small-tracking: -0.3px;
 
-    --text-body-serif: 1.20rem; /* 19.2px */
-    --text-body-serif-leading: 1.50;
-    --text-body-serif-weight: 500;
+    /* Body Scale — Inter weight 400 */
+    --text-body-serif: 1rem; /* 16px — body-md */
+    --text-body-serif-leading: 1.55;
+    --text-body-serif-weight: 400;
 
-    --text-body-serif-sm: 1.08rem; /* 17.28px */
-    --text-body-serif-sm-leading: 1.35;
+    --text-body-serif-sm: 0.875rem; /* 14px — body-sm */
+    --text-body-serif-sm-leading: 1.55;
     --text-body-serif-sm-weight: 400;
 
-    --text-body-sans: 1rem; /* 16px */
-    --text-body-sans-leading: 1.50;
+    --text-body-sans: 1rem; /* 16px — body-md */
+    --text-body-sans-leading: 1.55;
     --text-body-sans-weight: 400;
 
-    --text-button-label: 0.875rem; /* 14px */
-    --text-button-label-leading: 1.00;
-    --text-button-label-weight: 400;
+    /* UI Scale */
+    --text-button-label: 0.875rem; /* 14px — button */
+    --text-button-label-leading: 1;
+    --text-button-label-weight: 600;
 
-    --text-button-caption: 0.875rem; /* 14px */
+    --text-button-caption: 0.875rem; /* 14px — button */
     --text-button-caption-leading: 1.50;
-    --text-button-caption-tracking: 0.14px;
+    --text-button-caption-tracking: 0;
 
-    --text-caption: 0.688rem; /* 11px */
-    --text-caption-leading: 1.50;
-    --text-caption-weight: 400;
+    --text-caption: 0.8125rem; /* 13px — caption */
+    --text-caption-leading: 1.4;
+    --text-caption-weight: 500;
 
     --text-mono-body: 0.75rem; /* 12px */
     --text-mono-body-leading: 1.67;
     --text-mono-body-weight: 400;
 
-    --text-mono-small: 0.688rem; /* 11px */
+    --text-mono-small: 0.6875rem; /* 11px */
     --text-mono-small-leading: 1.33;
     --text-mono-small-tracking: -0.275px;
+    --text-mono-small-weight: 400;
 
     /* System Typography */
-    --text-system-heading: 1.25rem; /* 20px */
-    --text-system-heading-leading: 1.55;
-    --text-system-heading-weight: 700;
+    --text-system-heading: 1.125rem; /* 18px — title-md */
+    --text-system-heading-leading: 1.4;
+    --text-system-heading-weight: 600;
 
-    --text-system-caption: 0.813rem; /* 13px */
-    --text-system-caption-leading: 1.33;
+    --text-system-caption: 0.8125rem; /* 13px — caption */
+    --text-system-caption-leading: 1.4;
     --text-system-caption-weight: 500;
 
-    --text-system-micro: 0.688rem; /* 11px */
-    --text-system-micro-leading: 1.27;
-    --text-system-micro-tracking: 0.048px;
-    --text-system-micro-weight: 500;
+    --text-system-micro: 0.75rem; /* 12px — caption-uppercase */
+    --text-system-micro-leading: 1.4;
+    --text-system-micro-tracking: 1.5px;
+    --text-system-micro-weight: 600;
   }
 
   /* Typography Utility Classes */
@@ -223,7 +267,6 @@ a {
 
   .font-serif {
     font-family: var(--font-serif);
-    font-feature-settings: "cswh" on;
   }
 
   .font-mono {
@@ -234,43 +277,43 @@ a {
     font-family: var(--font-ui);
   }
 
-  /* Hero Text */
+  /* Hero Text — display-xl */
   .text-hero {
     font-family: var(--font-display);
     font-size: var(--text-hero);
     line-height: var(--text-hero-leading);
     letter-spacing: var(--text-hero-tracking);
-    font-weight: 400;
+    font-weight: var(--text-hero-weight);
   }
 
-  /* Section Heading */
+  /* Section Heading — display-md */
   .text-section {
     font-family: var(--font-display);
     font-size: var(--text-section);
     line-height: var(--text-section-leading);
     letter-spacing: var(--text-section-tracking);
-    font-weight: 400;
+    font-weight: var(--text-hero-weight);
   }
 
-  /* Subheading */
+  /* Subheading — display-sm */
   .text-subheading {
     font-family: var(--font-display);
     font-size: var(--text-subheading);
     line-height: var(--text-subheading-leading);
     letter-spacing: var(--text-subheading-tracking);
-    font-weight: 400;
+    font-weight: var(--text-hero-weight);
   }
 
-  /* Title Small */
+  /* Title Small — title-lg */
   .text-title-small {
     font-family: var(--font-display);
     font-size: var(--text-title-small);
     line-height: var(--text-title-small-leading);
     letter-spacing: var(--text-title-small-tracking);
-    font-weight: 400;
+    font-weight: var(--text-hero-weight);
   }
 
-  /* Body Serif */
+  /* Body Serif — body-md (now Inter, not jjannon) */
   .text-body-serif {
     font-family: var(--font-serif);
     font-size: var(--text-body-serif);
@@ -278,7 +321,7 @@ a {
     font-weight: var(--text-body-serif-weight);
   }
 
-  /* Body Serif Small */
+  /* Body Serif Small — body-sm */
   .text-body-serif-sm {
     font-family: var(--font-serif);
     font-size: var(--text-body-serif-sm);
@@ -286,7 +329,7 @@ a {
     font-weight: var(--text-body-serif-sm-weight);
   }
 
-  /* Body Sans */
+  /* Body Sans — body-md */
   .text-body-sans {
     font-family: var(--font-ui);
     font-size: var(--text-body-sans);
@@ -308,8 +351,7 @@ a {
     font-size: var(--text-button-caption);
     line-height: var(--text-button-caption-leading);
     letter-spacing: var(--text-button-caption-tracking);
-    font-weight: 400;
-    font-feature-settings: "ss09" on;
+    font-weight: var(--text-button-label-weight);
   }
 
   /* Caption */
@@ -337,7 +379,7 @@ a {
     font-weight: var(--text-mono-small-weight);
   }
 
-  /* System Heading */
+  /* System Heading — title-md */
   .text-system-heading {
     font-family: var(--font-ui);
     font-size: var(--text-system-heading);
@@ -353,7 +395,7 @@ a {
     font-weight: var(--text-system-caption-weight);
   }
 
-  /* System Micro */
+  /* System Micro — caption-uppercase */
   .text-system-micro {
     font-family: var(--font-ui);
     font-size: var(--text-system-micro);

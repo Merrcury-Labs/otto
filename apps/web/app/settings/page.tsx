@@ -109,7 +109,7 @@ export default function SettingsPage() {
                                                     <AvatarImage src={image} alt={name} />
                                                     <AvatarFallback>{isPending ? "..." : initials}</AvatarFallback>
                                                 </Avatar>
-                                                <div className="absolute inset-0 flex items-center justify-center rounded-full transition-opacity opacity-0 group-hover:opacity-100" style={{ backgroundColor: 'rgba(38, 37, 30, 0.4)' }}>
+                                                <div className="absolute inset-0 flex items-center justify-center rounded-full transition-opacity opacity-0 group-hover:opacity-100" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
                                                     <Camera className="size-6" style={{ color: 'var(--surface-200)' }} />
                                                 </div>
                                             </div>

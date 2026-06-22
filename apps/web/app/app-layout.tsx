@@ -19,25 +19,21 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
-      <SidebarInset>
-        <header
-          className="flex h-16 shrink-0 items-center gap-2 border-b border-border-primary px-4"
-          style={{ backgroundColor: "var(--surface-200)" }}
-        >
+      <SidebarInset className="h-svh min-w-0 overflow-y-auto">
+        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-secondary px-4">
           <SidebarTrigger className="-ml-1" />
           <Separator
             orientation="vertical"
             className="mr-2 h-4"
-            style={{ borderColor: "var(--border-primary)" }}
           />
           <PageHeaderTitle />
           <HeaderActions />
         </header>
-        <main className="p-4" style={{ backgroundColor: "var(--surface-200)" }}>
+        <div className="flex-1 bg-background p-4">
           {children}
-        </main>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );

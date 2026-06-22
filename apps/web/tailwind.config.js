@@ -12,9 +12,14 @@ export default {
 	theme: {
 		extend: {
 			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)'
+				xs: 'var(--radius-xs)',
+				sm: 'var(--radius-sm)',
+				md: 'var(--radius-md)',
+				lg: 'var(--radius-lg)',
+				xl: 'var(--radius-xl)',
+				pill: 'var(--radius-pill)',
+				full: 'var(--radius-full)',
+				DEFAULT: 'var(--radius-md)',
 			},
 			colors: {
 				background: 'hsl(var(--background))',
@@ -57,6 +62,20 @@ export default {
 					'4': 'hsl(var(--chart-4))',
 					'5': 'hsl(var(--chart-5))'
 				},
+				/* Clay brand colors */
+				brand: {
+					pink: 'hsl(var(--brand-pink))',
+					teal: 'hsl(var(--brand-teal))',
+					lavender: 'hsl(var(--brand-lavender))',
+					peach: 'hsl(var(--brand-peach))',
+					ochre: 'hsl(var(--brand-ochre))',
+					mint: 'hsl(var(--brand-mint))',
+					coral: 'hsl(var(--brand-coral))',
+				},
+				/* Clay semantic color aliases */
+				ink: 'hsl(var(--ink))',
+				canvas: 'hsl(var(--canvas))',
+				hairline: 'hsl(var(--hairline))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
@@ -67,7 +86,17 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
-			}
+			},
+			spacing: {
+				'clay-xxs': '4px',
+				'clay-xs': '8px',
+				'clay-sm': '12px',
+				'clay-md': '16px',
+				'clay-lg': '24px',
+				'clay-xl': '32px',
+				'clay-xxl': '48px',
+				'clay-section': '96px',
+			},
 		}
 	},
 	plugins: [tailwindcssAnimate],

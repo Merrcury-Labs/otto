@@ -27,208 +27,16 @@ import {
 } from "@repo/ui/card";
 import LessonModal, {
   LessonFormData,
-  QuizQuestion,
 } from "../../components/LessonModal";
-import { CoursePreviewModal } from "../../components/CoursePreviewModal";
 import type { CourseFormData, CourseStatus, Lesson } from "../../types";
+import {
+  type AdminCoursesData,
+  getCourseFormData,
+  getLessonTypeLabel,
+} from "../../utils";
 import { graphqlFetch } from "../../../../lib/graphql/client";
 import { adminCoursesQuery } from "../../../../lib/graphql/courses";
 import { saveCourse } from "../../persistence";
-
-type BackendCourse = {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail?: string;
-  image?: string;
-  level: string;
-  category: string;
-  prerequisites?: string;
-  modules?: BackendModule[];
-};
-
-type BackendModule = {
-  id: string;
-  title: string;
-  description?: string;
-  order?: number;
-  lessons?: BackendLesson[];
-};
-
-type BackendLesson = {
-  id: string;
-  title: string;
-  content?: string;
-  videoUrl?: string | null;
-  length?: string;
-  sectionName?: string;
-  order?: number;
-};
-
-type AdminCoursesData = {
-  courses: BackendCourse[];
-};
-
-const parseLines = (value?: string) =>
-  value
-    ?.split(/\r?\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean) ?? [];
-
-const getImageUrl = (value?: string) => {
-  const imageUrl = value
-    ?.match(/https?:\/\/\S+|\/\/\S+|\S+unsplash\.com\S*/i)?.[0]
-    .trim()
-    .replace(/[),.;]+$/, "");
-
-  if (!imageUrl) return "";
-  if (imageUrl.startsWith("//")) return `https:${imageUrl}`;
-  if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("data:")) {
-    return imageUrl;
-  }
-  if (imageUrl.includes("unsplash.com")) return `https://${imageUrl}`;
-
-  return imageUrl;
-};
-
-const getUnsplashPhotoId = (url: URL) => {
-  if (url.hostname !== "unsplash.com") return "";
-
-  const [, resource, slug] = url.pathname.split("/");
-
-  if (resource !== "photos" || !slug) return "";
-
-  return slug.split("-").at(-1) ?? "";
-};
-
-const getDisplayableImageUrl = (value: string) => {
-  if (!value) return "";
-  if (value.startsWith("data:image/") || value.startsWith("/")) return value;
-
-  try {
-    const url = new URL(value);
-    const imageHosts = ["images.unsplash.com", "plus.unsplash.com"];
-
-    if (
-      imageHosts.includes(url.hostname) ||
-      /\.(avif|gif|jpe?g|png|webp)$/i.test(url.pathname)
-    ) {
-      return value;
-    }
-
-    const unsplashPhotoId = getUnsplashPhotoId(url);
-
-    if (unsplashPhotoId) {
-      return `https://unsplash.com/photos/${unsplashPhotoId}/download?force=true&w=900`;
-    }
-  } catch {
-    return "";
-  }
-
-  return "";
-};
-
-const getCourseImageUrl = (course: BackendCourse) =>
-  [course.thumbnail, course.image]
-    .map(getImageUrl)
-    .map(getDisplayableImageUrl)
-    .find(Boolean) ?? "";
-
-const parseQuizQuestions = (content?: string) => {
-  if (!content) return null;
-
-  try {
-    const value = JSON.parse(content) as unknown;
-
-    return Array.isArray(value) ? (value as QuizQuestion[]) : null;
-  } catch {
-    return null;
-  }
-};
-
-const getLessonDuration = (length?: string) => {
-  if (!length) return "";
-
-  const [hours = "0", minutes = "0", seconds = "0"] = length.split(":");
-  const hourCount = Number(hours);
-  const minuteCount = Number(minutes);
-  const secondCount = Number(seconds);
-
-  if (hourCount) return `${hourCount} hr ${minuteCount} min`;
-  if (minuteCount) return `${minuteCount} min`;
-  if (secondCount) return `${secondCount} sec`;
-
-  return length;
-};
-
-const normalizeLesson = (lesson: BackendLesson): Lesson => {
-  const questions = parseQuizQuestions(lesson.content);
-
-  if (questions) {
-    return {
-      id: lesson.id,
-      title: lesson.title,
-      type: "quiz",
-      duration: getLessonDuration(lesson.length),
-      questions,
-    };
-  }
-
-  if (lesson.videoUrl) {
-    return {
-      id: lesson.id,
-      title: lesson.title,
-      type: "video",
-      duration: getLessonDuration(lesson.length),
-      url: lesson.videoUrl,
-      content: lesson.content,
-    };
-  }
-
-  return {
-    id: lesson.id,
-    title: lesson.title,
-    type: "text",
-    duration: getLessonDuration(lesson.length),
-    content: lesson.content,
-  };
-};
-
-const normalizeModules = (modules?: BackendModule[]) =>
-  modules
-    ?.slice()
-    .sort((firstModule, secondModule) => {
-      const firstOrder = firstModule.order ?? 0;
-      const secondOrder = secondModule.order ?? 0;
-
-      return firstOrder - secondOrder || firstModule.title.localeCompare(secondModule.title);
-    })
-    .map((module) => ({
-      id: module.id,
-      title: module.title,
-      lessons:
-        module.lessons
-          ?.slice()
-          .sort((firstLesson, secondLesson) => {
-            const firstOrder = firstLesson.order ?? 0;
-            const secondOrder = secondLesson.order ?? 0;
-
-            return (
-              firstOrder - secondOrder ||
-              firstLesson.title.localeCompare(secondLesson.title)
-            );
-          })
-          .map(normalizeLesson) ?? [],
-    })) ?? [];
-
-const getCourseFormData = (course: BackendCourse): CourseFormData => ({
-  title: course.title,
-  description: course.description,
-  thumbnail: getCourseImageUrl(course),
-  prerequisites: parseLines(course.prerequisites),
-  tags: [course.category, course.level].filter(Boolean),
-  modules: normalizeModules(course.modules),
-});
 
 function getLessonIcon(type: Lesson["type"]) {
   if (type === "video") return <Video className="h-4 w-4" />;
@@ -240,7 +48,6 @@ function getLessonIcon(type: Lesson["type"]) {
 export default function EditCoursePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [formData, setFormData] = useState<CourseFormData | null>(null);
   const [status, setStatus] = useState<CourseStatus>("published");
   const [isLoadingCourse, setIsLoadingCourse] = useState(true);
@@ -397,21 +204,6 @@ export default function EditCoursePage() {
     setCurrentModuleId(moduleId);
     setLessonType(type);
     setIsLessonModalOpen(true);
-  };
-
-  const getLessonTypeLabel = (type: Lesson["type"]) => {
-    switch (type) {
-      case "video":
-        return "Video";
-      case "text":
-        return "Reading";
-      case "quiz":
-        return "Quiz";
-      case "code":
-        return "Exercise";
-      default:
-        return "Lesson";
-    }
   };
 
   const handleLessonSave = (data: LessonFormData) => {
@@ -572,7 +364,7 @@ export default function EditCoursePage() {
         </div>
         <Button
           type="button"
-          onClick={() => setIsPreviewOpen(true)}
+          onClick={() => router.push(`/courses/${params.id}/preview`)}
           className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
         >
           <Eye className="h-4 w-4 mr-2" />
@@ -964,12 +756,6 @@ export default function EditCoursePage() {
           setIsLessonModalOpen(false);
           setCurrentModuleId(null);
         }}
-      />
-
-      <CoursePreviewModal
-        course={formData}
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
       />
     </div>
   );

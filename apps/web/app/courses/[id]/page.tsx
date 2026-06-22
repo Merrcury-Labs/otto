@@ -111,7 +111,7 @@ export default function CourseLandingPage() {
                                 <img
                                     key={i}
                                     className="inline-block h-10 w-10 rounded-full ring-2"
-                                    style={{ ringColor: 'var(--surface-200)' }}
+                                    style={{ '--tw-ring-color': 'var(--surface-200)' } as React.CSSProperties}
                                     src={`https://images.unsplash.com/photo-${1500000000000 + i}?w=100&auto=format&fit=crop`}
                                     alt="Student"
                                 />
@@ -184,8 +184,7 @@ export default function CourseLandingPage() {
                                                 {section.lessons.map((lesson, lIdx) => (
                                                     <div
                                                         key={lIdx}
-                                                        className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors"
-                                                        style={{ ':hover': { backgroundColor: 'var(--surface-300)' } }}
+                                                        className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors hover:bg-muted"
                                                     >
                                                         <div className="flex items-center gap-4">
                                                             {lesson.preview ? (
@@ -233,7 +232,7 @@ export default function CourseLandingPage() {
                                     className="h-full w-full object-cover"
                                     style={{ borderBottom: '1px solid var(--border-primary)' }}
                                 />
-                                <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(38, 37, 30, 0.4)' }}>
+                                <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
                                     <PlayCircle className="size-16" style={{ color: 'var(--surface-200)' }} />
                                 </div>
                             </div>
@@ -246,10 +245,10 @@ export default function CourseLandingPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-3">
-                                    <button className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold transition-colors duration-150" style={{ backgroundColor: 'var(--surface-300)', borderRadius: '8px', color: 'var(--foreground)', ':hover': { color: 'var(--color-error)' } }}>
+                                    <button className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold transition-colors duration-150 bg-muted text-foreground rounded-md hover:text-destructive">
                                         Add to Cart
                                     </button>
-                                    <button className="w-full py-3 text-sm font-bold transition-colors duration-150" style={{ border: '1px solid var(--border-primary)', borderRadius: '8px', color: 'var(--foreground)', backgroundColor: 'transparent', ':hover': { backgroundColor: 'var(--surface-300)' } }}>
+                                    <button className="w-full py-3 text-sm font-bold transition-colors duration-150 border border-border text-foreground bg-transparent rounded-md hover:bg-muted">
                                         Buy Now
                                     </button>
                                 </div>
