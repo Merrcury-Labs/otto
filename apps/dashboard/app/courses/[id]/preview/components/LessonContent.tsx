@@ -24,7 +24,7 @@ interface LessonContentProps {
 const getNotesKey = (lessonId: string | number) =>
   `otto-preview-notes-${lessonId}`;
 
-function LessonNotes({ lessonId }: { lessonId: string | number }) {
+function LessonTools({ lessonId }: { lessonId: string | number }) {
   const [notes, setNotes] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
 
@@ -51,11 +51,12 @@ function LessonNotes({ lessonId }: { lessonId: string | number }) {
 
   return (
     <div className="rounded-lg border border-border/10 bg-surface-100 overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-border/10 px-4 py-2.5">
-        <ChatCircleText className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="border-b border-border/10 px-4 py-3">
+        <h3 className="text-sm font-medium text-foreground">Lesson tools</h3>
+        <div className="mt-2 flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <ChatCircleText className="h-4 w-4" />
           Comments
-        </span>
+        </div>
       </div>
       <textarea
         value={notes}
@@ -128,7 +129,7 @@ function VideoLesson({ lesson }: { lesson: Lesson }) {
         </div>
       )}
 
-      <LessonNotes lessonId={lesson.id} />
+      <LessonTools lessonId={lesson.id} />
     </div>
   );
 }
@@ -298,7 +299,7 @@ export function LessonContent({
           <div className="mx-auto max-w-4xl">
             <CodeLesson lesson={lesson} />
             <div className="mt-5">
-              <LessonNotes lessonId={lesson.id} />
+              <LessonTools lessonId={lesson.id} />
             </div>
           </div>
         )}
@@ -306,7 +307,7 @@ export function LessonContent({
           <div className="mx-auto max-w-4xl">
             <QuizLesson lesson={lesson} />
             <div className="mt-5">
-              <LessonNotes lessonId={lesson.id} />
+              <LessonTools lessonId={lesson.id} />
             </div>
           </div>
         )}

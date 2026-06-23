@@ -54,7 +54,9 @@ export async function POST(request: Request) {
     return graphqlErrorResponse(message, 400);
   }
 
-  const { result, status } = await executeGraphqlRequest(body);
+  const { result, status } = await executeGraphqlRequest(body, {
+    headers: request.headers as Headers,
+  });
 
   return NextResponse.json(result, {
     status,

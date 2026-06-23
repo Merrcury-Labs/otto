@@ -15,9 +15,59 @@ import {
 } from "lucide-react"
 import { courses, quizzes, weeklyStats, userStats } from "@/lib/data"
 import { Button } from "@/components/ui/button"
+import { graphqlFetch } from "@/lib/graphql/client"
+import { publishedCoursesQuery } from "@/lib/graphql/courses"
+import { type BackendCourse, normalizeCourse, type DisplayCourse } from "@/lib/graphql/normalize"
 
 export default function DashboardPage() {
     const enrolledCourses = courses.filter(c => c.progress > 0)
+
+    const [courseList, setCourseList] = React.useState<DisplayCourse[]>(
+        enrolledCourses.map((c) => ({
+            id: c.id,
+            title: c.title,
+            description: c.description,
+            instructor: c.instructor,
+            duration: c.duration,
+            level: c.level,
+            category: c.category,
+            status: c.status.toUpperCase(),
+            progress: c.progress,
+            rating: c.rating,
+            lessons: c.lessons,
+            image: c.image,
+            students: 0,
+            prerequisites: [],
+            modules: [],
+        }))
+    )
+    const [activeCourseCount, setActiveCourseCount] = React.useState(enrolledCourses.length)
+
+    React.useEffect(() => {
+        let isMounted = true
+
+        async function loadCourses() {
+            try {
+                const result = await graphqlFetch<{ courses: BackendCourse[] }>({
+                    query: publishedCoursesQuery,
+                })
+
+                if (isMounted) {
+                    const normalized = result.courses.map(normalizeCourse)
+                    setCourseList(normalized)
+                    setActiveCourseCount(normalized.length)
+                }
+            } catch {
+                // Keep mock data fallback
+            }
+        }
+
+        loadCourses()
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     return (
         <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
@@ -40,7 +90,7 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     {[
                         { label: "Points Earned", value: userStats.totalPoints, icon: Trophy, color: "text-amber-500", trend: "+12%" },
-                        { label: "Active Courses", value: enrolledCourses.length, icon: BookOpen, color: "text-primary" },
+                        { label: "Active Courses", value: activeCourseCount, icon: BookOpen, color: "text-primary" },
                         { label: "Completion Rate", value: `${userStats.averageScore}%`, icon: GraduationCap, color: "text-blue-500" },
                         { label: "Learning Streak", value: `${userStats.streak}d`, icon: Calendar, color: "text-orange-500" },
                     ].map((stat, i) => (
@@ -100,7 +150,7 @@ export default function DashboardPage() {
 
                         <section className="flex flex-col gap-6">
                             <div className="flex items-center justify-between px-1">
-                                <h3 className="text-xl font-bold tracking-tight">Continue Learning</h3>
+                                <h3 className="text-xl font-bold tracking-tight">Available Courses</h3>
                                 <Button variant="ghost" size="sm" className="font-bold text-primary group" asChild>
                                     <a href="/courses">
                                         Browse all <ArrowUpRight className="ml-1 size-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -109,7 +159,7 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                {enrolledCourses.map((course) => (
+                                {courseList.slice(0, 4).map((course) => (
                                     <div key={course.id} className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card/40 transition-all hover:bg-card hover:shadow-lg hover:shadow-primary/5">
                                         <div className="p-6">
                                             <div className="mb-4 flex items-center justify-between">
@@ -121,22 +171,30 @@ export default function DashboardPage() {
                                                 </div>
                                             </div>
                                             <h4 className="text-lg font-bold leading-tight line-clamp-1">{course.title}</h4>
-                                            <div className="mt-6 flex flex-col gap-2">
-                                                <div className="flex items-center justify-between font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-                                                    <span>Progression</span>
-                                                    <span>{course.progress}%</span>
-                                                </div>
-                                                <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/40">
-                                                    <div
-                                                        className="h-full rounded-full bg-primary transition-all duration-1000"
-                                                        style={{ width: `${course.progress}%` }}
-                                                    />
-                                                </div>
+                                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{course.description}</p>
+                                            <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+                                                <span>{course.lessons} lessons</span>
+                                                <span>•</span>
+                                                <span>{course.level}</span>
                                             </div>
+                                            {course.progress > 0 && (
+                                                <div className="mt-4 flex flex-col gap-2">
+                                                    <div className="flex items-center justify-between font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
+                                                        <span>Progression</span>
+                                                        <span>{course.progress}%</span>
+                                                    </div>
+                                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/40">
+                                                        <div
+                                                            className="h-full rounded-full bg-primary transition-all duration-1000"
+                                                            style={{ width: `${course.progress}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                         <Button className="rounded-none h-12 border-t font-bold tracking-tight bg-transparent hover:bg-primary hover:text-primary-foreground text-foreground transition-all border-none group" asChild>
                                             <a href={`/courses/${course.id}`} className="flex items-center justify-center gap-2">
-                                                Resume Course
+                                                {course.progress > 0 ? "Resume Course" : "Start Course"}
                                                 <ArrowUpRight className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                             </a>
                                         </Button>

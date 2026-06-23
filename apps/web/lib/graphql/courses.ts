@@ -1,24 +1,49 @@
 export const publishedCoursesQuery = /* GraphQL */ `
-  query PublishedCourses($search: String, $category: String, $level: String) {
-    courses(
-      status: PUBLISHED
-      search: $search
-      category: $category
-      level: $level
-    ) {
+  query PublishedCourses {
+    courses {
       id
-      title
+      title: name
       description
-      instructor
-      duration
+      tutor
+      thumbnail
+      image
+      lessonCount
       level
       category
-      status
-      progress
-      rating
-      lessons
-      image
+      prerequisites
+      students: enrolledStudents
+    }
+  }
+`;
+
+export const courseDetailQuery = /* GraphQL */ `
+  query CourseDetail {
+    courses {
+      id
+      title: name
+      description
+      tutor
       thumbnail
+      image
+      lessonCount
+      level
+      category
+      prerequisites
+      students: enrolledStudents
+      modules {
+        id
+        title
+        description
+        order
+        lessons {
+          id
+          title
+          content
+          videoUrl
+          length
+          sectionName
+        }
+      }
     }
   }
 `;
@@ -30,25 +55,6 @@ export const adminCoursesQuery = /* GraphQL */ `
       title
       description
       status
-    }
-  }
-`;
-
-export const courseQuery = /* GraphQL */ `
-  query Course($id: ID!) {
-    course(id: $id) {
-      id
-      title
-      description
-      instructor
-      duration
-      level
-      category
-      status
-      progress
-      rating
-      lessons
-      image
     }
   }
 `;
