@@ -12,11 +12,19 @@
       "Bash(pnpm --filter web build)",
       "Bash(pnpm --filter web add -D @types/pg)",
       "Bash(mkdir -p /home/isaac_s/Desktop/otto/apps/dashboard/app/courses/\\\\[id\\\\]/preview/components)",
-      "Bash(rm /home/isaac_s/Desktop/otto/apps/dashboard/app/courses/\\\\[id\\\\]/preview/components/PreviewSidebar.tsx)"
+      "Bash(rm /home/isaac_s/Desktop/otto/apps/dashboard/app/courses/\\\\[id\\\\]/preview/components/PreviewSidebar.tsx)",
+      "Bash(mkdir -p /home/isaac_s/Desktop/otto/apps/web/app/courses/\\\\[id\\\\]/learn)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ courses { id name thumbnail image } }\"}')",
+      "Bash(curl -sI \"https://unsplash.com/photos/Vs6ip7fsld8/download?force=true&w=900\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ courses { id name modules { lessons { title content videoUrl type } } } }\"}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ courses { id name modules { lessons { title content videoUrl } } } }\"}')"
     ],
     "additionalDirectories": [
       "/home/isaac_s/Desktop/otto/apps/dashboard/app/courses/[id]/preview",
-      "/home/isaac_s/Desktop/otto/apps/dashboard/app/courses/[id]/preview/components"
+      "/home/isaac_s/Desktop/otto/apps/dashboard/app/courses/[id]/preview/components",
+      "/home/isaac_s/Desktop/otto/apps/web/app/courses/[id]"
     ]
   }
 }

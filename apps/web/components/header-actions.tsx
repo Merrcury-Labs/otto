@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Bell, LogOut, User, Settings as SettingsIcon } from "lucide-react"
+import { Bell, LogOut, Moon, Sun, User, Settings as SettingsIcon } from "lucide-react"
+import { useTheme } from "next-themes"
 
 import { signOutAction } from "@/app/actions/auth"
 import {
@@ -39,6 +40,7 @@ function getInitials(name?: string | null, email?: string | null) {
 
 export function HeaderActions() {
     const { data: session, isPending } = authClient.useSession()
+    const { theme, setTheme } = useTheme()
     const user = session?.user
     const name = user?.name || "User"
     const email = user?.email || ""
@@ -47,6 +49,17 @@ export function HeaderActions() {
 
     return (
         <div className="ml-auto flex items-center gap-4">
+            {/* Theme toggle */}
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+            </Button>
+
             {/* Notifications */}
             <Popover>
                 <PopoverTrigger asChild>

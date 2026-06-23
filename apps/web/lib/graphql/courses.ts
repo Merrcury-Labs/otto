@@ -4,7 +4,10 @@ export const publishedCoursesQuery = /* GraphQL */ `
       id
       title: name
       description
-      tutor
+      tutor {
+        id
+        name
+      }
       thumbnail
       image
       lessonCount
@@ -22,7 +25,10 @@ export const courseDetailQuery = /* GraphQL */ `
       id
       title: name
       description
-      tutor
+      tutor {
+        id
+        name
+      }
       thumbnail
       image
       lessonCount

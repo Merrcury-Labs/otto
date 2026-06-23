@@ -8,6 +8,7 @@ import {
     type BackendCourse,
     type DisplayCourse,
     normalizeCourse,
+    flattenLessons,
 } from "@/lib/graphql/normalize"
 import {
     BadgeCheck,
@@ -71,11 +72,30 @@ export default function CourseLandingPage() {
         )
     }
 
+    const firstLessonUrl = course?.modules?.length
+        ? (() => {
+            const all = flattenLessons(course.modules)
+            const first = all[0]
+            return first ? `/courses/${id}/learn?lesson=${first.id}` : `/courses/${id}`
+        })()
+        : `/courses/${id}`
+
     return (
         <div className="relative flex flex-col gap-8 pb-20" style={{ fontFamily: 'var(--font-ui)' }}>
             {/* Hero Section */}
-            <div className="relative overflow-hidden rounded-3xl p-8 md:p-12 lg:p-16" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)' }}>
-                <div className="relative z-10 flex flex-col gap-6 lg:max-w-2xl">
+            <div className="relative overflow-hidden rounded-3xl" style={{ border: '1px solid var(--border-primary)' }}>
+                {/* Hero background image */}
+                {course?.image && (
+                    <div className="absolute inset-0">
+                        <img
+                            src={course.image}
+                            alt=""
+                            className="h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
+                    </div>
+                )}
+                <div className="relative z-10 flex flex-col gap-6 lg:max-w-2xl p-8 md:p-12 lg:p-16">
                     <div className="flex flex-wrap items-center gap-3">
                         <span className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold" style={{ backgroundColor: 'var(--color-gold)', color: 'white' }}>
                             <Star className="size-3 fill-white" />
@@ -167,9 +187,10 @@ export default function CourseLandingPage() {
                                             {isOpen && (
                                                 <div className="flex flex-col gap-1 p-2" style={{ backgroundColor: 'var(--surface-100)/50' }}>
                                                     {module.lessons.map((lesson) => (
-                                                        <div
+                                                        <a
                                                             key={lesson.id}
-                                                            className="flex cursor-pointer items-center justify-between rounded-lg p-3 transition-colors hover:bg-muted"
+                                                            href={`/courses/${id}/learn?lesson=${lesson.id}`}
+                                                            className="flex items-center justify-between rounded-lg p-3 transition-colors hover:bg-muted"
                                                         >
                                                             <div className="flex items-center gap-4">
                                                                 {lesson.type === "video" ? (
@@ -189,7 +210,7 @@ export default function CourseLandingPage() {
                                                                     <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lesson.duration}</span>
                                                                 )}
                                                             </div>
-                                                        </div>
+                                                        </a>
                                                     ))}
                                                 </div>
                                             )}
@@ -206,9 +227,9 @@ export default function CourseLandingPage() {
                     <div className="sticky top-24 flex flex-col gap-6">
                         <div className="overflow-hidden rounded-2xl" style={{ border: '1px solid var(--border-primary)', backgroundColor: 'var(--surface-100)', boxShadow: 'var(--shadow-card)' }}>
                             <div className="aspect-video relative">
-                                {course?.image ? (
+                                {course?.thumbnail ? (
                                     <img
-                                        src={course.image}
+                                        src={course.thumbnail}
                                         alt={course?.title ?? "Course Preview"}
                                         className="h-full w-full object-cover"
                                         style={{ borderBottom: '1px solid var(--border-primary)' }}
@@ -231,12 +252,13 @@ export default function CourseLandingPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-3">
-                                    <button className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold transition-colors duration-150 bg-muted text-foreground rounded-md hover:text-destructive">
-                                        Add to Cart
-                                    </button>
-                                    <button className="w-full py-3 text-sm font-bold transition-colors duration-150 border border-border text-foreground bg-transparent rounded-md hover:bg-muted">
-                                        Buy Now
-                                    </button>
+                                    <a
+                                        href={firstLessonUrl}
+                                        className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold transition-colors duration-150 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                                    >
+                                        <PlayCircle className="size-4" />
+                                        Start Learning
+                                    </a>
                                 </div>
 
                                 <p className="mt-4 text-center text-xs" style={{ color: 'var(--muted-foreground)' }}>

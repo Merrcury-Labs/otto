@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import {
     BookOpen,
     Clock,
@@ -34,6 +33,7 @@ const initialPublishedCourses: Course[] = courses
         progress: c.progress,
         rating: c.rating,
         lessons: c.lessons,
+        thumbnail: c.image,
         image: c.image,
         students: 0,
         prerequisites: [],
@@ -165,12 +165,10 @@ export default function CoursesPage() {
                         >
                             {/* Image Section */}
                             <div className="relative aspect-video overflow-hidden">
-                                {course.image ? (
-                                    <Image
-                                        src={course.image}
+                                {course.thumbnail || course.image ? (
+                                    <img
+                                        src={course.thumbnail || course.image}
                                         alt={course.title}
-                                        fill
-                                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                     />
                                 ) : (

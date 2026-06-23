@@ -35,6 +35,7 @@ export default function DashboardPage() {
             progress: c.progress,
             rating: c.rating,
             lessons: c.lessons,
+            thumbnail: c.image,
             image: c.image,
             students: 0,
             prerequisites: [],

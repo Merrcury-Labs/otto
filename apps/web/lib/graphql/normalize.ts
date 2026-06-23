@@ -2,11 +2,16 @@
 // Backend types (raw data from GraphQL)
 // ---------------------------------------------------------------------------
 
+export type BackendTutor = {
+  id: string;
+  name: string;
+};
+
 export type BackendCourse = {
   id: string;
   title: string; // aliased from "name"
   description: string;
-  tutor: string;
+  tutor: BackendTutor | null;
   thumbnail?: string;
   image?: string;
   lessonCount: number;
@@ -66,7 +71,8 @@ export type DisplayCourse = {
   progress: number; // 0 by default
   rating: number; // 0 by default
   lessons: number; // from lessonCount
-  image: string; // resolved from thumbnail/image
+  thumbnail: string; // resolved thumbnail URL
+  image: string; // resolved image URL (falls back to thumbnail)
   students: number; // from enrolledStudents alias
   prerequisites: string[]; // parsed from prerequisites string
   modules: DisplayModule[];
@@ -123,6 +129,14 @@ const getDisplayableImageUrl = (value: string) => {
       return value;
     }
 
+    // Unsplash download URLs — return as-is, <img> tags follow redirects natively
+    if (
+      (url.hostname === "unsplash.com" || url.hostname === "www.unsplash.com")
+    ) {
+      return value;
+    }
+
+    // Unsplash page URLs like unsplash.com/photos/a-sunset-abc123 — convert to direct image
     const unsplashPhotoId = getUnsplashPhotoId(url);
 
     if (unsplashPhotoId) {
@@ -232,20 +246,116 @@ export const normalizeModules = (modules?: BackendModule[]) =>
           .map(normalizeLesson) ?? [],
     })) ?? [];
 
-export const normalizeCourse = (course: BackendCourse): DisplayCourse => ({
-  id: course.id,
-  title: course.title,
-  description: course.description,
-  instructor: course.tutor,
-  duration: course.lessonCount ? `${course.lessonCount} lessons` : "",
-  level: course.level,
-  category: course.category,
-  status: "PUBLISHED",
-  progress: 0,
-  rating: 0,
-  lessons: course.lessonCount,
-  image: getCourseImageUrl(course),
-  students: course.students,
-  prerequisites: parseLines(course.prerequisites),
-  modules: normalizeModules(course.modules),
-});
+// ---------------------------------------------------------------------------
+// Lesson type utilities
+// ---------------------------------------------------------------------------
+
+export const getLessonTypeLabel = (type: DisplayLesson["type"]) => {
+  switch (type) {
+    case "video":
+      return "Video";
+    case "text":
+      return "Reading";
+    case "quiz":
+      return "Quiz";
+    default:
+      return "Lesson";
+  }
+};
+
+/**
+ * Flatten all lessons across modules into a single ordered array.
+ */
+export const flattenLessons = (modules: DisplayModule[]): DisplayLesson[] =>
+  modules.flatMap((module) => module.lessons);
+
+/**
+ * Find the previous and next lesson relative to a given lesson ID.
+ */
+export const getAdjacentLessons = (
+  modules: DisplayModule[],
+  lessonId: string | number,
+): { previous: DisplayLesson | null; next: DisplayLesson | null } => {
+  const flat = flattenLessons(modules);
+  const index = flat.findIndex((lesson) => String(lesson.id) === String(lessonId));
+
+  if (index === -1) {
+    return { previous: null, next: null };
+  }
+
+  return {
+    previous: index > 0 ? flat[index - 1] ?? null : null,
+    next: index < flat.length - 1 ? flat[index + 1] ?? null : null,
+  };
+};
+
+/**
+ * Convert various YouTube URL formats to embed URLs.
+ */
+export const getYouTubeEmbedUrl = (url: string): string | null => {
+  try {
+    const parsed = new URL(url);
+
+    if (
+      (parsed.hostname === "www.youtube.com" || parsed.hostname === "youtube.com") &&
+      parsed.pathname === "/watch"
+    ) {
+      const videoId = parsed.searchParams.get("v");
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    if (parsed.hostname === "youtu.be") {
+      const videoId = parsed.pathname.slice(1);
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    }
+
+    if (
+      (parsed.hostname === "www.youtube.com" || parsed.hostname === "youtube.com") &&
+      parsed.pathname.startsWith("/embed/")
+    ) {
+      return url;
+    }
+
+    if (
+      (parsed.hostname === "www.youtube.com" || parsed.hostname === "youtube.com") &&
+      parsed.pathname.startsWith("/v/")
+    ) {
+      const videoId = parsed.pathname.slice(3);
+      if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+    }
+  } catch {
+    // Not a valid URL, try regex fallback
+  }
+
+  const watchMatch = url.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
+  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`;
+
+  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+
+  return null;
+};
+
+export const normalizeCourse = (course: BackendCourse): DisplayCourse => {
+  const thumbnailUrl = [course.thumbnail].map(getImageUrl).map(getDisplayableImageUrl).find(Boolean) ?? "";
+  const imageUrl = [course.image].map(getImageUrl).map(getDisplayableImageUrl).find(Boolean) || thumbnailUrl;
+
+  return {
+    id: course.id,
+    title: course.title,
+    description: course.description,
+    instructor: course.tutor?.name ?? "",
+    duration: course.lessonCount ? `${course.lessonCount} lessons` : "",
+    level: course.level,
+    category: course.category,
+    status: "PUBLISHED",
+    progress: 0,
+    rating: 0,
+    lessons: course.lessonCount,
+    thumbnail: thumbnailUrl,
+    image: imageUrl,
+    students: course.students,
+    prerequisites: parseLines(course.prerequisites),
+    modules: normalizeModules(course.modules),
+  };
+};
