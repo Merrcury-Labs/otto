@@ -234,15 +234,6 @@ export const normalizeModules = (modules?: BackendModule[]) =>
       lessons:
         module.lessons
           ?.slice()
-          .sort((firstLesson, secondLesson) => {
-            const firstOrder = firstLesson.order ?? 0;
-            const secondOrder = secondLesson.order ?? 0;
-
-            return (
-              firstOrder - secondOrder ||
-              firstLesson.title.localeCompare(secondLesson.title)
-            );
-          })
           .map(normalizeLesson) ?? [],
     })) ?? [];
 
