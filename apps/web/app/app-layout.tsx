@@ -1,21 +1,29 @@
-"use client";
+"use client"
 
-import { usePathname } from "next/navigation";
-import { AppSidebar } from "@/components/app-sidebar";
-import { HeaderActions } from "@/components/header-actions";
-import { PageHeaderTitle } from "@/components/page-header-title";
-import { Separator } from "@/components/ui/separator";
+import { usePathname } from "next/navigation"
+import { AppSidebar } from "@/components/app-sidebar"
+import { HeaderActions } from "@/components/header-actions"
+import { PageHeaderTitle } from "@/components/page-header-title"
+import { Separator } from "@/components/ui/separator"
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
+  // No layout for auth pages
   if (pathname === "/login" || pathname === "/signup") {
-    return <>{children}</>;
+    return <>{children}</>
+  }
+
+  // Immersive full-height layout for the learn page — no sidebar, no header
+  const isLearnPage = pathname.includes("/learn")
+
+  if (isLearnPage) {
+    return <>{children}</>
   }
 
   return (
@@ -36,5 +44,5 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  );
+  )
 }

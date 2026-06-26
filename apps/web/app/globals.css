@@ -41,203 +41,249 @@ a {
 
 @layer base {
   :root {
-    /* Clay Design System — Color Palette */
-    --background: 40 100% 97%; /* #fffaf0 — canvas */
-    --foreground: 0 0% 4%; /* #0a0a0a — ink */
-    --card: 46 51% 92%; /* #f5f0e0 — surface-card */
-    --card-foreground: 0 0% 4%; /* #0a0a0a — ink */
-    --popover: 40 100% 97%; /* #fffaf0 — canvas */
-    --popover-foreground: 0 0% 4%; /* #0a0a0a — ink */
-    --primary: 0 0% 4%; /* #0a0a0a — near-black CTAs */
-    --primary-foreground: 0 0% 100%; /* #ffffff — on-primary */
-    --secondary: 43 64% 95%; /* #faf5e8 — surface-soft */
-    --secondary-foreground: 0 0% 4%; /* #0a0a0a — ink */
-    --muted: 46 34% 88%; /* #ebe6d6 — surface-strong */
-    --muted-foreground: 0 0% 42%; /* #6a6a6a — muted */
-    --accent: 0 0% 12%; /* #1f1f1f — primary-active */
-    --accent-foreground: 0 0% 100%; /* #ffffff — on-primary */
-    --destructive: 0 84% 60%; /* #ef4444 — error */
-    --destructive-foreground: 0 0% 100%; /* #ffffff */
-    --border: 0 0% 90%; /* #e5e5e5 — hairline */
-    --input: 0 0% 90%; /* #e5e5e5 — hairline */
-    --ring: 0 0% 4%; /* #0a0a0a — primary */
+    /* ─── Warm Cursor-Inspired Palette ──────────────────────────────────── */
+    --background: 40 20% 96%; /* #f2f1ed — warm cream */
+    --foreground: 40 10% 14%; /* #26251e — warm near-black */
+    --card: 40 20% 98%; /* #f7f7f4 — lightest warm surface */
+    --card-foreground: 40 10% 14%;
+    --popover: 40 20% 98%;
+    --popover-foreground: 40 10% 14%;
+    --primary: 224 72% 51%; /* #2563eb — blue primary for actions */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 16% 92%; /* #ebeae5 — warm surface */
+    --secondary-foreground: 40 10% 14%;
+    --muted: 40 14% 90%; /* #e6e5e0 — warm muted */
+    --muted-foreground: 40 8% 44%; /* warm gray text */
+    --accent: 224 72% 51%; /* primary blue */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 348 62% 49%; /* #cf2d56 — warm crimson */
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 12% 86%; /* warm border */
+    --input: 40 12% 86%;
+    --ring: 224 72% 51%;
 
-    /* Clay Surface Scale */
-    --surface-100: 40 100% 97%; /* #fffaf0 — canvas */
-    --surface-200: 43 64% 95%; /* #faf5e8 — surface-soft */
-    --surface-300: 46 51% 92%; /* #f5f0e0 — surface-card */
-    --surface-400: 46 34% 88%; /* #ebe6d6 — surface-strong */
-    --surface-500: 0 0% 94%; /* #f0f0f0 — hairline-soft */
+    /* ─── AI Feature Tokens ───────────────────────────────────────────── */
+    --ai-accent: 262 83% 58%; /* #7c3aed — violet */
+    --ai-accent-soft: 262 83% 58% / 8%;
+    --ai-accent-muted: 262 83% 58% / 15%;
+    --ai-gradient: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+    --ai-glow: 0 0 20px rgba(124, 58, 237, 0.15);
 
-    /* Clay Semantic Colors */
-    --color-error: 0 84% 60%; /* #ef4444 */
-    --color-success: 142 71% 45%; /* #22c55e */
-    --color-accent: 0 0% 4%; /* #0a0a0a — same as primary */
-    --color-gold: 42 77% 60%; /* #e8b94a — brand-ochre */
+    /* ─── Surface Scale (Warm) ─────────────────────────────────────────── */
+    --surface-100: 40 20% 98%; /* #f7f7f4 — lightest card surface */
+    --surface-200: 40 20% 96%; /* #f2f1ed — page background */
+    --surface-300: 40 16% 92%; /* #ebeae5 — button default */
+    --surface-400: 40 14% 90%; /* #e6e5e0 — card backgrounds */
+    --surface-500: 40 12% 86%; /* #e1e0db — deeper emphasis */
 
-    /* Clay Brand Colors */
-    --brand-pink: 339 100% 65%; /* #ff4d8b */
-    --brand-teal: 180 38% 16%; /* #1a3a3a */
-    --brand-lavender: 256 67% 79%; /* #b8a4ed */
-    --brand-peach: 21 100% 76%; /* #ffb084 */
-    --brand-ochre: 42 77% 60%; /* #e8b94a */
-    --brand-mint: 161 36% 74%; /* #a4d4c5 */
-    --brand-coral: 6 100% 68%; /* #ff6b5a */
+    /* ─── Semantic Colors ─────────────────────────────────────────────── */
+    --color-error: 348 62% 49%; /* #cf2d56 — warm crimson */
+    --color-success: 160 63% 33%; /* #1f8a65 — muted teal */
+    --color-warning: 38 92% 50%; /* #f59e0b — amber */
+    --color-accent: 224 72% 51%;
+    --color-gold: 35 68% 48%; /* #c08532 — warm gold */
+    --color-orange: 22 100% 48%; /* #f54e00 — accent orange */
 
-    /* Clay Text Colors */
-    --ink: 0 0% 4%; /* #0a0a0a */
-    --body: 0 0% 23%; /* #3a3a3a */
-    --body-strong: 0 0% 10%; /* #1a1a1a */
-    --muted-text: 0 0% 42%; /* #6a6a6a */
-    --muted-soft: 0 0% 60%; /* #9a9a9a */
-    --hairline: 0 0% 90%; /* #e5e5e5 */
-    --hairline-soft: 0 0% 94%; /* #f0f0f0 */
-    --canvas: 40 100% 97%; /* #fffaf0 */
-    --on-dark: 0 0% 100%; /* #ffffff */
+    /* ─── Brand Colors ────────────────────────────────────────────────── */
+    --brand-pink: 339 100% 65%;
+    --brand-teal: 180 38% 16%;
+    --brand-lavender: 256 67% 79%;
+    --brand-peach: 21 100% 76%;
+    --brand-ochre: 42 77% 60%;
+    --brand-mint: 161 36% 74%;
+    --brand-coral: 6 100% 68%;
 
-    /* Clay Border Colors */
-    --border-primary: #e5e5e5; /* hairline */
-    --border-medium: #d0d0d0;
-    --border-strong: #6a6a6a; /* muted */
+    /* ─── Text Colors (Warm) ──────────────────────────────────────────── */
+    --ink: 40 10% 14%; /* #26251e */
+    --body: 40 10% 23%;
+    --body-strong: 40 10% 14%;
+    --muted-text: 40 8% 44%;
+    --muted-soft: 40 6% 60%;
+    --hairline: 40 12% 86%;
+    --hairline-soft: 40 14% 90%;
+    --canvas: 40 20% 96%;
+    --on-dark: 0 0% 100%;
 
-    /* Clay Shadows — no heavy shadows per design system */
-    --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 0 0 1px #e5e5e5;
-    --shadow-ambient: rgba(0,0,0,0.02) 0px 0px 16px, rgba(0,0,0,0.008) 0px 0px 8px;
-    --shadow-focus: rgba(0,0,0,0.06) 0px 2px 8px;
+    /* ─── Border Colors ───────────────────────────────────────────────── */
+    --border-primary: rgba(38, 37, 30, 0.10);
+    --border-medium: rgba(38, 37, 30, 0.20);
+    --border-strong: rgba(38, 37, 30, 0.55);
 
-    /* Clay Radius Scale */
-    --radius: 0.75rem; /* 12px — default for buttons/inputs */
-    --radius-xs: 0.375rem; /* 6px */
-    --radius-sm: 0.5rem; /* 8px */
-    --radius-md: 0.75rem; /* 12px */
-    --radius-lg: 1rem; /* 16px */
-    --radius-xl: 1.5rem; /* 24px */
+    /* ─── Elevation System ────────────────────────────────────────────── */
+    --elevation-0: none;
+    --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --elevation-2: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(38, 37, 30, 0.06);
+    --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(38, 37, 30, 0.06);
+    --elevation-card: rgba(0,0,0,0.14) 0px 28px 70px, rgba(0,0,0,0.1) 0px 14px 32px, rgba(38, 37, 30, 0.06) 0px 0px 0px 1px;
+
+    /* ─── Shadows ─────────────────────────────────────────────────────── */
+    --shadow-card: var(--elevation-2);
+    --shadow-ambient: rgba(0, 0, 0, 0.02) 0px 0px 16px, rgba(0, 0, 0, 0.008) 0px 0px 8px;
+    --shadow-focus: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--primary));
+
+    /* ─── Transitions ─────────────────────────────────────────────────── */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ─── Focus Ring ──────────────────────────────────────────────────── */
+    --focus-ring: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--primary));
+
+    /* ─── Radius Scale ────────────────────────────────────────────────── */
+    --radius: 0.5rem; /* 8px — default matching Design.MD */
+    --radius-xs: 0.25rem; /* 4px */
+    --radius-sm: 0.375rem; /* 6px */
+    --radius-md: 0.5rem; /* 8px */
+    --radius-lg: 0.625rem; /* 10px — featured cards */
+    --radius-xl: 1rem; /* 16px */
+    --radius-2xl: 1.5rem; /* 24px */
     --radius-pill: 9999px;
     --radius-full: 9999px;
 
-    /* Sidebar Colors — surface-soft for warmth */
-    --sidebar-background: 43 64% 95%; /* #faf5e8 — surface-soft */
-    --sidebar-foreground: 0 0% 4%; /* #0a0a0a — ink */
-    --sidebar-primary: 0 0% 4%; /* #0a0a0a — ink */
-    --sidebar-primary-foreground: 0 0% 100%; /* #ffffff */
-    --sidebar-accent: 46 51% 92%; /* #f5f0e0 — surface-card hover */
-    --sidebar-accent-foreground: 0 0% 4%; /* #0a0a0a */
-    --sidebar-border: 0 0% 90%; /* #e5e5e5 — hairline */
-    --sidebar-ring: 0 0% 4%; /* #0a0a0a */
+    /* ─── Sidebar Colors ──────────────────────────────────────────────── */
+    --sidebar-background: 40 20% 96%;
+    --sidebar-foreground: 40 10% 14%;
+    --sidebar-primary: 224 72% 51%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 16% 92%;
+    --sidebar-accent-foreground: 40 10% 14%;
+    --sidebar-border: 40 12% 86%;
+    --sidebar-ring: 224 72% 51%;
+
+    /* ─── Chart Colors ────────────────────────────────────────────────── */
+    --chart-1: 224 72% 51%;
+    --chart-2: 262 83% 58%;
+    --chart-3: 160 63% 33%;
+    --chart-4: 35 68% 48%;
+    --chart-5: 348 62% 49%;
   }
 
   .dark {
-    /* Clay Dark Mode — surface-dark base with teal tint */
-    --background: 180 44% 7%; /* #0a1a1a — surface-dark */
-    --foreground: 40 100% 97%; /* #fffaf0 — canvas as text */
-    --card: 180 24% 13%; /* #1a2a2a — surface-dark-elevated */
-    --card-foreground: 40 100% 97%; /* #fffaf0 */
-    --popover: 180 24% 13%; /* #1a2a2a */
-    --popover-foreground: 40 100% 97%;
-    --primary: 0 0% 100%; /* white primary in dark mode */
-    --primary-foreground: 0 0% 4%; /* near-black on white */
-    --secondary: 180 20% 18%;
-    --secondary-foreground: 40 100% 97%;
-    --muted: 180 15% 22%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 339 100% 65%; /* brand-pink as accent in dark mode */
+    /* ─── Dark Mode — Linear/Cursor-inspired neutral dark ─────────────── */
+    --background: 30 6% 5%; /* warm-tinted near-black */
+    --foreground: 40 8% 93%; /* warm off-white */
+    --card: 30 6% 7%; /* slightly lighter warm dark */
+    --card-foreground: 40 8% 93%;
+    --popover: 30 6% 7%;
+    --popover-foreground: 40 8% 93%;
+    --primary: 217 91% 60%; /* #3b82f6 — brighter blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 30 5% 12%;
+    --secondary-foreground: 40 8% 93%;
+    --muted: 30 5% 14%;
+    --muted-foreground: 40 4% 55%;
+    --accent: 262 83% 58%; /* violet accent in dark */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%; /* #ef4444 */
+    --destructive: 348 62% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 339 100% 65%; /* brand-pink */
+    --border: 30 4% 14%;
+    --input: 30 4% 14%;
+    --ring: 262 83% 58%;
+
+    /* AI Tokens (Dark) */
+    --ai-accent: 262 83% 65%;
+    --ai-accent-soft: 262 83% 65% / 12%;
+    --ai-accent-muted: 262 83% 65% / 20%;
+    --ai-glow: 0 0 24px rgba(139, 92, 246, 0.2);
 
     /* Surface Scale (Dark) */
-    --surface-100: 180 44% 7%; /* surface-dark */
-    --surface-200: 180 24% 13%; /* surface-dark-elevated */
-    --surface-300: 180 20% 18%;
-    --surface-400: 180 15% 22%;
-    --surface-500: 180 10% 28%;
+    --surface-100: 30 6% 5%;
+    --surface-200: 30 6% 7%;
+    --surface-300: 30 5% 12%;
+    --surface-400: 30 5% 14%;
+    --surface-500: 30 5% 20%;
 
     /* Semantic (Dark) */
-    --color-error: 0 84% 60%;
-    --color-success: 142 71% 45%;
-    --color-accent: 339 100% 65%;
-    --color-gold: 42 77% 60%;
+    --color-error: 348 62% 55%;
+    --color-success: 160 63% 38%;
+    --color-accent: 262 83% 58%;
+    --color-gold: 35 68% 55%;
+    --color-orange: 22 100% 55%;
 
     /* Border Colors (Dark) */
-    --border-primary: rgba(255,255,255,0.1);
-    --border-medium: rgba(255,255,255,0.15);
-    --border-strong: rgba(255,255,255,0.3);
+    --border-primary: rgba(255, 255, 255, 0.08);
+    --border-medium: rgba(255, 255, 255, 0.12);
+    --border-strong: rgba(255, 255, 255, 0.25);
 
     /* Shadows (Dark) */
-    --shadow-card: 0 1px 3px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.05);
-    --shadow-ambient: rgba(0,0,0,0.1) 0px 0px 16px, rgba(0,0,0,0.05) 0px 0px 8px;
-    --shadow-focus: rgba(339 100% 65% / 0.2) 0px 2px 8px;
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --shadow-ambient: rgba(0, 0, 0, 0.1) 0px 0px 16px, rgba(0, 0, 0, 0.05) 0px 0px 8px;
+    --shadow-focus: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--primary));
 
     /* Sidebar Colors (Dark) */
-    --sidebar-background: 180 44% 7%; /* surface-dark */
-    --sidebar-foreground: 40 100% 97%;
-    --sidebar-primary: 0 0% 100%; /* white */
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 180 20% 18%;
-    --sidebar-accent-foreground: 40 100% 97%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 339 100% 65%;
+    --sidebar-background: 30 6% 5%;
+    --sidebar-foreground: 40 8% 93%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 30 6% 4%;
+    --sidebar-accent: 30 5% 12%;
+    --sidebar-accent-foreground: 40 8% 93%;
+    --sidebar-border: 30 4% 14%;
+    --sidebar-ring: 262 83% 58%;
+
+    /* Chart (Dark) */
+    --chart-1: 217 91% 60%;
+    --chart-2: 262 83% 65%;
+    --chart-3: 160 63% 42%;
+    --chart-4: 35 68% 55%;
+    --chart-5: 348 62% 60%;
   }
 }
 
 @layer base {
-  /* Clay Typography System — Inter throughout */
+  /* ─── Typography System — Design.MD Inspired ──────────────────────────── */
   :root {
     /* Font Families */
     --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-serif: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-mono: ui-monospace, "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
+    --font-mono: var(--font-jetbrains), ui-monospace, "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
     --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-    /* Display Scale — Inter weight 500, negative tracking (Plain Black substitute) */
-    --text-hero: 4.5rem; /* 72px — display-xl */
-    --text-hero-leading: 1;
+    /* Display Scale — Inter weight 600, negative tracking (Cursor-inspired) */
+    --text-hero: 4.5rem; /* 72px */
+    --text-hero-leading: 1.05;
     --text-hero-tracking: -2.5px;
-    --text-hero-weight: 500;
+    --text-hero-weight: 600;
 
-    --text-section: 2.5rem; /* 40px — display-md */
+    --text-section: 2.5rem; /* 40px */
     --text-section-leading: 1.1;
     --text-section-tracking: -1px;
 
-    --text-subheading: 1.75rem; /* ~28px — display-sm */
+    --text-subheading: 1.75rem; /* ~28px */
     --text-subheading-leading: 1.15;
     --text-subheading-tracking: -0.5px;
 
-    --text-title-small: 1.5rem; /* 24px — title-lg */
+    --text-title-small: 1.5rem; /* 24px */
     --text-title-small-leading: 1.3;
     --text-title-small-tracking: -0.3px;
 
     /* Body Scale — Inter weight 400 */
-    --text-body-serif: 1rem; /* 16px — body-md */
-    --text-body-serif-leading: 1.55;
+    --text-body-serif: 0.9375rem; /* 15px */
+    --text-body-serif-leading: 1.65;
     --text-body-serif-weight: 400;
 
-    --text-body-serif-sm: 0.875rem; /* 14px — body-sm */
-    --text-body-serif-sm-leading: 1.55;
+    --text-body-serif-sm: 0.875rem; /* 14px */
+    --text-body-serif-sm-leading: 1.6;
     --text-body-serif-sm-weight: 400;
 
-    --text-body-sans: 1rem; /* 16px — body-md */
-    --text-body-sans-leading: 1.55;
+    --text-body-sans: 0.9375rem; /* 15px */
+    --text-body-sans-leading: 1.65;
     --text-body-sans-weight: 400;
 
     /* UI Scale */
-    --text-button-label: 0.875rem; /* 14px — button */
+    --text-button-label: 0.875rem; /* 14px */
     --text-button-label-leading: 1;
     --text-button-label-weight: 600;
 
-    --text-button-caption: 0.875rem; /* 14px — button */
+    --text-button-caption: 0.875rem; /* 14px */
     --text-button-caption-leading: 1.50;
     --text-button-caption-tracking: 0;
 
-    --text-caption: 0.8125rem; /* 13px — caption */
+    --text-caption: 0.8125rem; /* 13px */
     --text-caption-leading: 1.4;
     --text-caption-weight: 500;
 
-    --text-mono-body: 0.75rem; /* 12px */
-    --text-mono-body-leading: 1.67;
+    --text-mono-body: 0.8125rem; /* 13px */
+    --text-mono-body-leading: 1.6;
     --text-mono-body-weight: 400;
 
     --text-mono-small: 0.6875rem; /* 11px */
@@ -246,17 +292,17 @@ a {
     --text-mono-small-weight: 400;
 
     /* System Typography */
-    --text-system-heading: 1.125rem; /* 18px — title-md */
+    --text-system-heading: 1.125rem; /* 18px */
     --text-system-heading-leading: 1.4;
     --text-system-heading-weight: 600;
 
-    --text-system-caption: 0.8125rem; /* 13px — caption */
+    --text-system-caption: 0.8125rem; /* 13px */
     --text-system-caption-leading: 1.4;
     --text-system-caption-weight: 500;
 
-    --text-system-micro: 0.75rem; /* 12px — caption-uppercase */
+    --text-system-micro: 0.6875rem; /* 11px */
     --text-system-micro-leading: 1.4;
-    --text-system-micro-tracking: 1.5px;
+    --text-system-micro-tracking: 0.0625rem;
     --text-system-micro-weight: 600;
   }
 
@@ -277,7 +323,7 @@ a {
     font-family: var(--font-ui);
   }
 
-  /* Hero Text — display-xl */
+  /* Hero Text */
   .text-hero {
     font-family: var(--font-display);
     font-size: var(--text-hero);
@@ -286,7 +332,7 @@ a {
     font-weight: var(--text-hero-weight);
   }
 
-  /* Section Heading — display-md */
+  /* Section Heading */
   .text-section {
     font-family: var(--font-display);
     font-size: var(--text-section);
@@ -295,7 +341,7 @@ a {
     font-weight: var(--text-hero-weight);
   }
 
-  /* Subheading — display-sm */
+  /* Subheading */
   .text-subheading {
     font-family: var(--font-display);
     font-size: var(--text-subheading);
@@ -304,7 +350,7 @@ a {
     font-weight: var(--text-hero-weight);
   }
 
-  /* Title Small — title-lg */
+  /* Title Small */
   .text-title-small {
     font-family: var(--font-display);
     font-size: var(--text-title-small);
@@ -313,7 +359,7 @@ a {
     font-weight: var(--text-hero-weight);
   }
 
-  /* Body Serif — body-md (now Inter, not jjannon) */
+  /* Body Serif */
   .text-body-serif {
     font-family: var(--font-serif);
     font-size: var(--text-body-serif);
@@ -321,7 +367,7 @@ a {
     font-weight: var(--text-body-serif-weight);
   }
 
-  /* Body Serif Small — body-sm */
+  /* Body Serif Small */
   .text-body-serif-sm {
     font-family: var(--font-serif);
     font-size: var(--text-body-serif-sm);
@@ -329,7 +375,7 @@ a {
     font-weight: var(--text-body-serif-sm-weight);
   }
 
-  /* Body Sans — body-md */
+  /* Body Sans */
   .text-body-sans {
     font-family: var(--font-ui);
     font-size: var(--text-body-sans);
@@ -379,7 +425,7 @@ a {
     font-weight: var(--text-mono-small-weight);
   }
 
-  /* System Heading — title-md */
+  /* System Heading */
   .text-system-heading {
     font-family: var(--font-ui);
     font-size: var(--text-system-heading);
@@ -395,7 +441,7 @@ a {
     font-weight: var(--text-system-caption-weight);
   }
 
-  /* System Micro — caption-uppercase */
+  /* System Micro */
   .text-system-micro {
     font-family: var(--font-ui);
     font-size: var(--text-system-micro);
@@ -403,5 +449,60 @@ a {
     letter-spacing: var(--text-system-micro-tracking);
     font-weight: var(--text-system-micro-weight);
     text-transform: uppercase;
+  }
+}
+
+/* ─── Utility Classes ────────────────────────────────────────────────── */
+
+@layer utilities {
+  .elevation-1 {
+    box-shadow: var(--elevation-1);
+  }
+
+  .elevation-2 {
+    box-shadow: var(--elevation-2);
+  }
+
+  .elevation-3 {
+    box-shadow: var(--elevation-3);
+  }
+
+  .ai-gradient {
+    background: var(--ai-gradient);
+  }
+
+  .ai-glow {
+    box-shadow: var(--ai-glow);
+  }
+
+  .focus-ring {
+    box-shadow: var(--focus-ring);
+  }
+
+  .frosted {
+    background-color: hsl(var(--background) / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Warm scrollbar */
+  .scrollbar-warm::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-warm::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-warm::-webkit-scrollbar-thumb {
+    background: rgba(38, 37, 30, 0.15);
+    border-radius: 9999px;
+  }
+  .scrollbar-warm::-webkit-scrollbar-thumb:hover {
+    background: rgba(38, 37, 30, 0.25);
+  }
+  .dark .scrollbar-warm::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .dark .scrollbar-warm::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
   }
 }

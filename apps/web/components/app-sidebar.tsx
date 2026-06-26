@@ -7,6 +7,7 @@ import {
     Settings,
     Users,
     LayoutList,
+    BarChart3,
 } from "lucide-react"
 
 import {
@@ -55,6 +56,11 @@ const items = [
         title: "Quizzes",
         url: "/quizzes",
         icon: LayoutList,
+    },
+    {
+        title: "Analytics",
+        url: "/analytics",
+        icon: BarChart3,
     },
 ]
 

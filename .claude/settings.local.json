@@ -19,7 +19,8 @@
       "Bash(curl -sI \"https://unsplash.com/photos/Vs6ip7fsld8/download?force=true&w=900\")",
       "Bash(curl -s -X POST http://127.0.0.1:8000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ courses { id name modules { lessons { title content videoUrl type } } } }\"}')",
       "Bash(python3 -m json.tool)",
-      "Bash(curl -s -X POST http://127.0.0.1:8000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ courses { id name modules { lessons { title content videoUrl } } } }\"}')"
+      "Bash(curl -s -X POST http://127.0.0.1:8000/graphql -H 'Content-Type: application/json' -d '{\"query\":\"{ courses { id name modules { lessons { title content videoUrl } } } }\"}')",
+      "Bash(npx shadcn@latest add progress scroll-area collapsible dialog accordion card command -y)"
     ],
     "additionalDirectories": [
       "/home/isaac_s/Desktop/otto/apps/dashboard/app/courses/[id]/preview",
