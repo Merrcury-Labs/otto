@@ -22,7 +22,6 @@ import {
   DotsThreeVertical,
   CheckCircle,
   Circle,
-  XCircle,
   Brain,
   ListChecks,
   BookOpen,
@@ -44,7 +43,7 @@ type GraphqlQuiz = Omit<Quiz, "status" | "questions"> & {
   status: Uppercase<Quiz["status"]>;
   questions: Array<
     Omit<Quiz["questions"][number], "correctAnswer"> & {
-      correctAnswer?: string | null;
+      correctAnswer?: string | boolean | number | number[] | Record<string, unknown> | unknown[] | null;
     }
   >;
 };
@@ -61,18 +60,24 @@ const emptyQuizStats: QuizStats = {
   averageScore: 0,
 };
 
-const parseCorrectAnswer = (value?: string | null) => {
-  if (!value) {
+const parseCorrectAnswer = (
+  value?: string | boolean | number | number[] | Record<string, unknown> | unknown[] | null,
+): Quiz["questions"][number]["correctAnswer"] => {
+  if (value == null || value === "") {
     return undefined;
   }
 
+  // Non-string values (booleans, numbers, arrays, objects) are already parsed
   if (typeof value !== "string") {
-    return value as number | number[];
+    return value;
   }
 
-  const parsed = JSON.parse(value) as number | number[];
-
-  return parsed;
+  // String values may be JSON-encoded or plain strings — try parsing first
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
 };
 
 const normalizeQuiz = (quiz: GraphqlQuiz): Quiz => ({
@@ -100,8 +105,6 @@ export default function QuizzesPage() {
         return <CheckCircle className="h-5 w-5 text-brand-success" />;
       case "draft":
         return <Circle className="h-5 w-5 text-brand-gold" />;
-      case "archived":
-        return <XCircle className="h-5 w-5 text-muted-foreground" />;
       default:
         return null;
     }
@@ -111,7 +114,6 @@ export default function QuizzesPage() {
     const variants = {
       published: "bg-brand-success text-white",
       draft: "bg-brand-gold text-white",
-      archived: "bg-muted text-muted-foreground",
     };
 
     return (
@@ -521,7 +523,6 @@ export default function QuizzesPage() {
           <option value="all">All Status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
         </select>
         <div className="flex gap-2">
           <button

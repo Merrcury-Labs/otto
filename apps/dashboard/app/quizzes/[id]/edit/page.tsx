@@ -41,7 +41,7 @@ interface QuizQuestion {
   type: QuestionType;
   points: number;
   options: string[];
-  correctAnswer?: number | number[];
+  correctAnswer?: string | boolean | number | number[] | Record<string, unknown> | unknown[];
   categories?: string[];
   categoryMapping?: Record<number, number>;
   hint?: string;

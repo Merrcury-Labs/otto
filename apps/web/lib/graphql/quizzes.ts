@@ -53,10 +53,10 @@ export const dashboardQuery = /* GraphQL */ `
 
 // ── Backend-proxied queries ─────────────────────────────────────────────
 
-/** Fetch all quizzes (no student context — for anonymous users). */
+/** Fetch published quizzes only (no student context — for anonymous users). */
 export const publishedQuizzesQuery = /* GraphQL */ `
   query PublishedQuizzes {
-    quizzes {
+    quizzes(status: PUBLISHED) {
       id
       title
       description
@@ -72,10 +72,10 @@ export const publishedQuizzesQuery = /* GraphQL */ `
   }
 `;
 
-/** Fetch all quizzes with student progress data. */
+/** Fetch published quizzes with student progress data. */
 export const publishedQuizzesWithProgressQuery = /* GraphQL */ `
   query PublishedQuizzesWithProgress($studentId: ID!) {
-    quizzes {
+    quizzes(status: PUBLISHED) {
       id
       title
       description
@@ -97,6 +97,61 @@ export const publishedQuizzesWithProgressQuery = /* GraphQL */ `
       lastAttempted
       quiz {
         id
+      }
+    }
+  }
+`;
+
+/** Fetch a single quiz with questions for taking (excludes correctAnswer). */
+export const quizDetailQuery = /* GraphQL */ `
+  query QuizDetail($id: ID!) {
+    quiz(id: $id) {
+      id
+      title
+      description
+      duration
+      numQuestions
+      passingScore
+      status
+      courseId
+      courseTitle
+      attempts
+      avgScore
+      questions {
+        id
+        question
+        type
+        points
+        options
+        correctAnswer
+        hint
+        categories
+      }
+    }
+  }
+`;
+
+/** Submit a quiz attempt and get scored results. */
+export const submitQuizAttemptMutation = /* GraphQL */ `
+  mutation SubmitQuizAttempt($studentId: ID!, $quizId: ID!, $answers: JSON!) {
+    submitQuizAttempt(studentId: $studentId, quizId: $quizId, answers: $answers) {
+      id
+      score
+      maxPoints
+      earnedPoints
+      passed
+      attemptDate
+      answers {
+        isCorrect
+        points
+        response
+        question {
+          id
+          question
+          type
+          options
+          correctAnswer
+        }
       }
     }
   }

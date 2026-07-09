@@ -33,8 +33,10 @@ import {
     normalizeQuiz,
 } from "@/lib/graphql/normalize"
 import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
 
 export default function QuizzesPage() {
+    const router = useRouter()
     const [quizList, setQuizList] = React.useState<DisplayQuiz[]>([])
     const [categories, setCategories] = React.useState<string[]>(["All"])
     const [avgScore, setAvgScore] = React.useState(0)
@@ -315,6 +317,7 @@ export default function QuizzesPage() {
                                             <Button
                                                 className="w-full h-11 rounded-2xl font-bold tracking-tight transition-all active:scale-95 group/btn"
                                                 variant={quiz.isCompleted ? "outline" : "default"}
+                                                onClick={() => router.push(`/quizzes/${quiz.id}/take`)}
                                             >
                                                 {quiz.isCompleted ? (
                                                     <span className="flex items-center gap-2">Retake Quiz <ArrowUpRight className="size-3 opacity-0 group-hover/btn:opacity-100 transition-opacity" /></span>

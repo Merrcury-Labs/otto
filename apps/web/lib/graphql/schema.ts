@@ -19,13 +19,15 @@ import {
   quizzesQuery,
   publishedQuizzesQuery,
   publishedQuizzesWithProgressQuery,
+  quizDetailQuery,
+  submitQuizAttemptMutation,
 } from "@/lib/graphql/quizzes";
 
 // Proxying to real backend for certain read-only operations is optional and
 // controlled via BACKEND_GRAPHQL_URL or SERVER_URL environment variables.
 const DEFAULT_SERVER_URL = "http://127.0.0.1:8000";
 const GRAPHQL_REQUEST_TIMEOUT_MS = 15_000;
-const proxiedOperations = new Set(["PublishedCourses", "CourseDetail", "CourseDetailWithEnrollment", "StudentByUserId", "EnrollStudent", "PublishedQuizzes", "PublishedQuizzesWithProgress"]);
+const proxiedOperations = new Set(["PublishedCourses", "CourseDetail", "CourseDetailWithEnrollment", "StudentByUserId", "EnrollStudent", "PublishedQuizzes", "PublishedQuizzesWithProgress", "QuizDetail", "SubmitQuizAttempt"]);
 
 const getBackendGraphqlUrl = () => {
   if (process.env.BACKEND_GRAPHQL_URL) return process.env.BACKEND_GRAPHQL_URL;
@@ -155,6 +157,8 @@ const registeredOperations = new Map(
     Dashboard: dashboardQuery,
     PublishedQuizzes: publishedQuizzesQuery,
     PublishedQuizzesWithProgress: publishedQuizzesWithProgressQuery,
+    QuizDetail: quizDetailQuery,
+    SubmitQuizAttempt: submitQuizAttemptMutation,
   }).map(([operationName, query]) => [
     operationName,
     query.replace(/\s+/g, " ").trim(),
