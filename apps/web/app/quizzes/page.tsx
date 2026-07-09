@@ -44,11 +44,14 @@ export default function QuizzesPage() {
     const [searchQuery, setSearchQuery] = React.useState("")
     const [selectedCategory, setSelectedCategory] = React.useState("All")
 
-    const { data: session } = authClient.useSession()
+    const { data: session, isPending: isSessionLoading } = authClient.useSession()
     const user = session?.user
 
     // Resolve student ID, then fetch quizzes with progress
     React.useEffect(() => {
+        // Wait for session to resolve before fetching
+        if (isSessionLoading) return
+
         let mounted = true
 
         async function loadQuizzes() {
@@ -126,6 +129,7 @@ export default function QuizzesPage() {
                             passingScore: 50,
                             courseId: "",
                             courseTitle: q.category,
+                            status: "PUBLISHED",
                         }))
                     )
                     setCategories(mockCategories)

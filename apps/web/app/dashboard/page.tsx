@@ -13,9 +13,13 @@ import {
     Search,
     Play,
     Loader2,
+    BarChart3,
+    FileText,
+    Users,
 } from "lucide-react"
 import { courses, quizzes as mockQuizzes, weeklyStats, userStats as mockUserStats } from "@/lib/data"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { graphqlFetch } from "@/lib/graphql/client"
 import { publishedCoursesQuery, studentByUserIdQuery } from "@/lib/graphql/courses"
 import {
@@ -57,39 +61,20 @@ export default function DashboardPage() {
         }))
     )
     const [activeCourseCount, setActiveCourseCount] = React.useState(enrolledCourses.length)
-    const [quizList, setQuizList] = React.useState<DisplayQuiz[]>(
-        mockQuizzes.map((q) => ({
-            id: q.id,
-            title: q.title,
-            description: "",
-            score: q.score,
-            bestScore: q.bestScore,
-            date: q.date,
-            duration: q.duration,
-            category: q.category,
-            difficulty: q.difficulty,
-            questions: q.questions,
-            isCompleted: q.isCompleted,
-            image: q.image,
-            attempts: 0,
-            avgScore: 0,
-            passingScore: 50,
-            courseId: "",
-            courseTitle: q.category,
-        }))
-    )
+    const [quizList, setQuizList] = React.useState<DisplayQuiz[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
 
-    const { data: session } = authClient.useSession()
+    const { data: session, isPending: isSessionLoading } = authClient.useSession()
     const user = session?.user
 
     // Load courses and quizzes from backend
     React.useEffect(() => {
+        if (isSessionLoading) return
+
         let mounted = true
 
         async function loadData() {
             try {
-                // Load courses in parallel with student resolution
                 const coursesPromise = graphqlFetch<{ courses: BackendCourse[] }>({
                     query: publishedCoursesQuery,
                 }).catch(() => null)
@@ -109,7 +94,7 @@ export default function DashboardPage() {
                     }
                 }
 
-                // Fetch quizzes with or without progress
+                // Fetch all quizzes — admin view shows published AND draft
                 const quizzesPromise = studentId
                     ? graphqlFetch<{
                         quizzes: BackendQuiz[]
@@ -128,14 +113,12 @@ export default function DashboardPage() {
 
                 if (!mounted) return
 
-                // Update courses
                 if (coursesResult) {
                     const normalized = coursesResult.courses.map(normalizeCourse)
                     setCourseList(normalized)
                     setActiveCourseCount(normalized.length)
                 }
 
-                // Update quizzes
                 if (quizzesResult) {
                     const progressByQuizId = new Map<string, BackendQuizProgress>()
                     const studentProgress = ("studentQuizProgress" in quizzesResult)
@@ -152,7 +135,6 @@ export default function DashboardPage() {
                 }
             } catch (err) {
                 console.error("Failed to load dashboard data from backend", err)
-                // Keep mock data fallback
             } finally {
                 if (mounted) setIsLoading(false)
             }
@@ -165,6 +147,14 @@ export default function DashboardPage() {
         }
     }, [user])
 
+    // Derived quiz stats
+    const publishedCount = quizList.filter(q => q.status === "PUBLISHED").length
+    const draftCount = quizList.filter(q => q.status === "DRAFT").length
+    const totalAttempts = quizList.reduce((acc, q) => acc + q.attempts, 0)
+    const overallAvgScore = quizList.length > 0
+        ? Math.round(quizList.reduce((acc, q) => acc + q.avgScore, 0) / quizList.length)
+        : 0
+
     return (
         <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
             <div className="flex flex-col gap-12 pb-20">
@@ -172,23 +162,23 @@ export default function DashboardPage() {
                 <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-px w-8 bg-muted-foreground/30" />
-                        Learning Dashboard
+                        Admin Dashboard
                     </div>
                     <h1 className="text-4xl text-muted-foreground dark:text-white font-extrabold tracking-tight lg:text-5xl">
-                        Welcome back, <span className="text-primary">Morné</span>
+                        Quiz <span className="text-primary">Overview</span>
                     </h1>
                     <p className="max-w-[600px] text-lg text-muted-foreground/90 dark:text-muted-foreground/50 leading-relaxed">
-                        You've completed 4 lessons this week. You're just <span className="font-semibold text-foreground">2 hours away</span> from hitting your weekly goal.
+                        Manage and monitor all quizzes across your platform.
                     </p>
                 </div>
 
                 {/* Main Stats Row */}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     {[
-                        { label: "Points Earned", value: mockUserStats.totalPoints, icon: Trophy, color: "text-amber-500", trend: "+12%" },
-                        { label: "Active Courses", value: activeCourseCount, icon: BookOpen, color: "text-primary" },
-                        { label: "Completion Rate", value: `${mockUserStats.averageScore}%`, icon: GraduationCap, color: "text-blue-500" },
-                        { label: "Learning Streak", value: `${mockUserStats.streak}d`, icon: Calendar, color: "text-orange-500" },
+                        { label: "Total Quizzes", value: quizList.length, icon: FileText, color: "text-primary" },
+                        { label: "Published", value: publishedCount, icon: CheckCircle2, color: "text-green-500" },
+                        { label: "Total Attempts", value: totalAttempts, icon: Users, color: "text-blue-500" },
+                        { label: "Avg. Score", value: `${overallAvgScore}%`, icon: BarChart3, color: "text-amber-500" },
                     ].map((stat, i) => (
                         <div key={i} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-card/40 p-6 transition-all hover:bg-card hover:shadow-xl hover:shadow-primary/5">
                             <div className="flex items-center justify-between">
@@ -197,53 +187,90 @@ export default function DashboardPage() {
                             </div>
                             <div className="mt-4 flex items-baseline gap-2">
                                 <h2 className="text-4xl font-bold tracking-tight">{stat.value}</h2>
-                                {stat.trend && (
-                                    <span className="flex items-center text-xs font-bold text-green-500">
-                                        <TrendingUp className="mr-1 size-3" />
-                                        {stat.trend}
-                                    </span>
-                                )}
                             </div>
                         </div>
                     ))}
                 </div>
 
                 <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-                    {/* Activity Section - Left */}
+                    {/* Quiz Table - Left */}
                     <div className="flex flex-col gap-8 lg:col-span-8">
                         <section className="flex flex-col gap-6">
                             <div className="flex items-center justify-between px-1">
-                                <h3 className="text-xl font-bold tracking-tight text-muted-foreground dark:text-white">Weekly Engagement</h3>
-                                <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="size-2 rounded-full bg-primary" />
-                                        Hours Spent
-                                    </div>
-                                </div>
+                                <h3 className="text-xl font-bold tracking-tight">All Quizzes</h3>
+                                <Button variant="ghost" size="sm" className="font-bold text-primary group" asChild>
+                                    <a href="/quizzes">
+                                        Quiz Hub <ArrowUpRight className="ml-1 size-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                    </a>
+                                </Button>
                             </div>
 
-                            <div className="rounded-3xl border bg-card/30 p-8 shadow-sm">
-                                <div className="flex h-56 items-end justify-between gap-3 px-4 sm:gap-6">
-                                    {weeklyStats.map((stat) => (
-                                        <div key={stat.day} className="group relative flex flex-1 flex-col items-center gap-4">
-                                            <div className="relative w-full flex-1">
-                                                <div
-                                                    className="absolute bottom-0 w-full rounded-full bg-gradient-to-t from-primary/80 to-primary/40 transition-all duration-500 ease-out group-hover:from-primary group-hover:to-primary/60"
-                                                    style={{ height: `${(stat.hours / 6) * 100}%` }}
-                                                />
-                                                <div className="absolute -top-10 left-1/2 -translate-x-1/2 rounded-full bg-background/90 px-3 py-1.5 text-[10px] font-bold shadow-sm opacity-0 ring-1 ring-border transition-all group-hover:opacity-100 group-hover:-translate-y-1">
-                                                    {stat.hours}h
+                            {isLoading ? (
+                                <div className="flex items-center justify-center py-20">
+                                    <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : quizList.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-20 text-center">
+                                    <FileText className="size-12 text-muted-foreground/40 mb-4" />
+                                    <h3 className="text-lg font-bold">No quizzes found</h3>
+                                    <p className="text-sm text-muted-foreground mt-1">Create quizzes from the admin panel to see them here.</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-3">
+                                    {quizList.map((quiz) => (
+                                        <div key={quiz.id} className="group flex items-center gap-5 rounded-2xl border bg-card/40 p-5 transition-all hover:bg-card hover:shadow-md">
+                                            {/* Status indicator */}
+                                            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
+                                                <FileText className="size-4 text-primary" />
+                                            </div>
+
+                                            {/* Title & meta */}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <p className="text-sm font-bold leading-tight truncate">{quiz.title}</p>
+                                                    <Badge
+                                                        variant={quiz.status === "PUBLISHED" ? "default" : "secondary"}
+                                                        className="shrink-0 text-[9px] font-bold uppercase tracking-wider px-2 py-0"
+                                                    >
+                                                        {quiz.status}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{quiz.description}</p>
+                                                <div className="flex items-center gap-4 mt-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                                                    <span className="flex items-center gap-1">
+                                                        <BookOpen className="size-3" />
+                                                        {quiz.questions} Qs
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock className="size-3" />
+                                                        {quiz.duration}
+                                                    </span>
+                                                    <span>{quiz.courseTitle}</span>
                                                 </div>
                                             </div>
-                                            <span className="text-xs font-bold tracking-wider text-muted-foreground/70 uppercase">
-                                                {stat.day[0]}
-                                            </span>
+
+                                            {/* Stats */}
+                                            <div className="hidden sm:flex items-center gap-6 shrink-0">
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <span className="text-lg font-bold">{quiz.attempts}</span>
+                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Attempts</span>
+                                                </div>
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <span className="text-lg font-bold">{quiz.avgScore > 0 ? `${quiz.avgScore}%` : "—"}</span>
+                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Avg Score</span>
+                                                </div>
+                                                <div className="flex flex-col items-center gap-0.5">
+                                                    <span className="text-lg font-bold">{quiz.passingScore}%</span>
+                                                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Pass</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            )}
                         </section>
 
+                        {/* Courses section */}
                         <section className="flex flex-col gap-6">
                             <div className="flex items-center justify-between px-1">
                                 <h3 className="text-xl font-bold tracking-tight">Available Courses</h3>
@@ -273,24 +300,10 @@ export default function DashboardPage() {
                                                 <span>•</span>
                                                 <span>{course.level}</span>
                                             </div>
-                                            {course.progress > 0 && (
-                                                <div className="mt-4 flex flex-col gap-2">
-                                                    <div className="flex items-center justify-between font-bold text-[10px] text-muted-foreground uppercase tracking-widest">
-                                                        <span>Progression</span>
-                                                        <span>{course.progress}%</span>
-                                                    </div>
-                                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/40">
-                                                        <div
-                                                            className="h-full rounded-full bg-primary transition-all duration-1000"
-                                                            style={{ width: `${course.progress}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
                                         <Button className="rounded-none h-12 border-t font-bold tracking-tight bg-transparent hover:bg-primary hover:text-primary-foreground text-foreground transition-all border-none group" asChild>
                                             <a href={`/courses/${course.id}`} className="flex items-center justify-center gap-2">
-                                                {course.progress > 0 ? "Resume Course" : "Start Course"}
+                                                View Course
                                                 <ArrowUpRight className="size-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                                             </a>
                                         </Button>
@@ -300,22 +313,70 @@ export default function DashboardPage() {
                         </section>
                     </div>
 
-                    {/* Meta & Quizzes - Right */}
+                    {/* Sidebar - Right */}
                     <div className="flex flex-col gap-8 lg:col-span-4">
+                        {/* Quiz stats summary */}
                         <div className="rounded-3xl border bg-card/20 p-8 shadow-sm">
                             <div className="mb-8 flex items-center justify-between">
-                                <h3 className="text-lg font-bold tracking-tight">Recent Performance</h3>
-                                <Trophy className="size-4 text-muted-foreground/60" />
+                                <h3 className="text-lg font-bold tracking-tight">Quiz Stats</h3>
+                                <BarChart3 className="size-4 text-muted-foreground/60" />
                             </div>
 
-                            <div className="flex flex-col gap-4">
-                                {isLoading ? (
-                                    <div className="flex items-center justify-center py-8">
-                                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                            <div className="flex flex-col gap-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex size-9 items-center justify-center rounded-xl bg-green-500/10">
+                                            <CheckCircle2 className="size-4 text-green-500" />
+                                        </div>
+                                        <span className="text-sm font-medium">Published</span>
                                     </div>
-                                ) : quizList.length > 0 ? (
-                                    quizList
-                                        .filter((q) => q.isCompleted)
+                                    <span className="text-lg font-bold">{publishedCount}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10">
+                                            <FileText className="size-4 text-amber-500" />
+                                        </div>
+                                        <span className="text-sm font-medium">Draft</span>
+                                    </div>
+                                    <span className="text-lg font-bold">{draftCount}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex size-9 items-center justify-center rounded-xl bg-blue-500/10">
+                                            <Users className="size-4 text-blue-500" />
+                                        </div>
+                                        <span className="text-sm font-medium">Total Attempts</span>
+                                    </div>
+                                    <span className="text-lg font-bold">{totalAttempts}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
+                                            <Trophy className="size-4 text-primary" />
+                                        </div>
+                                        <span className="text-sm font-medium">Overall Avg</span>
+                                    </div>
+                                    <span className="text-lg font-bold">{overallAvgScore}%</span>
+                                </div>
+                            </div>
+
+                            <Button variant="outline" className="mt-8 w-full rounded-xl border-dashed font-bold tracking-tight hover:bg-primary/5 hover:border-primary/50" asChild>
+                                <a href="/quizzes">Manage Quizzes</a>
+                            </Button>
+                        </div>
+
+                        {/* Student progress (if logged in) */}
+                        {quizList.some(q => q.isCompleted) && (
+                            <div className="rounded-3xl border bg-card/20 p-8 shadow-sm">
+                                <div className="mb-6 flex items-center justify-between">
+                                    <h3 className="text-lg font-bold tracking-tight">Your Progress</h3>
+                                    <Trophy className="size-4 text-muted-foreground/60" />
+                                </div>
+
+                                <div className="flex flex-col gap-4">
+                                    {quizList
+                                        .filter(q => q.isCompleted)
                                         .slice(0, 5)
                                         .map((quiz) => (
                                             <div key={quiz.id} className="flex items-center gap-4 rounded-2xl bg-background/40 p-4 transition-all hover:bg-background">
@@ -329,16 +390,10 @@ export default function DashboardPage() {
                                                     </p>
                                                 </div>
                                             </div>
-                                        ))
-                                ) : (
-                                    <p className="py-4 text-center text-sm text-muted-foreground">No completed quizzes yet</p>
-                                )}
-
-                                <Button variant="outline" className="mt-4 rounded-xl border-dashed font-bold tracking-tight hover:bg-primary/5 hover:border-primary/50" asChild>
-                                    <a href="/quizzes">Full Quiz History</a>
-                                </Button>
+                                        ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="relative group overflow-hidden rounded-3xl bg-neutral-900 p-8 text-neutral-50 shadow-2xl">
                             <div className="absolute -right-8 -top-8 size-32 rounded-full bg-primary/20 blur-3xl transition-all group-hover:bg-primary/40" />

@@ -397,6 +397,7 @@ export type DisplayQuiz = {
   passingScore: number;
   courseId: string;
   courseTitle: string;
+  status: string;
 };
 
 const deriveDifficulty = (passingScore?: number): string => {
@@ -451,4 +452,5 @@ export const normalizeQuiz = (
   passingScore: quiz.passingScore ?? 0,
   courseId: quiz.courseId ?? "",
   courseTitle: quiz.courseTitle ?? "",
+  status: quiz.status ?? "DRAFT",
 });
