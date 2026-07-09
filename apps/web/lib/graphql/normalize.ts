@@ -350,3 +350,105 @@ export const normalizeCourse = (course: BackendCourse): DisplayCourse => {
     modules: normalizeModules(course.modules),
   };
 };
+
+// ---------------------------------------------------------------------------
+// Quiz normalization (backend → display)
+// ---------------------------------------------------------------------------
+
+export type BackendQuiz = {
+  id: string;
+  title: string;
+  description?: string;
+  duration?: string;
+  numQuestions?: number;
+  passingScore?: number;
+  status?: string;
+  courseId?: string;
+  courseTitle?: string;
+  attempts?: number;
+  avgScore?: number;
+};
+
+export type BackendQuizProgress = {
+  id: string;
+  bestScore: number;
+  attemptsCount: number;
+  completed: boolean;
+  completedDate?: string | null;
+  lastAttempted?: string | null;
+  quiz: { id: string };
+};
+
+export type DisplayQuiz = {
+  id: string | number;
+  title: string;
+  description: string;
+  score: number;
+  bestScore: number;
+  date: string;
+  duration: string;
+  category: string;
+  difficulty: string;
+  questions: number;
+  isCompleted: boolean;
+  image: string;
+  attempts: number;
+  avgScore: number;
+  passingScore: number;
+  courseId: string;
+  courseTitle: string;
+};
+
+const deriveDifficulty = (passingScore?: number): string => {
+  if (!passingScore) return "Intermediate";
+  if (passingScore >= 80) return "Advanced";
+  if (passingScore >= 50) return "Intermediate";
+  return "Beginner";
+};
+
+const formatDate = (value?: string | null): string => {
+  if (!value) return "-";
+  try {
+    const iso = new Date(value as string).toISOString();
+    const datePart = iso.split("T")[0];
+    return datePart ?? "-";
+  } catch {
+    return "-";
+  }
+};
+
+const formatDuration = (value?: string): string => {
+  if (!value) return "";
+  // Backend returns timedelta strings like "0:15:00" or "0:25:00"
+  const match = value.match(/^(?:(\d+):)?(\d+):(\d+)$/);
+  if (match) {
+    const hours = parseInt(match[1] ?? "0", 10);
+    const minutes = parseInt(match[2] ?? "0", 10);
+    if (hours) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  }
+  return value;
+};
+
+export const normalizeQuiz = (
+  quiz: BackendQuiz,
+  progress?: BackendQuizProgress | null,
+): DisplayQuiz => ({
+  id: quiz.id,
+  title: quiz.title,
+  description: quiz.description ?? "",
+  score: progress?.bestScore ?? 0,
+  bestScore: progress?.bestScore ?? 0,
+  date: formatDate(progress?.lastAttempted),
+  duration: formatDuration(quiz.duration),
+  category: quiz.courseTitle ?? "",
+  difficulty: deriveDifficulty(quiz.passingScore),
+  questions: quiz.numQuestions ?? 0,
+  isCompleted: progress?.completed ?? false,
+  image: "",
+  attempts: quiz.attempts ?? 0,
+  avgScore: quiz.avgScore ?? 0,
+  passingScore: quiz.passingScore ?? 0,
+  courseId: quiz.courseId ?? "",
+  courseTitle: quiz.courseTitle ?? "",
+});

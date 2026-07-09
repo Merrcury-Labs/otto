@@ -11,13 +11,27 @@ import {
     Calendar,
     ArrowUpRight,
     Search,
-    Play
+    Play,
+    Loader2,
 } from "lucide-react"
-import { courses, quizzes, weeklyStats, userStats } from "@/lib/data"
+import { courses, quizzes as mockQuizzes, weeklyStats, userStats as mockUserStats } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { graphqlFetch } from "@/lib/graphql/client"
-import { publishedCoursesQuery } from "@/lib/graphql/courses"
-import { type BackendCourse, normalizeCourse, type DisplayCourse } from "@/lib/graphql/normalize"
+import { publishedCoursesQuery, studentByUserIdQuery } from "@/lib/graphql/courses"
+import {
+    publishedQuizzesWithProgressQuery,
+    publishedQuizzesQuery,
+} from "@/lib/graphql/quizzes"
+import {
+    type BackendCourse,
+    type BackendQuiz,
+    type BackendQuizProgress,
+    type DisplayCourse,
+    type DisplayQuiz,
+    normalizeCourse,
+    normalizeQuiz,
+} from "@/lib/graphql/normalize"
+import { authClient } from "@/lib/auth-client"
 
 export default function DashboardPage() {
     const enrolledCourses = courses.filter(c => c.progress > 0)
@@ -43,32 +57,113 @@ export default function DashboardPage() {
         }))
     )
     const [activeCourseCount, setActiveCourseCount] = React.useState(enrolledCourses.length)
+    const [quizList, setQuizList] = React.useState<DisplayQuiz[]>(
+        mockQuizzes.map((q) => ({
+            id: q.id,
+            title: q.title,
+            description: "",
+            score: q.score,
+            bestScore: q.bestScore,
+            date: q.date,
+            duration: q.duration,
+            category: q.category,
+            difficulty: q.difficulty,
+            questions: q.questions,
+            isCompleted: q.isCompleted,
+            image: q.image,
+            attempts: 0,
+            avgScore: 0,
+            passingScore: 50,
+            courseId: "",
+            courseTitle: q.category,
+        }))
+    )
+    const [isLoading, setIsLoading] = React.useState(true)
 
+    const { data: session } = authClient.useSession()
+    const user = session?.user
+
+    // Load courses and quizzes from backend
     React.useEffect(() => {
-        let isMounted = true
+        let mounted = true
 
-        async function loadCourses() {
+        async function loadData() {
             try {
-                const result = await graphqlFetch<{ courses: BackendCourse[] }>({
+                // Load courses in parallel with student resolution
+                const coursesPromise = graphqlFetch<{ courses: BackendCourse[] }>({
                     query: publishedCoursesQuery,
-                })
+                }).catch(() => null)
 
-                if (isMounted) {
-                    const normalized = result.courses.map(normalizeCourse)
+                // Resolve student ID for quiz progress
+                let studentId: string | null = null
+                if (user) {
+                    try {
+                        const result = await graphqlFetch<{ studentByUserId: { id: string } | null }>({
+                            query: studentByUserIdQuery,
+                            operationName: "StudentByUserId",
+                            variables: { userId: user.id },
+                        })
+                        studentId = result.studentByUserId?.id ?? null
+                    } catch (err) {
+                        console.error("Failed to resolve student ID for dashboard", err)
+                    }
+                }
+
+                // Fetch quizzes with or without progress
+                const quizzesPromise = studentId
+                    ? graphqlFetch<{
+                        quizzes: BackendQuiz[]
+                        studentQuizProgress: BackendQuizProgress[]
+                    }>({
+                        query: publishedQuizzesWithProgressQuery,
+                        operationName: "PublishedQuizzesWithProgress",
+                        variables: { studentId },
+                    })
+                    : graphqlFetch<{ quizzes: BackendQuiz[] }>({
+                        query: publishedQuizzesQuery,
+                        operationName: "PublishedQuizzes",
+                    })
+
+                const [coursesResult, quizzesResult] = await Promise.all([coursesPromise, quizzesPromise])
+
+                if (!mounted) return
+
+                // Update courses
+                if (coursesResult) {
+                    const normalized = coursesResult.courses.map(normalizeCourse)
                     setCourseList(normalized)
                     setActiveCourseCount(normalized.length)
                 }
-            } catch {
+
+                // Update quizzes
+                if (quizzesResult) {
+                    const progressByQuizId = new Map<string, BackendQuizProgress>()
+                    const studentProgress = ("studentQuizProgress" in quizzesResult)
+                        ? quizzesResult.studentQuizProgress as BackendQuizProgress[]
+                        : []
+                    for (const p of studentProgress) {
+                        progressByQuizId.set(String(p.quiz.id), p)
+                    }
+
+                    const normalizedQuizzes = ((quizzesResult as { quizzes: BackendQuiz[] }).quizzes ?? []).map((q) =>
+                        normalizeQuiz(q, progressByQuizId.get(String(q.id)))
+                    )
+                    setQuizList(normalizedQuizzes)
+                }
+            } catch (err) {
+                console.error("Failed to load dashboard data from backend", err)
                 // Keep mock data fallback
+            } finally {
+                if (mounted) setIsLoading(false)
             }
         }
 
-        loadCourses()
+        loadData()
 
         return () => {
-            isMounted = false
+            mounted = false
         }
-    }, [])
+    }, [user])
 
     return (
         <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
@@ -90,10 +185,10 @@ export default function DashboardPage() {
                 {/* Main Stats Row */}
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     {[
-                        { label: "Points Earned", value: userStats.totalPoints, icon: Trophy, color: "text-amber-500", trend: "+12%" },
+                        { label: "Points Earned", value: mockUserStats.totalPoints, icon: Trophy, color: "text-amber-500", trend: "+12%" },
                         { label: "Active Courses", value: activeCourseCount, icon: BookOpen, color: "text-primary" },
-                        { label: "Completion Rate", value: `${userStats.averageScore}%`, icon: GraduationCap, color: "text-blue-500" },
-                        { label: "Learning Streak", value: `${userStats.streak}d`, icon: Calendar, color: "text-orange-500" },
+                        { label: "Completion Rate", value: `${mockUserStats.averageScore}%`, icon: GraduationCap, color: "text-blue-500" },
+                        { label: "Learning Streak", value: `${mockUserStats.streak}d`, icon: Calendar, color: "text-orange-500" },
                     ].map((stat, i) => (
                         <div key={i} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-card/40 p-6 transition-all hover:bg-card hover:shadow-xl hover:shadow-primary/5">
                             <div className="flex items-center justify-between">
@@ -214,19 +309,30 @@ export default function DashboardPage() {
                             </div>
 
                             <div className="flex flex-col gap-4">
-                                {quizzes.map((quiz) => (
-                                    <div key={quiz.id} className="flex items-center gap-4 rounded-2xl bg-background/40 p-4 transition-all hover:bg-background">
-                                        <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-xs ring-1 ring-primary/20">
-                                            {quiz.score}%
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-bold leading-tight truncate">{quiz.title}</p>
-                                            <p className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider mt-1">
-                                                {quiz.date}
-                                            </p>
-                                        </div>
+                                {isLoading ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <Loader2 className="size-5 animate-spin text-muted-foreground" />
                                     </div>
-                                ))}
+                                ) : quizList.length > 0 ? (
+                                    quizList
+                                        .filter((q) => q.isCompleted)
+                                        .slice(0, 5)
+                                        .map((quiz) => (
+                                            <div key={quiz.id} className="flex items-center gap-4 rounded-2xl bg-background/40 p-4 transition-all hover:bg-background">
+                                                <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary font-bold text-xs ring-1 ring-primary/20">
+                                                    {quiz.bestScore}%
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-bold leading-tight truncate">{quiz.title}</p>
+                                                    <p className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider mt-1">
+                                                        {quiz.date}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                ) : (
+                                    <p className="py-4 text-center text-sm text-muted-foreground">No completed quizzes yet</p>
+                                )}
 
                                 <Button variant="outline" className="mt-4 rounded-xl border-dashed font-bold tracking-tight hover:bg-primary/5 hover:border-primary/50" asChild>
                                     <a href="/quizzes">Full Quiz History</a>

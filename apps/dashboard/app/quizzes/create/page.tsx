@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -25,37 +26,19 @@ import {
   CircleHalf,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
+import type { QuizFormData, QuizQuestion, QuestionType } from "../types";
+import { questionTypeLabels } from "../types";
+import { saveQuiz } from "../persistence";
+import { graphqlFetch } from "../../../lib/graphql/client";
+import { adminCoursesQuery } from "../../../lib/graphql/courses";
 
-type QuestionType =
-  | "multiple-choice"
-  | "drag-drop-category"
-  | "drag-drop-order"
-  | "true-false"
-  | "checkbox";
-
-interface QuizQuestion {
-  id: number;
-  question: string;
-  type: QuestionType;
-  points: number;
-  options: string[];
-  correctAnswer?: number | number[];
-  categories?: string[];
-  categoryMapping?: Record<number, number>;
-  hint?: string;
-}
+type CourseOption = {
+  id: string;
+  title: string;
+};
 
 const MIN_CATEGORY_COUNT = 2;
 const MAX_CATEGORY_COUNT = 6;
-
-interface QuizFormData {
-  title: string;
-  description: string;
-  duration: string;
-  courseId?: string;
-  courseTitle?: string;
-  questions: QuizQuestion[];
-}
 
 function QuestionPreviewCard({
   question,
@@ -376,14 +359,45 @@ export default function CreateQuizPage() {
 
   const [newQuestionType, setNewQuestionType] = useState<QuestionType>("multiple-choice");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isSavingQuiz, setIsSavingQuiz] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [courses, setCourses] = useState<CourseOption[]>([]);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
 
-  const questionTypeLabels: Record<QuestionType, string> = {
-    "multiple-choice": "Multiple Choice",
-    "drag-drop-category": "Drag & Drop (Categories)",
-    "drag-drop-order": "Drag & Drop (Order)",
-    "true-false": "True/False",
-    "checkbox": "Checkbox",
-  };
+  const router = useRouter();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourses() {
+      try {
+        const result = await graphqlFetch<{ courses: Array<{ id: string; title: string }> }>({
+          query: adminCoursesQuery,
+        });
+
+        if (isMounted) {
+          setCourses(
+            result.courses.map((course) => ({
+              id: course.id,
+              title: course.title,
+            }))
+          );
+        }
+      } catch {
+        // Courses failed to load — user will see empty dropdown
+      } finally {
+        if (isMounted) {
+          setIsLoadingCourses(false);
+        }
+      }
+    }
+
+    loadCourses();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const addQuestion = () => {
     const newQuestion: QuizQuestion = {
@@ -563,14 +577,29 @@ export default function CreateQuizPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Creating quiz:", formData);
+
+    setIsSavingQuiz(true);
+    setSaveError(null);
+
+    try {
+      console.log("Creating quiz — formData:", formData);
+      await saveQuiz(formData);
+      router.push("/quizzes");
+      router.refresh();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Unable to create quiz."
+      );
+    } finally {
+      setIsSavingQuiz(false);
+    }
   };
 
   const totalPoints = formData.questions.reduce((acc, q) => acc + q.points, 0);
 
-  const isQuizReady = Boolean(formData.title && formData.description);
+  const isQuizReady = Boolean(formData.title && formData.description && formData.courseId);
 
   return (
     <div className="space-y-6 px-4">
@@ -668,19 +697,32 @@ export default function CreateQuizPage() {
 
             <div>
               <label className="block text-sm font-medium mb-2 text-foreground">
-                Assign to Course (optional)
+                Assign to Course *
               </label>
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={formData.courseTitle || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, courseTitle: e.target.value })
-                  }
-                  placeholder="Search and select a course..."
+                <select
+                  value={formData.courseId || ""}
+                  onChange={(e) => {
+                    const selectedCourse = courses.find((c) => c.id === e.target.value);
+                    setFormData({
+                      ...formData,
+                      courseId: e.target.value || undefined,
+                      courseTitle: selectedCourse?.title,
+                    });
+                  }}
+                  disabled={isLoadingCourses}
                   className="flex-1 px-4 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
-                />
+                >
+                  <option value="">
+                    {isLoadingCourses ? "Loading courses..." : "Select a course..."}
+                  </option>
+                  {courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.title}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </CardContent>
@@ -1341,6 +1383,12 @@ export default function CreateQuizPage() {
         </Card>
 
         {/* Action Buttons */}
+        {saveError && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {saveError}
+          </div>
+        )}
+
         <div className="flex justify-end gap-3">
           <Button
             type="button"
@@ -1352,22 +1400,22 @@ export default function CreateQuizPage() {
           </Button>
           <Button
             type="submit"
-            disabled={!isQuizReady || formData.questions.length === 0}
+            disabled={!isQuizReady || formData.questions.length === 0 || isSavingQuiz}
             className={`cursor-btn-hover focus-warm transition-all duration-150 ${
-              isQuizReady && formData.questions.length > 0
+              isQuizReady && formData.questions.length > 0 && !isSavingQuiz
                 ? "bg-surface-300 text-foreground"
                 : "bg-card text-foreground"
             }`}
             style={{
               opacity:
-                isQuizReady && formData.questions.length > 0 ? 1 : 0.6,
+                isQuizReady && formData.questions.length > 0 && !isSavingQuiz ? 1 : 0.6,
               cursor:
-                isQuizReady && formData.questions.length > 0
+                isQuizReady && formData.questions.length > 0 && !isSavingQuiz
                   ? "pointer"
                   : "not-allowed",
             }}
           >
-            Create Quiz
+            {isSavingQuiz ? "Creating..." : "Create Quiz"}
           </Button>
         </div>
       </form>

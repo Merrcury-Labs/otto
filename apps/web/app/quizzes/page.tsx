@@ -12,29 +12,183 @@ import {
     Filter,
     ArrowUpRight,
     Star,
-    Award
+    Award,
+    BookOpen,
+    Loader2,
 } from "lucide-react"
-import { quizzes, quizCategories, userStats } from "@/lib/data"
+import { quizzes as mockQuizzes, quizCategories as mockCategories, userStats as mockUserStats } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { graphqlFetch } from "@/lib/graphql/client"
+import {
+    publishedQuizzesQuery,
+    publishedQuizzesWithProgressQuery,
+} from "@/lib/graphql/quizzes"
+import { studentByUserIdQuery } from "@/lib/graphql/courses"
+import {
+    type BackendQuiz,
+    type BackendQuizProgress,
+    type DisplayQuiz,
+    normalizeQuiz,
+} from "@/lib/graphql/normalize"
+import { authClient } from "@/lib/auth-client"
 
 export default function QuizzesPage() {
+    const [quizList, setQuizList] = React.useState<DisplayQuiz[]>([])
+    const [categories, setCategories] = React.useState<string[]>(["All"])
+    const [avgScore, setAvgScore] = React.useState(0)
+    const [completedCount, setCompletedCount] = React.useState(0)
+    const [totalPoints, setTotalPoints] = React.useState(0)
+    const [isLoading, setIsLoading] = React.useState(true)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [selectedCategory, setSelectedCategory] = React.useState("All")
 
+    const { data: session } = authClient.useSession()
+    const user = session?.user
+
+    // Resolve student ID, then fetch quizzes with progress
+    React.useEffect(() => {
+        let mounted = true
+
+        async function loadQuizzes() {
+            try {
+                let studentId: string | null = null
+
+                // Resolve Django student ID if user is logged in
+                if (user) {
+                    try {
+                        const result = await graphqlFetch<{ studentByUserId: { id: string } | null }>({
+                            query: studentByUserIdQuery,
+                            operationName: "StudentByUserId",
+                            variables: { userId: user.id },
+                        })
+                        studentId = result.studentByUserId?.id ?? null
+                    } catch (err) {
+                        console.error("Failed to resolve student ID for quizzes", err)
+                    }
+                }
+
+                if (studentId) {
+                    // Fetch quizzes with student progress
+                    const result = await graphqlFetch<{
+                        quizzes: BackendQuiz[]
+                        studentQuizProgress: BackendQuizProgress[]
+                    }>({
+                        query: publishedQuizzesWithProgressQuery,
+                        operationName: "PublishedQuizzesWithProgress",
+                        variables: { studentId },
+                    })
+
+                    if (!mounted) return
+
+                    const progressByQuizId = new Map<string, BackendQuizProgress>()
+                    for (const p of result.studentQuizProgress ?? []) {
+                        progressByQuizId.set(String(p.quiz.id), p)
+                    }
+
+                    const normalized = result.quizzes.map((q) =>
+                        normalizeQuiz(q, progressByQuizId.get(String(q.id)))
+                    )
+                    setQuizList(normalized)
+                } else {
+                    // No student context — fetch published quizzes without progress
+                    const result = await graphqlFetch<{ quizzes: BackendQuiz[] }>({
+                        query: publishedQuizzesQuery,
+                        operationName: "PublishedQuizzes",
+                    })
+
+                    if (!mounted) return
+
+                    const normalized = result.quizzes.map((q) => normalizeQuiz(q))
+                    setQuizList(normalized)
+                }
+            } catch (err) {
+                console.error("Failed to fetch quizzes from backend, using fallback data", err)
+                // Fall back to mock data
+                if (mounted) {
+                    setQuizList(
+                        mockQuizzes.map((q) => ({
+                            id: q.id,
+                            title: q.title,
+                            description: "",
+                            score: q.score,
+                            bestScore: q.bestScore,
+                            date: q.date,
+                            duration: q.duration,
+                            category: q.category,
+                            difficulty: q.difficulty,
+                            questions: q.questions,
+                            isCompleted: q.isCompleted,
+                            image: q.image,
+                            attempts: 0,
+                            avgScore: 0,
+                            passingScore: 50,
+                            courseId: "",
+                            courseTitle: q.category,
+                        }))
+                    )
+                    setCategories(mockCategories)
+                    setAvgScore(
+                        mockQuizzes.filter((q) => q.isCompleted).length > 0
+                            ? Math.round(
+                                mockQuizzes
+                                    .filter((q) => q.isCompleted)
+                                    .reduce((acc, q) => acc + q.score, 0) /
+                                mockQuizzes.filter((q) => q.isCompleted).length
+                            )
+                            : 0
+                    )
+                    setCompletedCount(mockQuizzes.filter((q) => q.isCompleted).length)
+                    setTotalPoints(mockUserStats.totalPoints)
+                    setIsLoading(false)
+                    return
+                }
+            } finally {
+                if (mounted) setIsLoading(false)
+            }
+        }
+
+        loadQuizzes()
+
+        return () => {
+            mounted = false
+        }
+    }, [user])
+
+    // Derive categories, stats from quiz data
+    React.useEffect(() => {
+        if (quizList.length === 0) return
+
+        const uniqueCategories = Array.from(new Set(quizList.map((q) => q.category).filter(Boolean)))
+        setCategories(["All", ...uniqueCategories])
+
+        const completed = quizList.filter((q) => q.isCompleted)
+        setCompletedCount(completed.length)
+        setAvgScore(
+            completed.length > 0
+                ? Math.round(completed.reduce((acc, q) => acc + q.bestScore, 0) / completed.length)
+                : 0
+        )
+        // Estimate total points from completed quiz scores
+        setTotalPoints(completed.reduce((acc, q) => acc + Math.round(q.bestScore), 0))
+    }, [quizList])
+
     const filteredQuizzes = React.useMemo(() => {
-        return quizzes.filter(quiz => {
+        return quizList.filter(quiz => {
             const matchesSearch = quiz.title.toLowerCase().includes(searchQuery.toLowerCase())
             const matchesCategory = selectedCategory === "All" || quiz.category === selectedCategory
             return matchesSearch && matchesCategory
         })
-    }, [searchQuery, selectedCategory])
+    }, [quizList, searchQuery, selectedCategory])
 
-    const completedQuizzes = quizzes.filter(q => q.isCompleted)
-    const avgScore = completedQuizzes.length > 0
-        ? Math.round(completedQuizzes.reduce((acc, q) => acc + q.score, 0) / completedQuizzes.length)
-        : 0
+    if (isLoading) {
+        return (
+            <div className="flex h-[60vh] items-center justify-center">
+                <Loader2 className="size-8 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
 
     return (
         <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
@@ -59,11 +213,11 @@ export default function QuizzesPage() {
                         </div>
                         <div className="flex flex-col gap-1 pr-6 border-r border-border/50">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Completed</span>
-                            <span className="text-2xl font-black">{completedQuizzes.length}</span>
+                            <span className="text-2xl font-black">{completedCount}</span>
                         </div>
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Pts</span>
-                            <span className="text-2xl font-black text-amber-500">{userStats.totalPoints}</span>
+                            <span className="text-2xl font-black text-amber-500">{totalPoints}</span>
                         </div>
                     </div>
                 </div>
@@ -80,7 +234,7 @@ export default function QuizzesPage() {
                         />
                     </div>
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-                        {quizCategories.map(cat => (
+                        {categories.map(cat => (
                             <Button
                                 key={cat}
                                 variant={selectedCategory === cat ? "secondary" : "ghost"}
@@ -102,12 +256,18 @@ export default function QuizzesPage() {
                                 {filteredQuizzes.map((quiz) => (
                                     <div key={quiz.id} className="group relative flex flex-col overflow-hidden rounded-3xl border bg-card/40 backdrop-blur-sm transition-all hover:bg-card hover:shadow-2xl hover:shadow-primary/5">
                                         {/* Image Header with Badge */}
-                                        <div className="relative h-32 overflow-hidden">
-                                            <img
-                                                src={quiz.image}
-                                                alt={quiz.title}
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                            />
+                                        <div className="relative h-32 overflow-hidden bg-muted">
+                                            {quiz.image ? (
+                                                <img
+                                                    src={quiz.image}
+                                                    alt={quiz.title}
+                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center">
+                                                    <BookOpen className="size-10 text-muted-foreground/40" />
+                                                </div>
+                                            )}
                                             <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
                                             <div className="absolute top-4 left-4">
                                                 <Badge variant="secondary" className="bg-background/80 backdrop-blur-md font-black text-[9px] uppercase tracking-widest px-2.5 py-1">

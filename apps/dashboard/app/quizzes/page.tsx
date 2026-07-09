@@ -66,6 +66,10 @@ const parseCorrectAnswer = (value?: string | null) => {
     return undefined;
   }
 
+  if (typeof value !== "string") {
+    return value as number | number[];
+  }
+
   const parsed = JSON.parse(value) as number | number[];
 
   return parsed;

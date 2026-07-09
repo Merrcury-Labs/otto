@@ -3,13 +3,14 @@
 import * as React from "react"
 import { useParams } from "next/navigation"
 import { graphqlFetch } from "@/lib/graphql/client"
-import { courseDetailQuery } from "@/lib/graphql/courses"
+import { courseDetailQuery, courseDetailWithEnrollmentQuery, studentByUserIdQuery, enrollStudentMutation } from "@/lib/graphql/courses"
 import {
     type BackendCourse,
     type DisplayCourse,
     normalizeCourse,
     flattenLessons,
 } from "@/lib/graphql/normalize"
+import { authClient } from "@/lib/auth-client"
 import {
     BadgeCheck,
     ChevronDown,
@@ -26,33 +27,104 @@ import {
     Award,
     Video,
     BookOpen,
+    Loader2,
 } from "lucide-react"
+
+type EnrollmentData = {
+    id: string
+    progress: number
+    completed: boolean
+} | null
 
 export default function CourseLandingPage() {
     const { id } = useParams()
     const [openModules, setOpenModules] = React.useState<number[]>([0])
     const [course, setCourse] = React.useState<DisplayCourse | null>(null)
+    const [isEnrolled, setIsEnrolled] = React.useState(false)
+    const [enrollment, setEnrollment] = React.useState<EnrollmentData>(null)
+    const [isEnrolling, setIsEnrolling] = React.useState(false)
+    const [enrollError, setEnrollError] = React.useState<string | null>(null)
+    const [studentId, setStudentId] = React.useState<string | null>(null)
 
+    const { data: session } = authClient.useSession()
+    const user = session?.user
+
+    // Resolve Django student ID from Better Auth user ID
+    React.useEffect(() => {
+        let mounted = true
+
+        async function resolveStudentId() {
+            if (!user) {
+                if (mounted) setStudentId(null)
+                return
+            }
+
+            try {
+                const result = await graphqlFetch<{ studentByUserId: { id: string } | null }>({
+                    query: studentByUserIdQuery,
+                    operationName: "StudentByUserId",
+                    variables: { userId: user.id },
+                })
+
+                if (!mounted) return
+                setStudentId(result.studentByUserId?.id ?? null)
+            } catch {
+                if (mounted) setStudentId(null)
+            }
+        }
+
+        resolveStudentId()
+
+        return () => {
+            mounted = false
+        }
+    }, [user])
+
+    // Load course details with enrollment status
     React.useEffect(() => {
         let mounted = true
 
         async function loadCourse() {
             try {
-                const result = await graphqlFetch<{ courses: BackendCourse[] }>({
-                    query: courseDetailQuery,
-                    operationName: "CourseDetail",
-                })
+                if (studentId) {
+                    const result = await graphqlFetch<{ courses: Array<BackendCourse & { isEnrolled: boolean; enrollment: EnrollmentData }> }>({
+                        query: courseDetailWithEnrollmentQuery,
+                        operationName: "CourseDetailWithEnrollment",
+                        variables: { studentId },
+                    })
 
-                if (!mounted) return
+                    if (!mounted) return
 
-                const backendCourse = result.courses.find(
-                    (item) => String(item.id) === String(id)
-                )
+                    const backendCourse = result.courses.find(
+                        (item) => String(item.id) === String(id)
+                    )
 
-                if (backendCourse) {
-                    setCourse(normalizeCourse(backendCourse))
+                    if (backendCourse) {
+                        setCourse(normalizeCourse(backendCourse))
+                        setIsEnrolled(backendCourse.isEnrolled)
+                        setEnrollment(backendCourse.enrollment)
+                    } else {
+                        setCourse(null)
+                    }
                 } else {
-                    setCourse(null)
+                    const result = await graphqlFetch<{ courses: BackendCourse[] }>({
+                        query: courseDetailQuery,
+                        operationName: "CourseDetail",
+                    })
+
+                    if (!mounted) return
+
+                    const backendCourse = result.courses.find(
+                        (item) => String(item.id) === String(id)
+                    )
+
+                    if (backendCourse) {
+                        setCourse(normalizeCourse(backendCourse))
+                        setIsEnrolled(false)
+                        setEnrollment(null)
+                    } else {
+                        setCourse(null)
+                    }
                 }
             } catch {
                 if (mounted) setCourse(null)
@@ -64,7 +136,38 @@ export default function CourseLandingPage() {
         return () => {
             mounted = false
         }
-    }, [id])
+    }, [id, studentId])
+
+    const handleEnroll = async () => {
+        if (!user) {
+            window.location.href = `/sign-in?callbackUrl=${encodeURIComponent(window.location.pathname)}`
+            return
+        }
+
+        if (!studentId) {
+            setEnrollError("Unable to identify student account. Please try again.")
+            return
+        }
+
+        setIsEnrolling(true)
+        setEnrollError(null)
+
+        try {
+            await graphqlFetch<{ enrollStudent: { id: string } }>({
+                query: enrollStudentMutation,
+                operationName: "EnrollStudent",
+                variables: { studentId, courseId: String(id) },
+            })
+
+            setIsEnrolled(true)
+        } catch (error) {
+            setEnrollError(
+                error instanceof Error ? error.message : "Failed to enroll. Please try again."
+            )
+        } finally {
+            setIsEnrolling(false)
+        }
+    }
 
     const toggleModule = (index: number) => {
         setOpenModules(prev =>
@@ -121,7 +224,7 @@ export default function CourseLandingPage() {
                         )}
                         <div className="flex items-center gap-2">
                             <Users className="size-4" style={{ color: 'var(--color-accent)' }} />
-                            <span>{course?.students ? `${course.students.toLocaleString()} students enrolled` : 'Enroll today'}</span>
+                            <span>{isEnrolled ? 'You are enrolled' : course?.students ? `${course.students.toLocaleString()} students enrolled` : 'Enroll today'}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <BadgeCheck className="size-4" style={{ color: 'var(--color-success)' }} />
@@ -141,7 +244,7 @@ export default function CourseLandingPage() {
                 {/* Main Content */}
                 <div className="flex flex-col gap-12 lg:col-span-2">
 
-                    {/* What you'll learn */}
+                    {/* Prerequisites */}
                     {course?.prerequisites && course.prerequisites.length > 0 && (
                         <section className="rounded-2xl p-8" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)' }}>
                             <h2 className="mb-6 text-subheading" style={{ fontFamily: 'var(--font-display)' }}>Prerequisites</h2>
@@ -153,6 +256,28 @@ export default function CourseLandingPage() {
                                     </div>
                                 ))}
                             </div>
+                        </section>
+                    )}
+
+                    {/* Enrollment progress (shown when enrolled) */}
+                    {isEnrolled && enrollment && enrollment.progress > 0 && (
+                        <section className="rounded-2xl p-8" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)' }}>
+                            <div className="flex items-center justify-between mb-3">
+                                <h2 className="text-subheading" style={{ fontFamily: 'var(--font-display)' }}>Your Progress</h2>
+                                <span className="text-sm font-bold" style={{ color: 'var(--color-accent)' }}>{Math.round(enrollment.progress)}%</span>
+                            </div>
+                            <div className="h-2 w-full overflow-hidden rounded-full" style={{ backgroundColor: 'var(--surface-200)' }}>
+                                <div
+                                    className="h-full rounded-full transition-all duration-500"
+                                    style={{ width: `${enrollment.progress}%`, backgroundColor: 'var(--color-accent)' }}
+                                />
+                            </div>
+                            {enrollment.completed && (
+                                <p className="mt-3 flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-success)' }}>
+                                    <CheckCircle2 className="size-4" />
+                                    Course completed!
+                                </p>
+                            )}
                         </section>
                     )}
 
@@ -252,13 +377,36 @@ export default function CourseLandingPage() {
                                 </div>
 
                                 <div className="flex flex-col gap-3">
-                                    <a
-                                        href={firstLessonUrl}
-                                        className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold transition-colors duration-150 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-                                    >
-                                        <PlayCircle className="size-4" />
-                                        Start Learning
-                                    </a>
+                                    {isEnrolled ? (
+                                        <a
+                                            href={firstLessonUrl}
+                                            className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold transition-colors duration-150 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+                                        >
+                                            <PlayCircle className="size-4" />
+                                            {enrollment && enrollment.progress > 0 ? "Continue Learning" : "Start Learning"}
+                                        </a>
+                                    ) : (
+                                        <button
+                                            onClick={handleEnroll}
+                                            disabled={isEnrolling}
+                                            className="flex w-full items-center justify-center gap-2 py-3 text-sm font-bold transition-colors duration-150 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                                        >
+                                            {isEnrolling ? (
+                                                <>
+                                                    <Loader2 className="size-4 animate-spin" />
+                                                    Enrolling...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <BookOpen className="size-4" />
+                                                    Enroll Now
+                                                </>
+                                            )}
+                                        </button>
+                                    )}
+                                    {enrollError && (
+                                        <p className="text-xs text-center text-red-500">{enrollError}</p>
+                                    )}
                                 </div>
 
                                 <p className="mt-4 text-center text-xs" style={{ color: 'var(--muted-foreground)' }}>

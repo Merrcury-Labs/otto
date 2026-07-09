@@ -7,7 +7,11 @@ import {
   updateLessonMutation,
   updateModuleMutation,
 } from "./courses";
-import { adminQuizzesQuery } from "./quizzes";
+import {
+  adminQuizzesQuery,
+  createQuizMutation,
+  createQuestionMutation,
+} from "./quizzes";
 
 export type GraphqlRequestBody = {
   query?: string;
@@ -33,6 +37,8 @@ const registeredOperations = new Map(
   Object.entries({
     AdminCourses: adminCoursesQuery,
     AdminQuizzes: adminQuizzesQuery,
+    CreateQuiz: createQuizMutation,
+    CreateQuestion: createQuestionMutation,
     CreateCourse: createCourseMutation,
     UpdateCourse: updateCourseMutation,
     CreateModule: createModuleMutation,
@@ -152,17 +158,22 @@ export async function executeGraphqlRequest(
     const contentType = response.headers.get("content-type");
     const result = contentType?.includes("application/json")
       ? ((await response.json()) as GraphqlResponse)
-      : {
-          errors: [
-            {
-              message: "Backend GraphQL endpoint returned a non-JSON response.",
-            },
-          ],
-        };
+      : (() => {
+          console.error("Backend returned non-JSON. Content-Type:", contentType, "Status:", response.status);
+          return {
+            errors: [
+              {
+                message: "Backend GraphQL endpoint returned a non-JSON response.",
+              },
+            ],
+          };
+        })();
 
     if (result.errors?.length) {
       console.error("Backend GraphQL errors", result.errors);
     }
+
+    console.log("Backend GraphQL response status:", response.status, "data:", JSON.stringify(result).slice(0, 500));
 
     return {
       result: sanitizeGraphqlResult(result),

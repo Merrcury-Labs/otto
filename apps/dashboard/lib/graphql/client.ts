@@ -28,6 +28,8 @@ export async function graphqlFetch<TData>({
 
   const result = (await response.json()) as GraphqlResponse<TData>;
 
+  console.log(`graphqlFetch [${operationName ?? "unnamed"}] response:`, result);
+
   if (!response.ok || result.errors?.length) {
     throw new Error(result.errors?.[0]?.message ?? "Unable to run GraphQL query");
   }
