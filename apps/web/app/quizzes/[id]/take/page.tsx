@@ -135,7 +135,9 @@ function MCQQuestion({
   onAnswer: (response: string) => void
   disabled?: boolean
 }) {
-  // Options can be an array of strings or an object with keys
+  // Options can be an array of strings or an object with keys.
+  // We always store the selected answer as the option VALUE (text),
+  // not the key, because the backend's correct_option stores the text.
   const optionEntries: Array<[string, string]> = React.useMemo(() => {
     if (Array.isArray(question.options)) {
       return question.options.map((opt, i) => [String(i), String(opt)])
@@ -152,7 +154,12 @@ function MCQQuestion({
     return []
   }, [question.options])
 
-  const selectedKey = typeof answer === "string" ? answer : undefined
+  // Resolve the selected value from the answer (which is now stored as the option text)
+  const selectedKey = React.useMemo(() => {
+    if (typeof answer !== "string") return undefined
+    // Find the key whose value matches the answer
+    return optionEntries.find(([, val]) => val === answer)?.[0]
+  }, [answer, optionEntries])
 
   return (
     <div className="space-y-2.5">
@@ -163,7 +170,7 @@ function MCQQuestion({
         return (
           <button
             key={key}
-            onClick={() => !disabled && onAnswer(key)}
+            onClick={() => !disabled && onAnswer(label)}
             disabled={disabled}
             className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all ${
               isSelected

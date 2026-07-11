@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .models import Answer, Attempt, Question, Quiz, QuizProgress
+from .schema import evaluate_answer
 from .serializers import (
     AnswerSerializer,
     AttemptSerializer,
@@ -15,28 +16,6 @@ from .serializers import (
     QuizSerializer,
     SubmitAttemptSerializer,
 )
-
-
-def evaluate_answer(question, response):
-    """Evaluate a student's response against the correct option.
-
-    Returns (is_correct: bool, points_awarded: int).
-    All-or-nothing scoring per question.
-    """
-    correct = question.correct_option
-
-    if question.type == Question.MCQ:
-        is_correct = response == correct
-    elif question.type == Question.TF:
-        is_correct = str(response).lower() == str(correct).lower()
-    elif question.type == Question.REORDER:
-        is_correct = response == correct
-    elif question.type == Question.CATEGORIZE:
-        is_correct = response == correct
-    else:
-        is_correct = False
-
-    return is_correct, question.points if is_correct else 0
 
 
 class QuizViewSet(viewsets.ModelViewSet):

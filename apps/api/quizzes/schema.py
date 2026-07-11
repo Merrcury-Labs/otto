@@ -19,18 +19,206 @@ def duration_from_string(value: str) -> timedelta:
     return duration
 
 
+def _resolve_mcq_correct_text(question: Question) -> str | None:
+    """Resolve the correct option for an MCQ question to its display text.
+
+    correct_option can be stored in multiple formats depending on how the quiz
+    was created:
+      - Integer index (e.g. 0)  — dashboard quiz creation
+      - String index (e.g. "0") — some creation flows
+      - Letter key (e.g. "B")   — {"choices": ["A) var", "B) let", ...]}
+      - Option text (e.g. "Mean") — direct text match
+
+    Returns the resolved text, or None if unresolvable.
+    """
+    correct = question.correct_option
+    if correct is None:
+        return None
+
+    options = question.options or {}
+
+    # If correct is already a text answer (non-numeric, non-single-letter),
+    # and it's not a key in an object-style options dict, return as-is.
+    if isinstance(correct, str) and not correct.isdigit() and len(correct) > 1:
+        # Could be text like "Mean" or a key like "A" in {"A": "Option A"}
+        if isinstance(options, dict):
+            # Check if it's a key in the options dict
+            if correct in options and not isinstance(options[correct], list):
+                return str(options[correct])
+            # Check choices array
+            if "choices" in options and isinstance(options["choices"], list):
+                # Not a letter key, so treat as direct text
+                return correct
+        # For array options, direct text match
+        return correct
+
+    # Resolve from options list using index
+    choices: list | None = None
+    if isinstance(options, list):
+        choices = options
+    elif isinstance(options, dict):
+        if "choices" in options and isinstance(options["choices"], list):
+            choices = options["choices"]
+        elif correct in options and not isinstance(options[correct], list):
+            # Object-style like {"A": "Option A", "B": "Option B"}
+            return str(options[correct])
+
+    if choices is not None:
+        idx: int | None = None
+        if isinstance(correct, int):
+            idx = correct
+        elif isinstance(correct, str) and correct.isdigit():
+            idx = int(correct)
+        elif isinstance(correct, str) and len(correct) == 1 and correct.isalpha():
+            # Letter key like "A", "B", "C" -> index 0, 1, 2
+            idx = ord(correct.upper()) - ord("A")
+
+        if idx is not None and 0 <= idx < len(choices):
+            return str(choices[idx])
+
+    # Fallback: return as string
+    return str(correct)
+
+
+def _resolve_reorder_correct(question: Question) -> list | None:
+    """Resolve REORDER correct_option to a list of option texts.
+
+    correct_option may be stored as:
+      - List of integer indices (e.g. [0, 1, 2])
+      - List of option texts (e.g. ["Mean", "Median", "Mode"])
+    """
+    correct = question.correct_option
+    if not isinstance(correct, list) or len(correct) == 0:
+        return None
+
+    # If the first element is a string that exists in options, it's already text
+    options = question.options or {}
+    choices: list | None = None
+    if isinstance(options, list):
+        choices = options
+    elif isinstance(options, dict):
+        if "items" in options and isinstance(options["items"], list):
+            choices = options["items"]
+        elif "choices" in options and isinstance(options["choices"], list):
+            choices = options["choices"]
+
+    if choices is None:
+        return correct
+
+    # Check if values are indices (int or numeric string)
+    first = correct[0]
+    if isinstance(first, int) or (isinstance(first, str) and first.isdigit()):
+        resolved = []
+        for idx in correct:
+            i = int(idx)
+            if 0 <= i < len(choices):
+                resolved.append(str(choices[i]))
+            else:
+                return correct  # Can't resolve, return as-is
+        return resolved
+
+    # Already text values
+    return correct
+
+
+def _resolve_categorize_correct(question: Question) -> dict | None:
+    """Normalize CATEGORIZE correct_option to a canonical item→category mapping.
+
+    correct_option may be stored as:
+      - Item→category mapping: {"Mean": "Center", "Range": "Spread"}
+      - Category→items mapping: {"Number": ["42", "3.14"], "String": ["hello"]}
+      - Integer-keyed mapping (e.g. {0: 0, 1: 0}) — rare, from dashboard creation
+
+    Always returns an item→category mapping like {"Mean": "Center"}.
+    """
+    correct = question.correct_option
+    if not isinstance(correct, dict) or len(correct) == 0:
+        return None
+
+    options = question.options or {}
+
+    # Check if any value is a list — that means it's a category→items format
+    first_val = next(iter(correct.values()))
+    if isinstance(first_val, list):
+        # Convert {"Number": ["42", "3.14"]} → {"42": "Number", "3.14": "Number"}
+        item_to_category = {}
+        for category, items in correct.items():
+            if isinstance(items, list):
+                for item in items:
+                    item_to_category[str(item)] = str(category)
+        return item_to_category
+
+    # Check if keys/values look like indices
+    first_key = next(iter(correct))
+    keys_are_indices = isinstance(first_key, int) or (isinstance(first_key, str) and str(first_key).isdigit())
+    vals_are_indices = isinstance(first_val, int) or (isinstance(first_val, str) and str(first_val).isdigit())
+
+    if keys_are_indices:
+        # Resolve item indices to text
+        items: list = []
+        category_names: list = []
+
+        if isinstance(options, dict):
+            if "items" in options and isinstance(options["items"], list):
+                items = options["items"]
+            elif "buckets" in options and isinstance(options["buckets"], dict):
+                category_names = list(options["buckets"].keys())
+
+            if not category_names:
+                categories = question.categories or {}
+                if isinstance(categories, dict):
+                    category_names = list(categories.keys())
+
+        if items:
+            resolved = {}
+            for k, v in correct.items():
+                item_idx = int(k)
+                item_text = str(items[item_idx]) if 0 <= item_idx < len(items) else str(k)
+                if vals_are_indices and category_names:
+                    cat_idx = int(v)
+                    cat_text = category_names[cat_idx] if 0 <= cat_idx < len(category_names) else str(v)
+                else:
+                    cat_text = str(v)
+                resolved[item_text] = cat_text
+            return resolved
+
+    # Already text-keyed item→category mapping
+    return {str(k): str(v) for k, v in correct.items()}
+
+
 def evaluate_answer(question: Question, response) -> tuple[bool, int]:
     """Evaluate a student's response. Returns (is_correct, points_awarded)."""
-    correct = question.correct_option
-
     if question.type == Question.MCQ:
-        is_correct = response == correct
+        correct_text = _resolve_mcq_correct_text(question)
+        # Compare as strings to handle type mismatches
+        is_correct = str(response).strip() == str(correct_text).strip() if correct_text is not None else False
     elif question.type == Question.TF:
-        is_correct = str(response).lower() == str(correct).lower()
+        correct = question.correct_option
+        # correct may be 0/1 (integer), "true"/"false", or "0"/"1"
+        # Normalize both sides to true/false strings
+        def normalize_tf(val) -> str:
+            s = str(val).lower().strip()
+            if s in ("true", "1"):
+                return "true"
+            return "false"
+        is_correct = normalize_tf(response) == normalize_tf(correct)
     elif question.type == Question.REORDER:
-        is_correct = response == correct
+        correct_order = _resolve_reorder_correct(question)
+        if correct_order is not None and isinstance(response, list):
+            # Compare as string lists
+            resp_strs = [str(r) for r in response]
+            corr_strs = [str(c) for c in correct_order]
+            is_correct = resp_strs == corr_strs
+        else:
+            is_correct = response == question.correct_option
     elif question.type == Question.CATEGORIZE:
-        is_correct = response == correct
+        correct_mapping = _resolve_categorize_correct(question)
+        if correct_mapping is not None and isinstance(response, dict):
+            # Compare as string-keyed/string-valued dicts
+            resp_norm = {str(k): str(v) for k, v in response.items()}
+            is_correct = resp_norm == correct_mapping
+        else:
+            is_correct = response == question.correct_option
     else:
         is_correct = False
 
