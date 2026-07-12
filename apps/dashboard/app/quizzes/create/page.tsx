@@ -30,7 +30,7 @@ import type { QuizFormData, QuizQuestion, QuestionType } from "../types";
 import { questionTypeLabels } from "../types";
 import { saveQuiz } from "../persistence";
 import { graphqlFetch } from "../../../lib/graphql/client";
-import { adminCoursesQuery } from "../../../lib/graphql/courses";
+import { courseListQuery } from "../../../lib/graphql/courses";
 
 type CourseOption = {
   id: string;
@@ -372,7 +372,8 @@ export default function CreateQuizPage() {
     async function loadCourses() {
       try {
         const result = await graphqlFetch<{ courses: Array<{ id: string; title: string }> }>({
-          query: adminCoursesQuery,
+          query: courseListQuery,
+          operationName: "CourseList",
         });
 
         if (isMounted) {
@@ -425,14 +426,14 @@ export default function CreateQuizPage() {
     });
   };
 
-  const removeQuestion = (questionId: number) => {
+  const removeQuestion = (questionId: number | string) => {
     setFormData({
       ...formData,
       questions: formData.questions.filter((q) => q.id !== questionId),
     });
   };
 
-  const updateQuestion = (questionId: number, updates: Partial<QuizQuestion>) => {
+  const updateQuestion = (questionId: number | string, updates: Partial<QuizQuestion>) => {
     setFormData({
       ...formData,
       questions: formData.questions.map((q) =>
@@ -441,7 +442,7 @@ export default function CreateQuizPage() {
     });
   };
 
-  const addOption = (questionId: number) => {
+  const addOption = (questionId: number | string) => {
     const question = formData.questions.find((q) => q.id === questionId);
     if (!question) return;
 
@@ -457,7 +458,7 @@ export default function CreateQuizPage() {
     });
   };
 
-  const removeOption = (questionId: number, optionIndex: number) => {
+  const removeOption = (questionId: number | string, optionIndex: number) => {
     const question = formData.questions.find((q) => q.id === questionId);
     if (!question) return;
 
@@ -492,7 +493,7 @@ export default function CreateQuizPage() {
     });
   };
 
-  const setCategoryCount = (questionId: number, categoryCount: number) => {
+  const setCategoryCount = (questionId: number | string, categoryCount: number) => {
     const question = formData.questions.find((q) => q.id === questionId);
     if (!question || !question.categories) return;
 
@@ -533,7 +534,7 @@ export default function CreateQuizPage() {
     });
   };
 
-  const updateCategory = (questionId: number, categoryIndex: number, name: string) => {
+  const updateCategory = (questionId: number | string, categoryIndex: number, name: string) => {
     const question = formData.questions.find((q) => q.id === questionId);
     if (!question || !question.categories) return;
 
@@ -553,7 +554,7 @@ export default function CreateQuizPage() {
     });
   };
 
-  const assignToCategory = (questionId: number, optionIndex: number, categoryIndex: number) => {
+  const assignToCategory = (questionId: number | string, optionIndex: number, categoryIndex: number) => {
     const question = formData.questions.find((q) => q.id === questionId);
     if (!question || !question.categoryMapping) return;
 
@@ -565,7 +566,7 @@ export default function CreateQuizPage() {
     });
   };
 
-  const unassignFromCategory = (questionId: number, optionIndex: number) => {
+  const unassignFromCategory = (questionId: number | string, optionIndex: number) => {
     const question = formData.questions.find((q) => q.id === questionId);
     if (!question || !question.categoryMapping) return;
 

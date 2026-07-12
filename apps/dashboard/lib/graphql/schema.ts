@@ -1,5 +1,6 @@
 import {
   adminCoursesQuery,
+  courseListQuery,
   createCourseMutation,
   createLessonMutation,
   createModuleMutation,
@@ -11,6 +12,11 @@ import {
   adminQuizzesQuery,
   createQuizMutation,
   createQuestionMutation,
+  quizDetailQuery,
+  updateQuizMutation,
+  updateQuestionMutation,
+  deleteQuestionMutation,
+  deleteQuizMutation,
 } from "./quizzes";
 
 export type GraphqlRequestBody = {
@@ -36,9 +42,15 @@ const GRAPHQL_REQUEST_TIMEOUT_MS = 15_000;
 const registeredOperations = new Map(
   Object.entries({
     AdminCourses: adminCoursesQuery,
+    CourseList: courseListQuery,
     AdminQuizzes: adminQuizzesQuery,
+    QuizDetail: quizDetailQuery,
     CreateQuiz: createQuizMutation,
+    UpdateQuiz: updateQuizMutation,
+    DeleteQuiz: deleteQuizMutation,
     CreateQuestion: createQuestionMutation,
+    UpdateQuestion: updateQuestionMutation,
+    DeleteQuestion: deleteQuestionMutation,
     CreateCourse: createCourseMutation,
     UpdateCourse: updateCourseMutation,
     CreateModule: createModuleMutation,

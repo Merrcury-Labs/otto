@@ -8,7 +8,7 @@ export type QuestionType =
 export type QuizStatus = "published" | "draft";
 
 export interface QuizQuestion {
-  id: number;
+  id: number | string;
   question: string;
   type: QuestionType;
   points: number;
@@ -29,7 +29,7 @@ export interface QuizFormData {
 }
 
 export interface Quiz extends QuizFormData {
-  id: number;
+  id: number | string;
   status: QuizStatus;
   attempts: number;
   avgScore: number;

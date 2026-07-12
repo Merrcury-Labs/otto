@@ -28,9 +28,9 @@ import {
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import { QuizPreviewModal } from "./components/QuizPreviewModal";
-import type { Quiz } from "./types";
+import type { Quiz, QuestionType } from "./types";
 import { graphqlFetch } from "../../lib/graphql/client";
-import { adminQuizzesQuery } from "../../lib/graphql/quizzes";
+import { adminQuizzesQuery, deleteQuizMutation } from "../../lib/graphql/quizzes";
 
 type QuizStats = {
   total: number;
@@ -41,11 +41,16 @@ type QuizStats = {
 
 type GraphqlQuiz = Omit<Quiz, "status" | "questions"> & {
   status: Uppercase<Quiz["status"]>;
-  questions: Array<
-    Omit<Quiz["questions"][number], "correctAnswer"> & {
-      correctAnswer?: string | boolean | number | number[] | Record<string, unknown> | unknown[] | null;
-    }
-  >;
+  questions: Array<{
+    id: string | number;
+    question: string;
+    type: string;
+    points: number;
+    options: unknown;
+    correctAnswer?: unknown;
+    categories?: unknown;
+    hint?: string;
+  }>;
 };
 
 type AdminQuizzesData = {
@@ -80,14 +85,198 @@ const parseCorrectAnswer = (
   }
 };
 
-const normalizeQuiz = (quiz: GraphqlQuiz): Quiz => ({
-  ...quiz,
-  status: quiz.status.toLowerCase() as Quiz["status"],
-  questions: quiz.questions.map((question) => ({
-    ...question,
-    correctAnswer: parseCorrectAnswer(question.correctAnswer),
-  })),
-});
+// Map backend question type codes to dashboard QuestionType values
+const mapQuestionType = (backendType: string): QuestionType => {
+  const typeMap: Record<string, QuestionType> = {
+    MCQ: "multiple-choice",
+    TF: "true-false",
+    REORDER: "drag-drop-order",
+    CATEGORIZE: "drag-drop-category",
+  };
+  return typeMap[backendType] ?? "multiple-choice";
+};
+
+// Convert backend options (JSON objects/arrays) to a flat string[] for the dashboard
+const normalizeOptions = (raw: unknown): string[] => {
+  if (Array.isArray(raw)) {
+    return raw.map(String);
+  }
+  if (typeof raw === "object" && raw !== null) {
+    const opts = raw as Record<string, unknown>;
+    // {choices: [...]} or {items: [...]}
+    if (Array.isArray(opts.choices)) return opts.choices.map(String);
+    if (Array.isArray(opts.items)) return opts.items.map(String);
+    // Flat object like {"A": "Option A", "B": "Option B"}
+    const values = Object.values(opts).filter((v) => typeof v !== "object" && !Array.isArray(v));
+    if (values.length > 0) return values.map(String);
+  }
+  return [];
+};
+
+// Extract category names from backend categories / options
+const normalizeCategories = (rawCategories: unknown, rawOptions: unknown): string[] => {
+  if (Array.isArray(rawCategories)) {
+    return rawCategories.map(String);
+  }
+  if (typeof rawCategories === "object" && rawCategories !== null) {
+    const cats = rawCategories as Record<string, unknown>;
+    // { "Center": [], "Spread": [] } — keys are category names
+    const keys = Object.keys(cats);
+    if (keys.length > 0 && keys.every((k) => Array.isArray(cats[k]))) {
+      return keys;
+    }
+    return keys;
+  }
+  // Check for buckets in options
+  if (typeof rawOptions === "object" && rawOptions !== null) {
+    const opts = rawOptions as Record<string, unknown>;
+    if (opts.buckets && typeof opts.buckets === "object" && !Array.isArray(opts.buckets)) {
+      return Object.keys(opts.buckets);
+    }
+  }
+  return [];
+};
+
+// Derive categoryMapping (itemIndex → categoryIndex) from backend correctAnswer
+const normalizeCategoryMapping = (
+  correctAnswer: unknown,
+  options: string[],
+  categories: string[],
+): Record<number, number> => {
+  if (!correctAnswer || typeof correctAnswer !== "object" || Array.isArray(correctAnswer)) {
+    return {};
+  }
+  const mapping: Record<number, number> = {};
+  const answer = correctAnswer as Record<string, unknown>;
+
+  // Check if it's a category→items format: {"Center": ["Mean"], "Spread": ["Range"]}
+  const firstVal = Object.values(answer)[0];
+  if (Array.isArray(firstVal)) {
+    for (const [cat, items] of Object.entries(answer)) {
+      if (!Array.isArray(items)) continue;
+      const catIdx = categories.indexOf(cat);
+      if (catIdx === -1) continue;
+      for (const item of items) {
+        const optIdx = options.indexOf(String(item));
+        if (optIdx !== -1) mapping[optIdx] = catIdx;
+      }
+    }
+    return mapping;
+  }
+
+  // It's an item→category format: {"Mean": "Center", "Range": "Spread"}
+  for (const [item, cat] of Object.entries(answer)) {
+    const optIdx = options.indexOf(String(item));
+    const catIdx = categories.indexOf(String(cat));
+    if (optIdx !== -1 && catIdx !== -1) mapping[optIdx] = catIdx;
+  }
+
+  // If keys are numeric indices (dashboard creation format)
+  if (Object.keys(answer).every((k) => /^\d+$/.test(k))) {
+    for (const [k, v] of Object.entries(answer)) {
+      const optIdx = Number(k);
+      const catIdx = typeof v === "number" ? v : Number(v);
+      if (!Number.isNaN(optIdx) && !Number.isNaN(catIdx)) {
+        mapping[optIdx] = catIdx;
+      }
+    }
+  }
+
+  return mapping;
+};
+
+// Resolve correctAnswer from backend format to dashboard index-based format
+const normalizeCorrectAnswer = (
+  type: QuestionType,
+  rawCorrect: unknown,
+  options: string[],
+): Quiz["questions"][number]["correctAnswer"] => {
+  if (rawCorrect == null) return undefined;
+
+  switch (type) {
+    case "multiple-choice": {
+      // Backend may store: index (0), string ("0"), letter ("A"), or option text
+      if (typeof rawCorrect === "number") return rawCorrect;
+      if (typeof rawCorrect === "string") {
+        if (/^\d+$/.test(rawCorrect)) return parseInt(rawCorrect, 10);
+        if (/^[A-Z]$/.test(rawCorrect)) return rawCorrect.charCodeAt(0) - 65;
+        // It's text — find matching option index
+        const idx = options.indexOf(rawCorrect);
+        return idx !== -1 ? idx : undefined;
+      }
+      return undefined;
+    }
+    case "true-false": {
+      // Backend stores: true/false boolean, 0/1 integer, "true"/"false" string
+      if (typeof rawCorrect === "boolean") return rawCorrect ? 0 : 1;
+      if (typeof rawCorrect === "number") return rawCorrect === 1 ? 0 : 1;
+      if (typeof rawCorrect === "string") {
+        const lower = rawCorrect.toLowerCase();
+        if (lower === "true" || rawCorrect === "1") return 0;
+        if (lower === "false" || rawCorrect === "0") return 1;
+      }
+      return 0;
+    }
+    case "checkbox": {
+      // Backend may store array of indices or text
+      if (Array.isArray(rawCorrect)) {
+        const indices = rawCorrect
+          .map((v) => {
+            if (typeof v === "number") return v;
+            if (typeof v === "string" && /^\d+$/.test(v)) return parseInt(v, 10);
+            const idx = options.indexOf(String(v));
+            return idx;
+          })
+          .filter((v) => v !== -1 && !Number.isNaN(v));
+        return indices;
+      }
+      return undefined;
+    }
+    default:
+      return parseCorrectAnswer(rawCorrect as string | boolean | number | number[] | Record<string, unknown> | unknown[] | null);
+  }
+};
+
+const normalizeQuiz = (quiz: GraphqlQuiz): Quiz => {
+  const questions: Quiz["questions"] = quiz.questions.map((q) => {
+    const type = mapQuestionType(q.type);
+    const options = normalizeOptions(q.options);
+    const categories = type === "drag-drop-category"
+      ? normalizeCategories(q.categories, q.options)
+      : undefined;
+    const categoryMapping = type === "drag-drop-category"
+      ? normalizeCategoryMapping(q.correctAnswer, options, categories ?? [])
+      : undefined;
+    const correctAnswer = normalizeCorrectAnswer(type, q.correctAnswer, options);
+
+    return {
+      id: Number(q.id) || q.id,
+      question: q.question,
+      type,
+      points: q.points,
+      options,
+      correctAnswer,
+      categories,
+      categoryMapping,
+      hint: q.hint,
+    };
+  });
+
+  return {
+    id: Number(quiz.id) || quiz.id,
+    title: quiz.title,
+    description: quiz.description,
+    duration: quiz.duration,
+    status: quiz.status.toLowerCase() as Quiz["status"],
+    courseId: quiz.courseId,
+    courseTitle: quiz.courseTitle,
+    attempts: quiz.attempts,
+    avgScore: quiz.avgScore,
+    createdAt: quiz.createdAt,
+    updatedAt: quiz.updatedAt,
+    questions,
+  };
+};
 
 export default function QuizzesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");

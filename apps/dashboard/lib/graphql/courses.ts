@@ -4,7 +4,10 @@ export const adminCoursesQuery = /* GraphQL */ `
       id
       title: name
       description
-      tutor
+      tutor {
+        id
+        name
+      }
       thumbnail
       image
       lessonCount
@@ -26,6 +29,16 @@ export const adminCoursesQuery = /* GraphQL */ `
           sectionName
         }
       }
+    }
+  }
+`;
+
+/** Lightweight query for course dropdowns — only id and title. */
+export const courseListQuery = /* GraphQL */ `
+  query CourseList {
+    courses {
+      id
+      title: name
     }
   }
 `;
@@ -86,7 +99,10 @@ export const updateCourseMutation = /* GraphQL */ `
       id
       name
       description
-      tutor
+      tutor {
+        id
+        name
+      }
       thumbnail
       image
       lessonCount

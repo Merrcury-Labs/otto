@@ -64,6 +64,8 @@ export const createQuestionMutation = /* GraphQL */ `
     $type: String!
     $options: JSON
     $points: Int
+    $hint: String
+    $categories: JSON
   ) {
     createQuestion(
       quizId: $quizId
@@ -72,8 +74,102 @@ export const createQuestionMutation = /* GraphQL */ `
       type: $type
       options: $options
       points: $points
+      hint: $hint
+      categories: $categories
     ) {
       id
     }
+  }
+`;
+
+export const quizDetailQuery = /* GraphQL */ `
+  query QuizDetail($id: ID!) {
+    quiz(id: $id) {
+      id
+      title
+      description
+      duration
+      numQuestions
+      passingScore
+      status
+      courseId
+      courseTitle
+      attempts
+      avgScore
+      createdAt
+      updatedAt
+      questions {
+        id
+        question
+        type
+        points
+        options
+        correctAnswer
+        categories
+        hint
+      }
+    }
+  }
+`;
+
+export const updateQuizMutation = /* GraphQL */ `
+  mutation UpdateQuiz(
+    $id: ID!
+    $title: String
+    $description: String
+    $length: String
+    $numQuestions: Int
+    $passingScore: Float
+    $status: String
+  ) {
+    updateQuiz(
+      id: $id
+      title: $title
+      description: $description
+      length: $length
+      numQuestions: $numQuestions
+      passingScore: $passingScore
+      status: $status
+    ) {
+      id
+    }
+  }
+`;
+
+export const updateQuestionMutation = /* GraphQL */ `
+  mutation UpdateQuestion(
+    $id: ID!
+    $text: String
+    $correctOption: JSON
+    $type: String
+    $options: JSON
+    $points: Int
+    $hint: String
+    $categories: JSON
+  ) {
+    updateQuestion(
+      id: $id
+      text: $text
+      correctOption: $correctOption
+      type: $type
+      options: $options
+      points: $points
+      hint: $hint
+      categories: $categories
+    ) {
+      id
+    }
+  }
+`;
+
+export const deleteQuestionMutation = /* GraphQL */ `
+  mutation DeleteQuestion($id: ID!) {
+    deleteQuestion(id: $id)
+  }
+`;
+
+export const deleteQuizMutation = /* GraphQL */ `
+  mutation DeleteQuiz($id: ID!) {
+    deleteQuiz(id: $id)
   }
 `;
