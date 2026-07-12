@@ -13,7 +13,8 @@ import {
     ChevronRight,
     Camera,
     ShieldCheck,
-    Languages
+    Languages,
+    Loader2,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
@@ -45,6 +46,10 @@ export default function SettingsPage() {
     const { theme, setTheme } = useTheme()
     const { data: session, isPending } = authClient.useSession()
     const [mounted, setMounted] = React.useState(false)
+    const [uploading, setUploading] = React.useState(false)
+    const [uploadError, setUploadError] = React.useState<string | null>(null)
+    const fileInputRef = React.useRef<HTMLInputElement>(null)
+
     const user = session?.user
     const name = user?.name || "User"
     const email = user?.email || ""
@@ -56,6 +61,69 @@ export default function SettingsPage() {
     React.useEffect(() => {
         setMounted(true)
     }, [])
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploadError(null)
+        setUploading(true)
+
+        try {
+            const formData = new FormData()
+            formData.append("image", file)
+
+            const response = await fetch("/api/user", {
+                method: "POST",
+                body: formData,
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Upload failed")
+            }
+
+            // Update the better-auth session with the new image URL
+            await authClient.updateUser({ image: data.imageUrl })
+        } catch (err) {
+            setUploadError(err instanceof Error ? err.message : "Failed to upload image")
+        } finally {
+            setUploading(false)
+            // Reset the file input so the same file can be re-selected
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ""
+            }
+        }
+    }
+
+    const handleRemoveAvatar = async () => {
+        setUploadError(null)
+        setUploading(true)
+
+        try {
+            const response = await fetch("/api/user", {
+                method: "DELETE",
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to remove image")
+            }
+
+            // Clear the image in the better-auth session
+            await authClient.updateUser({ image: null })
+        } catch (err) {
+            setUploadError(err instanceof Error ? err.message : "Failed to remove image")
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click()
+    }
 
     if (!mounted) {
         return null
@@ -104,22 +172,50 @@ export default function SettingsPage() {
 
                                     <div className="flex flex-col gap-8">
                                         <div className="flex items-center gap-6">
-                                            <div className="relative group cursor-pointer">
+                                            <div className="relative group cursor-pointer" onClick={uploading ? undefined : triggerFileInput}>
                                                 <Avatar className="size-24 shadow-xl ring-4" style={{ "--tw-ring-color": 'var(--surface-200)' } as React.CSSProperties}>
                                                     <AvatarImage src={image} alt={name} />
                                                     <AvatarFallback>{isPending ? "..." : initials}</AvatarFallback>
                                                 </Avatar>
-                                                <div className="absolute inset-0 flex items-center justify-center rounded-full transition-opacity opacity-0 group-hover:opacity-100" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
-                                                    <Camera className="size-6" style={{ color: 'var(--surface-200)' }} />
-                                                </div>
+                                                {uploading && (
+                                                    <div className="absolute inset-0 flex items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
+                                                        <Loader2 className="size-6 animate-spin" style={{ color: 'var(--surface-200)' }} />
+                                                    </div>
+                                                )}
+                                                {!uploading && (
+                                                    <div className="absolute inset-0 flex items-center justify-center rounded-full transition-opacity opacity-0 group-hover:opacity-100" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
+                                                        <Camera className="size-6" style={{ color: 'var(--surface-200)' }} />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex flex-col gap-3">
                                                 <div className="flex gap-3">
-                                                    <Button size="sm" className="rounded-xl font-bold">Change Avatar</Button>
-                                                    <Button size="sm" variant="outline" className="rounded-xl font-bold">Remove</Button>
+                                                    <Button size="sm" className="rounded-xl font-bold" onClick={triggerFileInput} disabled={uploading}>
+                                                        {uploading ? (
+                                                            <>
+                                                                <Loader2 className="mr-2 size-3 animate-spin" />
+                                                                Uploading...
+                                                            </>
+                                                        ) : (
+                                                            "Change Avatar"
+                                                        )}
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={handleRemoveAvatar} disabled={uploading || !image}>
+                                                        Remove
+                                                    </Button>
                                                 </div>
-                                                <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>JPG, GIF or PNG. 1MB Max.</p>
+                                                <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>JPG, PNG, GIF or WebP. 1MB Max.</p>
+                                                {uploadError && (
+                                                    <p className="text-xs" style={{ color: 'var(--color-error)' }}>{uploadError}</p>
+                                                )}
                                             </div>
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/gif,image/webp"
+                                                className="hidden"
+                                                onChange={handleFileSelect}
+                                            />
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
