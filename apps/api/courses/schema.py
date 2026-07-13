@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import strawberry
 from django.utils.dateparse import parse_duration
 
-from dashboard.models import Tutor
+from dashboard.models import Org, Tutor
 from dashboard.schema import TutorType
 from users.schema import StudentType
 
@@ -123,14 +123,19 @@ class CourseType:
 @strawberry.type
 class CourseQuery:
     @strawberry.field
-    def courses(self) -> list[CourseType]:
-        return list(
-            Course.objects.select_related("tutor").prefetch_related(
-                "modules__lessons",
-                "lessons",
-                "enrollments__student",
-            ).order_by("name")
+    def courses(self, owner_user_id: str | None = None) -> list[CourseType]:
+        qs = Course.objects.select_related("tutor").prefetch_related(
+            "modules__lessons",
+            "lessons",
+            "enrollments__student",
         )
+        if owner_user_id:
+            org = Org.objects.filter(owner_user_id=owner_user_id).first()
+            if org:
+                qs = qs.filter(tutor__org=org)
+            else:
+                return []
+        return list(qs.order_by("name"))
 
     @strawberry.field
     def course(self, id: strawberry.ID) -> CourseType | None:

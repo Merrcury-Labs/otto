@@ -6,6 +6,7 @@ from django.db.models import Avg, Count, Q
 from django.utils.dateparse import parse_duration
 from strawberry.scalars import JSON
 
+from dashboard.models import Org
 from courses.schema import CourseType
 from users.schema import StudentType
 
@@ -396,10 +397,18 @@ class QuizQuery:
         self,
         status: ContentStatus | None = None,
         search: str | None = None,
+        owner_user_id: str | None = None,
     ) -> list[QuizType]:
         qs = Quiz.objects.select_related("course").prefetch_related(
             "questions", "attempts__student", "progress_records__student",
-        ).order_by("title")
+        )
+
+        if owner_user_id:
+            org = Org.objects.filter(owner_user_id=owner_user_id).first()
+            if org:
+                qs = qs.filter(course__tutor__org=org)
+            else:
+                return []
 
         if status is not None:
             qs = qs.filter(status=status.value)
@@ -409,7 +418,7 @@ class QuizQuery:
                 | Q(description__icontains=search)
                 | Q(author__icontains=search)
             )
-        return list(qs)
+        return list(qs.order_by("title"))
 
     @strawberry.field
     def quiz(self, id: strawberry.ID) -> QuizType | None:
@@ -421,11 +430,28 @@ class QuizQuery:
         )
 
     @strawberry.field
-    def quiz_stats(self) -> QuizStatsType:
-        total = Quiz.objects.count()
-        published = Quiz.objects.filter(status=Quiz.PUBLISHED).count()
-        attempt_count = Attempt.objects.count()
-        avg_result = Attempt.objects.aggregate(avg=Avg("score"))
+    def quiz_stats(self, owner_user_id: str | None = None) -> QuizStatsType:
+        qs = Quiz.objects.all()
+        if owner_user_id:
+            org = Org.objects.filter(owner_user_id=owner_user_id).first()
+            if org:
+                qs = qs.filter(course__tutor__org=org)
+            else:
+                return QuizStatsType(total=0, published=0, attempts=0, average_score=0.0)
+
+        total = qs.count()
+        published = qs.filter(status=Quiz.PUBLISHED).count()
+
+        attempt_qs = Attempt.objects.all()
+        if owner_user_id:
+            org = Org.objects.filter(owner_user_id=owner_user_id).first()
+            if org:
+                attempt_qs = attempt_qs.filter(quiz__course__tutor__org=org)
+            else:
+                attempt_qs = Attempt.objects.none()
+
+        attempt_count = attempt_qs.count()
+        avg_result = attempt_qs.aggregate(avg=Avg("score"))
         average_score = round(avg_result["avg"], 2) if avg_result["avg"] is not None else 0.0
         return QuizStatsType(
             total=total,

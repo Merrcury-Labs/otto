@@ -23,6 +23,7 @@ class OrgType:
     description: str
     logo: str
     website: str | None
+    owner_user_id: str | None
 
     @strawberry.field
     def tutors(self) -> list[TutorType]:
@@ -36,8 +37,19 @@ class DashboardQuery:
         return list(Org.objects.prefetch_related("tutors").order_by("name"))
 
     @strawberry.field
-    def tutors(self) -> list[TutorType]:
-        return list(Tutor.objects.select_related("org").order_by("name"))
+    def tutors(self, owner_user_id: str | None = None) -> list[TutorType]:
+        qs = Tutor.objects.select_related("org")
+        if owner_user_id:
+            org = Org.objects.filter(owner_user_id=owner_user_id).first()
+            if org:
+                qs = qs.filter(org=org)
+            else:
+                return []
+        return list(qs.order_by("name"))
+
+    @strawberry.field
+    def org_by_owner(self, owner_user_id: str) -> OrgType | None:
+        return Org.objects.filter(owner_user_id=owner_user_id).first()
 
 
 @strawberry.type
@@ -49,12 +61,14 @@ class DashboardMutation:
         description: str | None = None,
         logo: str = "",
         website: str | None = None,
+        owner_user_id: str | None = None,
     ) -> OrgType:
         return Org.objects.create(
             name=name,
             description=description,
             logo=logo,
             website=website,
+            owner_user_id=owner_user_id,
         )
 
     @strawberry.mutation
