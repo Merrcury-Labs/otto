@@ -1,28 +1,16 @@
 "use server";
 
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
-import { backendGraphqlFetch } from "@/lib/graphql/backend";
-
-const registerStudentMutation = /* GraphQL */ `
-  mutation RegisterStudent($name: String!, $email: String!, $userId: String) {
-    registerStudent(name: $name, email: $email, userId: $userId) {
-      id
-      name
-      email
-      userID
-    }
-  }
-`;
 
 export async function signUpAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const name = formData.get("name") as string;
 
-  const result = await auth.api.signUpEmail({
+  await auth.api.signUpEmail({
     body: {
       email,
       password,
@@ -30,17 +18,8 @@ export async function signUpAction(formData: FormData) {
     },
   });
 
-  await backendGraphqlFetch({
-    query: registerStudentMutation,
-    operationName: "RegisterStudent",
-    variables: {
-      name,
-      email,
-      userId: result.user.id,
-    },
-  });
-
-  redirect("/");
+  // Redirect to onboarding — role selection happens there
+  redirect("/onboarding");
 }
 
 export async function signInAction(formData: FormData) {
@@ -54,10 +33,17 @@ export async function signInAction(formData: FormData) {
     },
   });
 
+  // After sign-in, redirect to home.
+  // The middleware will check for the role cookie and redirect
+  // to /onboarding if the user hasn't selected a role yet.
   redirect("/");
 }
 
 export async function signOutAction() {
+  // Clear the role cookie on sign out
+  const cookieStore = await cookies();
+  cookieStore.delete("user_role");
+
   await auth.api.signOut({
     headers: await headers(),
   });

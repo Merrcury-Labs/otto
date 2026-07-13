@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   executeGraphqlRequest,
   type GraphqlRequestBody,
 } from "../../../lib/graphql/schema";
+import { auth } from "@/lib/auth";
 
 const MAX_GRAPHQL_BODY_BYTES = 1_250_000;
 
@@ -38,7 +39,14 @@ const readGraphqlRequestBody = async (
   return JSON.parse(rawBody) as GraphqlRequestBody;
 };
 
-export async function POST(request: Request) {
+// Operations that should be scoped to the user's org
+const ORG_SCOPED_OPERATIONS = new Set([
+  "AdminCourses",
+  "CourseList",
+  "AdminQuizzes",
+]);
+
+export async function POST(request: NextRequest) {
   let body: GraphqlRequestBody;
 
   try {
@@ -55,6 +63,21 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Inject ownerUserId for org-scoped operations
+    const operationName = body.operationName;
+    if (operationName && ORG_SCOPED_OPERATIONS.has(operationName)) {
+      const session = await auth.api.getSession({
+        headers: request.headers,
+      });
+
+      if (session?.user?.id) {
+        body.variables = {
+          ...body.variables,
+          ownerUserId: session.user.id,
+        };
+      }
+    }
+
     const { result, status } = await executeGraphqlRequest(body, {
       headers: request.headers,
     });
