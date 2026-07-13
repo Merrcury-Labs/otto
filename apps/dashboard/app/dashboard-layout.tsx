@@ -22,6 +22,7 @@ import {
   ChartLine,
   Users,
   BookOpen,
+  Cards,
   Faders,
   House,
   TrendUp,
@@ -202,6 +203,17 @@ export function DashboardLayout({
                   <a href="/quizzes">
                     <Brain className="h-4 w-4 text-sidebar-foreground" />
                     <span className="text-sidebar-foreground">Quizzes</span>
+                  </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                >
+                  <a href="/flashcards">
+                    <Cards className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Flash Cards</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
