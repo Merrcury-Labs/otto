@@ -49,3 +49,30 @@ export const editRequestSchema = z.object({
 });
 
 export type EditRequest = z.infer<typeof editRequestSchema>;
+
+/**
+ * Schema for AI flashcard generation requests.
+ */
+export const flashcardGenerationSchema = z.object({
+  cards: z.array(
+    z.object({
+      front: z.string().describe("The question or prompt side of the flashcard"),
+      back: z.string().describe("The answer or explanation side of the flashcard"),
+      hint: z.string().optional().describe("An optional hint to help the student"),
+      tags: z.array(z.string()).optional().describe("Relevant topic tags"),
+    })
+  ),
+});
+
+export const generateFlashcardsRequestSchema = z.object({
+  lessonContent: z.string().min(10).max(10000),
+  lessonTitle: z.string().min(1).max(200),
+  cardCount: z.number().min(1).max(20).default(5),
+  context: z
+    .enum(["lesson", "quiz", "course-description", "general"])
+    .default("lesson"),
+});
+
+export type GenerateFlashcardsRequest = z.infer<
+  typeof generateFlashcardsRequestSchema
+>;

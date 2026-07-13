@@ -2,7 +2,7 @@
  * System prompts for AI editor features, context-aware by content type.
  */
 
-export type ContentContext = "lesson" | "quiz" | "course-description" | "general";
+export type ContentContext = "lesson" | "quiz" | "course-description" | "general" | "flashcards";
 
 const contextPrompts: Record<ContentContext, string> = {
   lesson:
@@ -13,6 +13,8 @@ const contextPrompts: Record<ContentContext, string> = {
     "You are a course marketing writer for an LMS platform. Write compelling, concise descriptions that clearly communicate what students will learn. Use an encouraging and professional tone.",
   general:
     "You are a helpful writing assistant. Produce clear, well-structured text. Follow the user's intent precisely.",
+  flashcards:
+    "You are an educational content designer for an LMS platform. Generate effective flashcards that test key concepts. Each card's front should be a clear question or prompt, and the back should be a concise but complete answer. Cards should cover distinct concepts, not repeat information.",
 };
 
 export function getSystemPrompt(context: ContentContext = "general"): string {
@@ -37,6 +39,8 @@ export const actionPrompts = {
     "Rewrite the selected text with improved clarity, flow, and style. Preserve the original meaning and key information.",
   "fix-grammar":
     "Fix grammar, spelling, and punctuation errors in the selected text. Make minimal changes — only correct actual errors.",
+  "generate-flashcards":
+    "Generate flashcards from the provided lesson content. Each card should test a distinct concept. Front sides should be specific questions, back sides should be clear answers. Include hints for harder concepts. Cover the most important concepts from the content.",
 } as const;
 
 export type AIAction = keyof typeof actionPrompts;
