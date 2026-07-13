@@ -1,6 +1,8 @@
 import {
   adminCoursesQuery,
   courseListQuery,
+  lessonsQuery,
+  lessonQuery,
   createCourseMutation,
   createLessonMutation,
   createModuleMutation,
@@ -43,6 +45,8 @@ const registeredOperations = new Map(
   Object.entries({
     AdminCourses: adminCoursesQuery,
     CourseList: courseListQuery,
+    Lessons: lessonsQuery,
+    Lesson: lessonQuery,
     AdminQuizzes: adminQuizzesQuery,
     QuizDetail: quizDetailQuery,
     CreateQuiz: createQuizMutation,

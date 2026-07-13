@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { OttoEditor } from "@repo/editor";
 import {
   Card,
   CardContent,
@@ -449,13 +450,14 @@ export default function CreateCoursePage() {
                 >
                   Course Description *
                 </label>
-              <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              <OttoEditor
+                  content={formData.description}
+                  onChange={(json) => setFormData({ ...formData, description: json })}
                   placeholder="Describe what students will learn in this course"
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none bg-surface-100 border border-border/10 text-foreground"
-                  required
+                  showToolbar
+                  minHeight="120px"
+                  aiEnabled
+                  format="auto"
               />
             </div>
 

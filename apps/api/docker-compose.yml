@@ -18,6 +18,20 @@ services:
       db:
         condition: service_healthy
 
+  collab:
+    build:
+      context: ../../
+      dockerfile: apps/collab-server/Dockerfile
+    ports:
+      - "1234:1234"
+    environment:
+      COLLAB_SECRET: ${COLLAB_SECRET:-dev-secret-change-me}
+      COLLAB_PORT: "1234"
+      DATABASE_URL: postgres://${POSTGRES_USER:-otto_user}:${POSTGRES_PASSWORD:-otto_password}@db:5432/${POSTGRES_DB:-otto_lms}
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:16-alpine
     volumes:

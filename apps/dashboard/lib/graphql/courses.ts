@@ -202,3 +202,45 @@ export const updateLessonMutation = /* GraphQL */ `
     }
   }
 `;
+
+export const lessonsQuery = /* GraphQL */ `
+  query Lessons {
+    lessons {
+      id
+      title
+      content
+      sectionName
+      videoUrl
+      length
+      course {
+        id
+        name
+      }
+      module {
+        id
+        title
+      }
+    }
+  }
+`;
+
+export const lessonQuery = /* GraphQL */ `
+  query Lesson($id: ID!) {
+    lesson(id: $id) {
+      id
+      title
+      content
+      sectionName
+      videoUrl
+      length
+      course {
+        id
+        name
+      }
+      module {
+        id
+        title
+      }
+    }
+  }
+`;

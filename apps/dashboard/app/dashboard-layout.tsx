@@ -25,6 +25,7 @@ import {
   House,
   TrendUp,
   Brain,
+  Notebook,
 } from "@phosphor-icons/react";
 import { ThemeToggle } from "../components/theme-toggle";
 
@@ -136,6 +137,17 @@ export function DashboardLayout({
                     <Brain className="h-4 w-4 text-sidebar-foreground" />
                     <span className="text-sidebar-foreground">Quizzes</span>
                   </a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  className="cursor-btn-hover focus-warm transition-all duration-150"
+                >
+                  <Link href="/editor">
+                    <Notebook className="h-4 w-4 text-sidebar-foreground" />
+                    <span className="text-sidebar-foreground">Editor</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

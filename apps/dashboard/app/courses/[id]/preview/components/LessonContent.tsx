@@ -8,6 +8,8 @@ import {
   FileText,
   Play,
 } from "@phosphor-icons/react";
+import { OttoEditor } from "@repo/editor";
+import { isProsemirrorDoc } from "@repo/editor/serialization";
 import { MarkdownPreview } from "../../../components/lesson-modal/MarkdownPreview";
 import type { Lesson } from "../../../types";
 import { getLessonTypeLabel, getYouTubeEmbedUrl } from "../../../utils";
@@ -149,10 +151,28 @@ function TextLesson({ lesson }: { lesson: Lesson }) {
     );
   }
 
+  // Check if content is ProseMirror JSON or legacy markdown
+  const isProsemirror = (() => {
+    try {
+      return isProsemirrorDoc(JSON.parse(lesson.content));
+    } catch {
+      return false;
+    }
+  })();
+
   return (
     <div className="mx-auto w-full max-w-4xl">
       <div className="rounded-lg border border-border/10 bg-surface-100 p-6 shadow-sm md:p-8">
-        <MarkdownPreview content={lesson.content} />
+        {isProsemirror ? (
+          <OttoEditor
+            content={lesson.content}
+            editable={false}
+            showToolbar={false}
+            format="prosemirror"
+          />
+        ) : (
+          <MarkdownPreview content={lesson.content} />
+        )}
       </div>
     </div>
   );
