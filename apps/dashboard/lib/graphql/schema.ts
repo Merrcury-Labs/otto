@@ -15,6 +15,16 @@ import {
   createOrgMutation,
 } from "./orgs";
 import {
+  adminFlashcardDecksQuery,
+  flashcardDeckDetailQuery,
+  createFlashcardDeckMutation,
+  updateFlashcardDeckMutation,
+  deleteFlashcardDeckMutation,
+  createFlashcardMutation,
+  updateFlashcardMutation,
+  deleteFlashcardMutation,
+} from "./flashcards";
+import {
   adminQuizzesQuery,
   createQuizMutation,
   createQuestionMutation,
@@ -51,6 +61,14 @@ const registeredOperations = new Map(
     CourseList: courseListQuery,
     Lessons: lessonsQuery,
     Lesson: lessonQuery,
+    AdminFlashcardDecks: adminFlashcardDecksQuery,
+    FlashcardDeckDetail: flashcardDeckDetailQuery,
+    CreateFlashcardDeck: createFlashcardDeckMutation,
+    UpdateFlashcardDeck: updateFlashcardDeckMutation,
+    DeleteFlashcardDeck: deleteFlashcardDeckMutation,
+    CreateFlashcard: createFlashcardMutation,
+    UpdateFlashcard: updateFlashcardMutation,
+    DeleteFlashcard: deleteFlashcardMutation,
     AdminQuizzes: adminQuizzesQuery,
     QuizDetail: quizDetailQuery,
     CreateQuiz: createQuizMutation,

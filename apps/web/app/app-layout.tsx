@@ -20,7 +20,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   // Immersive full-height layout for learn & quiz-taking pages — no sidebar, no header
-  const isImmersivePage = pathname.includes("/learn") || pathname.includes("/take")
+  const isImmersivePage = pathname.includes("/learn") || pathname.includes("/take") || pathname.includes("/study")
 
   if (isImmersivePage) {
     return <>{children}</>
