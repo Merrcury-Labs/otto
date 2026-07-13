@@ -14,8 +14,8 @@ import {
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
-  // No layout for auth pages
-  if (pathname === "/login" || pathname === "/signup") {
+  // No layout for auth pages and onboarding
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/onboarding") {
     return <>{children}</>
   }
 

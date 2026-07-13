@@ -1,6 +1,6 @@
 export const adminCoursesQuery = /* GraphQL */ `
-  query AdminCourses {
-    courses {
+  query AdminCourses($ownerUserId: String) {
+    courses(ownerUserId: $ownerUserId) {
       id
       title: name
       description
@@ -35,8 +35,8 @@ export const adminCoursesQuery = /* GraphQL */ `
 
 /** Lightweight query for course dropdowns — only id and title. */
 export const courseListQuery = /* GraphQL */ `
-  query CourseList {
-    courses {
+  query CourseList($ownerUserId: String) {
+    courses(ownerUserId: $ownerUserId) {
       id
       title: name
     }

@@ -1,6 +1,6 @@
 export const adminQuizzesQuery = /* GraphQL */ `
-  query AdminQuizzes($status: ContentStatus, $search: String) {
-    quizzes(status: $status, search: $search) {
+  query AdminQuizzes($status: ContentStatus, $search: String, $ownerUserId: String) {
+    quizzes(status: $status, search: $search, ownerUserId: $ownerUserId) {
       id
       title
       description
@@ -23,7 +23,7 @@ export const adminQuizzesQuery = /* GraphQL */ `
         hint
       }
     }
-    quizStats {
+    quizStats(ownerUserId: $ownerUserId) {
       total
       published
       attempts

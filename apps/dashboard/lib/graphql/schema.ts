@@ -11,6 +11,10 @@ import {
   updateModuleMutation,
 } from "./courses";
 import {
+  orgByOwnerQuery,
+  createOrgMutation,
+} from "./orgs";
+import {
   adminQuizzesQuery,
   createQuizMutation,
   createQuestionMutation,
@@ -61,6 +65,8 @@ const registeredOperations = new Map(
     UpdateModule: updateModuleMutation,
     CreateLesson: createLessonMutation,
     UpdateLesson: updateLessonMutation,
+    OrgByOwner: orgByOwnerQuery,
+    CreateOrg: createOrgMutation,
   }).map(([operationName, query]) => [
     operationName,
     query.replace(/\s+/g, " ").trim(),
