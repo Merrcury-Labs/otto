@@ -10,6 +10,8 @@ import {
   BookOpen,
   Clock,
   Flame,
+  Plus,
+  Settings2,
 } from "lucide-react";
 import { graphqlFetch } from "@/lib/graphql/client";
 import { publishedFlashcardDecksQuery } from "@/lib/graphql/flashcards";
@@ -69,21 +71,30 @@ export default function FlashcardsPage() {
     <div className="mx-auto max-w-7xl animate-in fade-in duration-500">
       <div className="flex flex-col gap-8 pb-20">
         {/* Header */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            <Layers className="size-3" />
-            Study Hub
+        <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              <Layers className="size-3" />
+              Study Hub
+            </div>
+            <h1
+              className="text-section text-foreground"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Flash Cards
+            </h1>
+            <p className="max-w-lg text-[15px] text-muted-foreground leading-relaxed">
+              Master concepts with spaced repetition. Flip, rate your confidence,
+              and let the algorithm optimize your review schedule.
+            </p>
           </div>
-          <h1
-            className="text-section text-foreground"
-            style={{ fontFamily: "var(--font-display)" }}
+          <a
+            href="/flashcards/create"
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90"
           >
-            Flash Cards
-          </h1>
-          <p className="max-w-lg text-[15px] text-muted-foreground leading-relaxed">
-            Master concepts with spaced repetition. Flip, rate your confidence,
-            and let the algorithm optimize your review schedule.
-          </p>
+            <Plus className="size-3.5" />
+            Create Deck
+          </a>
         </div>
 
         {/* Quick Stats */}
@@ -181,15 +192,23 @@ export default function FlashcardsPage() {
                   </div>
                 )}
 
-                {/* Study button */}
-                <a
-                  href={`/flashcards/${deck.id}/study`}
-                  className="mt-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90"
-                >
-                  <Sparkles className="size-3.5" />
-                  Study Now
-                  <ArrowRight className="size-3.5" />
-                </a>
+                {/* Action buttons */}
+                <div className="mt-auto flex items-center gap-2">
+                  <a
+                    href={`/flashcards/${deck.id}/study`}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90"
+                  >
+                    <Sparkles className="size-3.5" />
+                    Study Now
+                    <ArrowRight className="size-3.5" />
+                  </a>
+                  <a
+                    href={`/flashcards/${deck.id}`}
+                    className="flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
+                  >
+                    <Settings2 className="size-3.5" />
+                  </a>
+                </div>
               </div>
             ))}
           </div>

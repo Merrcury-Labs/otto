@@ -67,3 +67,103 @@ export const reviewFlashcardMutation = /* GraphQL */ `
     }
   }
 `;
+
+export const createFlashcardDeckMutation = /* GraphQL */ `
+  mutation CreateFlashcardDeck(
+    $courseId: ID!
+    $title: String!
+    $description: String
+    $status: String
+  ) {
+    createFlashcardDeck(
+      courseId: $courseId
+      title: $title
+      description: $description
+      status: $status
+    ) {
+      id
+    }
+  }
+`;
+
+export const createFlashcardMutation = /* GraphQL */ `
+  mutation CreateFlashcard(
+    $deckId: ID!
+    $front: String!
+    $back: String!
+    $position: Int
+    $hint: String
+    $tags: JSON
+  ) {
+    createFlashcard(
+      deckId: $deckId
+      front: $front
+      back: $back
+      position: $position
+      hint: $hint
+      tags: $tags
+    ) {
+      id
+    }
+  }
+`;
+
+export const updateFlashcardDeckMutation = /* GraphQL */ `
+  mutation UpdateFlashcardDeck(
+    $id: ID!
+    $title: String
+    $description: String
+    $status: String
+  ) {
+    updateFlashcardDeck(
+      id: $id
+      title: $title
+      description: $description
+      status: $status
+    ) {
+      id
+      title
+      description
+      status
+    }
+  }
+`;
+
+export const updateFlashcardMutation = /* GraphQL */ `
+  mutation UpdateFlashcard(
+    $id: ID!
+    $front: String
+    $back: String
+    $position: Int
+    $hint: String
+    $tags: JSON
+  ) {
+    updateFlashcard(
+      id: $id
+      front: $front
+      back: $back
+      position: $position
+      hint: $hint
+      tags: $tags
+    ) {
+      id
+      front
+      back
+      position
+      hint
+      tags
+    }
+  }
+`;
+
+export const deleteFlashcardDeckMutation = /* GraphQL */ `
+  mutation DeleteFlashcardDeck($id: ID!) {
+    deleteFlashcardDeck(id: $id)
+  }
+`;
+
+export const deleteFlashcardMutation = /* GraphQL */ `
+  mutation DeleteFlashcard($id: ID!) {
+    deleteFlashcard(id: $id)
+  }
+`;
