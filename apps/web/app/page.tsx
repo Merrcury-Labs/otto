@@ -34,7 +34,7 @@ export default function Home() {
         </section>
 
         <section className={styles.cta}>
-          <Button appName="web" className={styles.primaryButton}>
+          <Button className={styles.primaryButton}>
             Continue Learning
           </Button>
         </section>

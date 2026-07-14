@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import {
     BookOpen,
     Clock,
     PlayCircle,
     Search,
     Star,
+    Users,
     X
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -15,30 +15,31 @@ import { Button } from "@/components/ui/button"
 import { courses } from "@/lib/data"
 import { graphqlFetch } from "@/lib/graphql/client"
 import { publishedCoursesQuery } from "@/lib/graphql/courses"
+import { type BackendCourse, normalizeCourse, type DisplayCourse } from "@/lib/graphql/normalize"
 
-type Course = {
-    id: number | string
-    title: string
-    description: string
-    instructor: string
-    duration: string
-    level: string
-    category: string
-    status: string
-    progress: number
-    rating: number
-    lessons: number
-    image: string
-}
+type Course = DisplayCourse
 
-type CoursesGraphqlResponse = {
-    data?: {
-        courses: Course[]
-    }
-    errors?: Array<{ message: string }>
-}
+const initialPublishedCourses: Course[] = courses
+    .filter((course) => course.status === "published")
+    .map((c) => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        instructor: c.instructor,
+        duration: c.duration,
+        level: c.level,
+        category: c.category,
+        status: c.status.toUpperCase(),
+        progress: c.progress,
+        rating: c.rating,
+        lessons: c.lessons,
+        thumbnail: c.image,
+        image: c.image,
+        students: 0,
+        prerequisites: [],
+        modules: [],
+    }))
 
-const initialPublishedCourses = courses.filter((course) => course.status === "published")
 const levels = ["All", "Beginner", "Intermediate", "Advanced"]
 
 export default function CoursesPage() {
@@ -51,20 +52,22 @@ export default function CoursesPage() {
         let isMounted = true
 
         async function loadPublishedCourses() {
-            const result = await graphqlFetch<NonNullable<CoursesGraphqlResponse["data"]>>({
-                query: publishedCoursesQuery,
-            })
+            try {
+                const result = await graphqlFetch<{ courses: BackendCourse[] }>({
+                    query: publishedCoursesQuery,
+                })
 
-            if (isMounted) {
-                setCourseList(result.courses)
+                if (isMounted) {
+                    setCourseList(result.courses.map(normalizeCourse))
+                }
+            } catch {
+                if (isMounted) {
+                    setCourseList(initialPublishedCourses)
+                }
             }
         }
 
-        loadPublishedCourses().catch(() => {
-            if (isMounted) {
-                setCourseList(initialPublishedCourses)
-            }
-        })
+        loadPublishedCourses()
 
         return () => {
             isMounted = false
@@ -162,13 +165,17 @@ export default function CoursesPage() {
                         >
                             {/* Image Section */}
                             <div className="relative aspect-video overflow-hidden">
-                                <Image
-                                    src={course.image}
-                                    alt={course.title}
-                                    fill
-                                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-                                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
+                                {course.thumbnail || course.image ? (
+                                    <img
+                                        src={course.thumbnail || course.image}
+                                        alt={course.title}
+                                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    />
+                                ) : (
+                                    <div className="flex h-full w-full items-center justify-center bg-muted">
+                                        <BookOpen className="size-10 text-muted-foreground" />
+                                    </div>
+                                )}
                                 <div className="absolute left-2 top-2">
                                     <span className="rounded-full bg-background/90 px-2.5 py-0.5 text-xs font-medium backdrop-blur-sm">
                                         {course.category}
@@ -184,9 +191,18 @@ export default function CoursesPage() {
                                         }`}>
                                         {course.level}
                                     </span>
-                                    <div className="flex items-center gap-1 text-sm font-medium">
-                                        <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
-                                        {course.rating}
+                                    <div className="flex items-center gap-2 text-sm font-medium">
+                                        {course.rating > 0 ? (
+                                            <>
+                                                <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
+                                                {course.rating}
+                                            </>
+                                        ) : course.students > 0 ? (
+                                            <>
+                                                <Users className="size-3.5 text-muted-foreground" />
+                                                <span className="text-xs">{course.students.toLocaleString()}</span>
+                                            </>
+                                        ) : null}
                                     </div>
                                 </div>
 
@@ -197,27 +213,25 @@ export default function CoursesPage() {
 
                                 <div className="mb-4 mt-auto flex items-center gap-4 text-xs text-muted-foreground">
                                     <div className="flex items-center gap-1">
-                                        <Clock className="size-3.5" />
-                                        {course.duration}
-                                    </div>
-                                    <div className="flex items-center gap-1">
                                         <PlayCircle className="size-3.5" />
                                         {course.lessons} Lessons
                                     </div>
                                 </div>
 
                                 {/* Progress Bar */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="font-medium">{course.progress}% Complete</span>
+                                {course.progress > 0 && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="font-medium">{course.progress}% Complete</span>
+                                        </div>
+                                        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                                            <div
+                                                className="h-full bg-primary transition-all"
+                                                style={{ width: `${course.progress}%` }}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                                        <div
-                                            className="h-full bg-primary transition-all"
-                                            style={{ width: `${course.progress}%` }}
-                                        />
-                                    </div>
-                                </div>
+                                )}
 
                                 <a
                                     href={`/courses/${course.id}`}

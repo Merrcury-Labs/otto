@@ -1,0 +1,8 @@
+Django==6.0.5
+django-cors-headers
+djangorestframework==3.14.0
+psycopg2-binary
+strawberry-graphql
+strawberry-graphql-django
+pytest
+python-dotenv

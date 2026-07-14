@@ -1,0 +1,50 @@
+services:
+  web:
+    build: .
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+      POSTGRES_DB: ${POSTGRES_DB:-otto_lms}
+      POSTGRES_USER: ${POSTGRES_USER:-otto_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-otto_password}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  collab:
+    build:
+      context: ../../
+      dockerfile: apps/collab-server/Dockerfile
+    ports:
+      - "1234:1234"
+    environment:
+      COLLAB_SECRET: ${COLLAB_SECRET:-dev-secret-change-me}
+      COLLAB_PORT: "1234"
+      DATABASE_URL: postgres://${POSTGRES_USER:-otto_user}:${POSTGRES_PASSWORD:-otto_password}@db:5432/${POSTGRES_DB:-otto_lms}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-otto_lms}
+      POSTGRES_USER: ${POSTGRES_USER:-otto_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-otto_password}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

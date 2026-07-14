@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -24,17 +25,147 @@ import {
   CheckCircle,
   Circle,
   XCircle,
+  BookOpen,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
-import { CoursePreviewModal } from "./components/CoursePreviewModal";
-import { courses } from "./data";
 import type { Course } from "./types";
+import { graphqlFetch } from "../../lib/graphql/client";
+import { adminCoursesQuery } from "../../lib/graphql/courses";
+
+type CourseStats = {
+  total: number;
+  published: number;
+  students: number;
+  averageProgress: number;
+};
+
+type BackendCourse = {
+  id: string;
+  title: string;
+  description: string;
+  tutor: string;
+  thumbnail?: string;
+  image?: string;
+  lessonCount: number;
+  level: string;
+  category: string;
+  prerequisites?: string;
+  students: number;
+};
+
+type AdminCoursesData = {
+  courses: BackendCourse[];
+};
+
+const emptyCourseStats: CourseStats = {
+  total: 0,
+  published: 0,
+  students: 0,
+  averageProgress: 0,
+};
+
+const parseLines = (value?: string) =>
+  value
+    ?.split(/\r?\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean) ?? [];
+
+const getImageUrl = (value?: string) => {
+  const imageUrl = value
+    ?.match(/https?:\/\/\S+|\/\/\S+|\S+unsplash\.com\S*/i)?.[0]
+    .trim()
+    .replace(/[),.;]+$/, "");
+
+  if (!imageUrl) return "";
+  if (imageUrl.startsWith("//")) return `https:${imageUrl}`;
+  if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("data:")) {
+    return imageUrl;
+  }
+  if (imageUrl.includes("unsplash.com")) return `https://${imageUrl}`;
+
+  return imageUrl;
+};
+
+const getUnsplashPhotoId = (url: URL) => {
+  if (url.hostname !== "unsplash.com") return "";
+
+  const [, resource, slug] = url.pathname.split("/");
+
+  if (resource !== "photos" || !slug) return "";
+
+  return slug.split("-").at(-1) ?? "";
+};
+
+const getDisplayableImageUrl = (value: string) => {
+  if (!value) return "";
+  if (value.startsWith("data:image/") || value.startsWith("/")) return value;
+
+  try {
+    const url = new URL(value);
+    const imageHosts = ["images.unsplash.com", "plus.unsplash.com"];
+
+    if (
+      imageHosts.includes(url.hostname) ||
+      /\.(avif|gif|jpe?g|png|webp)$/i.test(url.pathname)
+    ) {
+      return value;
+    }
+
+    const unsplashPhotoId = getUnsplashPhotoId(url);
+
+    if (unsplashPhotoId) {
+      return `https://unsplash.com/photos/${unsplashPhotoId}/download?force=true&w=900`;
+    }
+  } catch {
+    return "";
+  }
+
+  return "";
+};
+
+const getCourseImageUrl = (course: BackendCourse) =>
+  [course.thumbnail, course.image]
+    .map(getImageUrl)
+    .map(getDisplayableImageUrl)
+    .find(Boolean) ?? "";
+
+const getCourseStats = (courses: Course[]): CourseStats => ({
+  total: courses.length,
+  published: courses.filter((course) => course.status === "published").length,
+  students: courses.reduce((total, course) => total + course.students, 0),
+  averageProgress: courses.length
+    ? Math.round(
+        courses.reduce((total, course) => total + course.progress, 0) /
+          courses.length
+      )
+    : 0,
+});
+
+const normalizeCourse = (course: BackendCourse): Course => ({
+  id: course.id,
+  title: course.title,
+  description: course.description,
+  status: "published",
+  students: course.students,
+  quizzes: 0,
+  progress: 0,
+  duration: `${course.lessonCount} lessons`,
+  createdAt: "",
+  updatedAt: "",
+  thumbnail: getCourseImageUrl(course),
+  prerequisites: parseLines(course.prerequisites),
+  tags: [course.category, course.level].filter(Boolean),
+  modules: [],
+});
 
 export default function CoursesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("published");
-  const [previewCourse, setPreviewCourse] = useState<Course | null>(null);
+  const [courseList, setCourseList] = useState<Course[]>([]);
+  const [courseStats, setCourseStats] = useState<CourseStats>(emptyCourseStats);
+  const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [courseError, setCourseError] = useState<string | null>(null);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -67,17 +198,69 @@ export default function CoursesPage() {
     );
   };
 
-  const filteredCourses = courses.filter((course) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourses() {
+      const result = await graphqlFetch<AdminCoursesData>({
+        query: adminCoursesQuery,
+      });
+
+      if (isMounted) {
+        const courses = result.courses.map(normalizeCourse);
+
+        setCourseList(courses);
+        setCourseStats(getCourseStats(courses));
+        setCourseError(null);
+      }
+    }
+
+    loadCourses().catch((error) => {
+      if (isMounted) {
+        setCourseList([]);
+        setCourseStats(emptyCourseStats);
+        setCourseError(
+          error instanceof Error ? error.message : "Unable to load courses."
+        );
+      }
+    }).finally(() => {
+      if (isMounted) {
+        setIsLoadingCourses(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredCourses = useMemo(() => courseList.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       course.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus =
       statusFilter === "all" || course.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [courseList, searchQuery, statusFilter]);
 
   const CourseCard = ({ course }: { course: Course }) => (
-    <Card className="cursor-card hover:cursor-card-hover transition-all duration-200 group bg-card rounded-lg">
+    <Card className="cursor-card hover:cursor-card-hover transition-all duration-200 group overflow-hidden bg-card rounded-lg">
+      <div className="relative h-40 w-full bg-surface-100">
+        {course.thumbnail ? (
+          <Image
+            src={course.thumbnail}
+            alt={`${course.title} thumbnail`}
+            className="object-cover"
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <BookOpen className="h-8 w-8" />
+          </div>
+        )}
+      </div>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -139,15 +322,14 @@ export default function CoursesPage() {
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => setPreviewCourse(course)}
+              <a
+                href={`/courses/${course.id}/preview`}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
-                title="View"
+                title="Preview"
                 aria-label={`Preview ${course.title}`}
               >
                 <Eye className="h-4 w-4 text-muted-foreground" />
-              </button>
+              </a>
               <a
                 href={`/courses/${course.id}/edit`}
                 className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
@@ -173,6 +355,22 @@ export default function CoursesPage() {
     <div
       className="flex items-center gap-4 p-4 border-b cursor-btn-hover focus-warm transition-all duration-150 hover:bg-accent border-border/10"
     >
+      <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-md bg-surface-100">
+        {course.thumbnail ? (
+          <Image
+            src={course.thumbnail}
+            alt={`${course.title} thumbnail`}
+            className="object-cover"
+            fill
+            sizes="96px"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            <BookOpen className="h-5 w-5" />
+          </div>
+        )}
+      </div>
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <h3
@@ -213,15 +411,14 @@ export default function CoursesPage() {
         </div>
         {getStatusBadge(course.status)}
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setPreviewCourse(course)}
+          <a
+            href={`/courses/${course.id}/preview`}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
-            title="View"
+            title="Preview"
             aria-label={`Preview ${course.title}`}
           >
             <Eye className="h-4 w-4 text-muted-foreground" />
-          </button>
+          </a>
           <a
             href={`/courses/${course.id}/edit`}
             className="p-1.5 cursor-btn-hover focus-warm transition-all duration-150 rounded-md"
@@ -284,7 +481,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {courses.length}
+              {courseStats.total}
             </div>
           </CardContent>
         </Card>
@@ -303,7 +500,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {courses.filter((c) => c.status === "published").length}
+              {courseStats.published}
             </div>
           </CardContent>
         </Card>
@@ -322,7 +519,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {courses.reduce((acc, course) => acc + course.students, 0)}
+              {courseStats.students}
             </div>
           </CardContent>
         </Card>
@@ -341,11 +538,7 @@ export default function CoursesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {Math.round(
-                courses.reduce((acc, course) => acc + course.progress, 0) /
-                  courses.length
-              )}
-              %
+              {courseStats.averageProgress}%
             </div>
           </CardContent>
         </Card>
@@ -405,7 +598,22 @@ export default function CoursesPage() {
             : "space-y-2"
         }`}
       >
-        {filteredCourses.length > 0 ? (
+        {isLoadingCourses ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Loading courses
+            </h3>
+          </div>
+        ) : courseError ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Could not load courses
+            </h3>
+            <p>{courseError}</p>
+          </div>
+        ) : filteredCourses.length > 0 ? (
           filteredCourses.map((course) =>
             viewMode === "grid" ? (
               <CourseCard key={course.id} course={course} />
@@ -428,7 +636,7 @@ export default function CoursesPage() {
       {filteredCourses.length > 0 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {filteredCourses.length} of {courses.length} courses
+            Showing {filteredCourses.length} of {courseList.length} courses
           </p>
           <div className="flex gap-2">
             <Button
@@ -447,14 +655,6 @@ export default function CoursesPage() {
             </Button>
           </div>
         </div>
-      )}
-
-      {previewCourse && (
-        <CoursePreviewModal
-          course={previewCourse}
-          isOpen={Boolean(previewCourse)}
-          onClose={() => setPreviewCourse(null)}
-        />
       )}
     </div>
   );

@@ -10,11 +10,11 @@ import {
     Sun,
     Smartphone,
     Mail,
-    CreditCard,
     ChevronRight,
     Camera,
     ShieldCheck,
-    Languages
+    Languages,
+    Loader2,
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
@@ -23,17 +23,107 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
+import { authClient } from "@/lib/auth-client"
+
+function getInitials(name?: string | null, email?: string | null) {
+    const source = name?.trim() || email?.split("@")[0] || "User"
+    const parts = source.split(/\s+/).filter(Boolean)
+
+    if (parts.length > 1) {
+        return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase()
+    }
+
+    return source.slice(0, 2).toUpperCase()
+}
+
+function getUsername(name?: string | null, email?: string | null) {
+    const source = email?.split("@")[0] || name || "user"
+
+    return `@${source.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24) || "user"}`
+}
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme()
+    const { data: session, isPending } = authClient.useSession()
     const [mounted, setMounted] = React.useState(false)
+    const [uploading, setUploading] = React.useState(false)
+    const [uploadError, setUploadError] = React.useState<string | null>(null)
+    const fileInputRef = React.useRef<HTMLInputElement>(null)
+
+    const user = session?.user
+    const name = user?.name || "User"
+    const email = user?.email || ""
+    const image = user?.image || undefined
+    const initials = getInitials(user?.name, user?.email)
+    const username = getUsername(user?.name, user?.email)
 
     // Wait until mounted on client to prevent hydration mismatch
     React.useEffect(() => {
         setMounted(true)
     }, [])
+
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploadError(null)
+        setUploading(true)
+
+        try {
+            const formData = new FormData()
+            formData.append("image", file)
+
+            const response = await fetch("/api/user", {
+                method: "POST",
+                body: formData,
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Upload failed")
+            }
+
+            // Update the better-auth session with the new image URL
+            await authClient.updateUser({ image: data.imageUrl })
+        } catch (err) {
+            setUploadError(err instanceof Error ? err.message : "Failed to upload image")
+        } finally {
+            setUploading(false)
+            // Reset the file input so the same file can be re-selected
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ""
+            }
+        }
+    }
+
+    const handleRemoveAvatar = async () => {
+        setUploadError(null)
+        setUploading(true)
+
+        try {
+            const response = await fetch("/api/user", {
+                method: "DELETE",
+            })
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to remove image")
+            }
+
+            // Clear the image in the better-auth session
+            await authClient.updateUser({ image: null })
+        } catch (err) {
+            setUploadError(err instanceof Error ? err.message : "Failed to remove image")
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    const triggerFileInput = () => {
+        fileInputRef.current?.click()
+    }
 
     if (!mounted) {
         return null
@@ -48,7 +138,7 @@ export default function SettingsPage() {
                     <p style={{ color: 'var(--muted-foreground)' }}>Manage your account settings and preferences.</p>
                 </div>
 
-                <Tabs defaultValue="profile" className="flex flex-col lg:flex-row gap-12">
+                <Tabs defaultValue="profile" className="flex flex-col lg:flex-row gap-12" key={user?.id || email || "anonymous"}>
                     {/* Navigation Sidebar */}
                     <TabsList className="flex lg:flex-col items-start justify-start bg-transparent h-auto p-0 gap-2 lg:w-64">
                         {[
@@ -61,7 +151,7 @@ export default function SettingsPage() {
                                 key={tab.id}
                                 value={tab.id}
                                 className="w-full justify-start rounded-xl px-4 py-3 text-sm font-bold tracking-tight transition-all hover:rounded-xl group"
-                                style={{ backgroundColor: 'transparent', ':hover': { backgroundColor: 'var(--surface-400)' } }}
+                                style={{ backgroundColor: 'transparent' }}
                             >
                                 <tab.icon className="mr-3 size-4 transition-colors" style={{ color: 'var(--muted-foreground)' }} />
                                 {tab.label}
@@ -82,32 +172,64 @@ export default function SettingsPage() {
 
                                     <div className="flex flex-col gap-8">
                                         <div className="flex items-center gap-6">
-                                            <div className="relative group cursor-pointer">
-                                                <Avatar className="size-24 shadow-xl" style={{ ring: '4px solid var(--surface-200)' }}>
-                                                    <AvatarImage src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=60" />
-                                                    <AvatarFallback>M</AvatarFallback>
+                                            <div className="relative group cursor-pointer" onClick={uploading ? undefined : triggerFileInput}>
+                                                <Avatar className="size-24 shadow-xl ring-4" style={{ "--tw-ring-color": 'var(--surface-200)' } as React.CSSProperties}>
+                                                    <AvatarImage src={image} alt={name} />
+                                                    <AvatarFallback>{isPending ? "..." : initials}</AvatarFallback>
                                                 </Avatar>
-                                                <div className="absolute inset-0 flex items-center justify-center rounded-full transition-opacity opacity-0 group-hover:opacity-100" style={{ backgroundColor: 'rgba(38, 37, 30, 0.4)' }}>
-                                                    <Camera className="size-6" style={{ color: 'var(--surface-200)' }} />
-                                                </div>
+                                                {uploading && (
+                                                    <div className="absolute inset-0 flex items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
+                                                        <Loader2 className="size-6 animate-spin" style={{ color: 'var(--surface-200)' }} />
+                                                    </div>
+                                                )}
+                                                {!uploading && (
+                                                    <div className="absolute inset-0 flex items-center justify-center rounded-full transition-opacity opacity-0 group-hover:opacity-100" style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}>
+                                                        <Camera className="size-6" style={{ color: 'var(--surface-200)' }} />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex flex-col gap-3">
                                                 <div className="flex gap-3">
-                                                    <Button size="sm" className="rounded-xl font-bold">Change Avatar</Button>
-                                                    <Button size="sm" variant="outline" className="rounded-xl font-bold">Remove</Button>
+                                                    <Button size="sm" className="rounded-xl font-bold" onClick={triggerFileInput} disabled={uploading}>
+                                                        {uploading ? (
+                                                            <>
+                                                                <Loader2 className="mr-2 size-3 animate-spin" />
+                                                                Uploading...
+                                                            </>
+                                                        ) : (
+                                                            "Change Avatar"
+                                                        )}
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={handleRemoveAvatar} disabled={uploading || !image}>
+                                                        Remove
+                                                    </Button>
                                                 </div>
-                                                <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>JPG, GIF or PNG. 1MB Max.</p>
+                                                <p className="text-[10px] font-medium uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>JPG, PNG, GIF or WebP. 1MB Max.</p>
+                                                {uploadError && (
+                                                    <p className="text-xs" style={{ color: 'var(--color-error)' }}>{uploadError}</p>
+                                                )}
                                             </div>
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/gif,image/webp"
+                                                className="hidden"
+                                                onChange={handleFileSelect}
+                                            />
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="flex flex-col gap-2">
                                                 <Label htmlFor="display-name">Display Name</Label>
-                                                <Input id="display-name" defaultValue="Morné" />
+                                                <Input id="display-name" defaultValue={name} />
                                             </div>
                                             <div className="flex flex-col gap-2">
                                                 <Label htmlFor="username">Username</Label>
-                                                <Input id="username" defaultValue="@mornelabs" />
+                                                <Input id="username" defaultValue={username} />
+                                            </div>
+                                            <div className="col-span-full flex flex-col gap-2">
+                                                <Label htmlFor="profile-email">Email</Label>
+                                                <Input id="profile-email" type="email" defaultValue={email} disabled />
                                             </div>
                                             <div className="col-span-full flex flex-col gap-2">
                                                 <Label htmlFor="bio">Bio</Label>
@@ -116,7 +238,7 @@ export default function SettingsPage() {
                                                     className="min-h-[120px] w-full p-4 text-sm outline-none resize-none rounded-lg"
                                                     style={{ backgroundColor: 'transparent', border: '1px solid var(--border-primary)', color: 'var(--foreground)' }}
                                                     placeholder="Tell the community about yourself..."
-                                                    defaultValue="Passionate learner and software engineer exploring the frontiers of AI and web development."
+                                                    defaultValue=""
                                                 />
                                             </div>
                                         </div>
@@ -145,13 +267,13 @@ export default function SettingsPage() {
                                                 </div>
                                                 <div className="flex flex-col">
                                                     <span className="text-sm font-bold">Email Address</span>
-                                                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>mornie@example.com</span>
+                                                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{email || "No email on file"}</span>
                                                 </div>
                                             </div>
                                             <Button variant="ghost" size="sm" className="font-bold rounded-lg text-xs tracking-tighter uppercase" style={{ color: 'var(--color-accent)' }}>Change</Button>
                                         </div>
 
-                                        <div className="flex items-center justify-between p-6 rounded-2xl transition-all" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)', ':hover': { backgroundColor: 'var(--surface-300)' } }}>
+                                        <div className="flex items-center justify-between p-6 rounded-2xl transition-all hover:bg-[var(--surface-300)]" style={{ backgroundColor: 'var(--surface-100)', border: '1px solid var(--border-primary)' }}>
                                             <div className="flex items-center gap-4">
                                                 <div className="size-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
                                                     <ShieldCheck className="size-5" />
@@ -185,7 +307,7 @@ export default function SettingsPage() {
                                 <section className="flex flex-col gap-8">
                                     <div className="flex flex-col gap-1">
                                         <h3 className="text-lg font-bold">Email Notifications</h3>
-                                        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>Choose which updates you'd like to receive in your inbox.</p>
+                                        <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>Choose which updates you&apos;d like to receive in your inbox.</p>
                                     </div>
 
                                     <div className="flex flex-col gap-4">

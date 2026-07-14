@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { OttoEditor } from "@repo/editor";
 import {
   Card,
   CardContent,
@@ -26,8 +28,10 @@ import { Button } from "@repo/ui/button";
 import LessonModal, { LessonFormData } from "../components/LessonModal";
 import { CoursePreviewModal } from "../components/CoursePreviewModal";
 import type { CourseFormData, CourseModule as Module, Lesson } from "../types";
+import { saveCourse } from "../persistence";
 
 export default function CreateCoursePage() {
+  const router = useRouter();
   const [formData, setFormData] = useState<CourseFormData>({
     title: "",
     description: "",
@@ -41,8 +45,12 @@ export default function CreateCoursePage() {
   const [prerequisiteInput, setPrerequisiteInput] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
+  const [currentModuleId, setCurrentModuleId] = useState<
+    Module["id"] | null
+  >(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const availableTags = [
     "React",
@@ -116,14 +124,14 @@ export default function CreateCoursePage() {
     });
   };
 
-  const removeModule = (moduleId: number) => {
+  const removeModule = (moduleId: Module["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.filter((module) => module.id !== moduleId),
     });
   };
 
-  const updateModuleTitle = (moduleId: number, title: string) => {
+  const updateModuleTitle = (moduleId: Module["id"], title: string) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
@@ -132,13 +140,13 @@ export default function CreateCoursePage() {
     });
   };
 
-  const openLessonModal = (moduleId: number, type: Lesson["type"]) => {
+  const openLessonModal = (moduleId: Module["id"], type: Lesson["type"]) => {
     setCurrentModuleId(moduleId);
     setLessonType(type);
     setIsModalOpen(true);
   };
 
-  const removeLesson = (moduleId: number, lessonId: number) => {
+  const removeLesson = (moduleId: Module["id"], lessonId: Lesson["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
@@ -221,9 +229,25 @@ export default function CreateCoursePage() {
     setCurrentModuleId(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Creating course:", formData);
+
+    setIsSavingCourse(true);
+    setSaveError(null);
+
+    try {
+      await saveCourse(formData, {
+        status: "draft",
+      });
+      router.push("/courses");
+      router.refresh();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Unable to create course."
+      );
+    } finally {
+      setIsSavingCourse(false);
+    }
   };
 
   const totalLessons = formData.modules.reduce(
@@ -426,13 +450,14 @@ export default function CreateCoursePage() {
                 >
                   Course Description *
                 </label>
-              <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              <OttoEditor
+                  content={formData.description}
+                  onChange={(json) => setFormData({ ...formData, description: json })}
                   placeholder="Describe what students will learn in this course"
-                  rows={4}
-                  className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 resize-none bg-surface-100 border border-border/10 text-foreground"
-                  required
+                  showToolbar
+                  minHeight="120px"
+                  aiEnabled
+                  format="auto"
               />
             </div>
 
@@ -599,96 +624,100 @@ export default function CreateCoursePage() {
                       </div>
                     </div>
 
-                    {module.lessons.length > 0 && (
-                      <div className="space-y-2 mb-4 ml-8">
-                        {module.lessons.map((lesson) => (
-                          <div
-                            key={lesson.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-surface-300 border-border/10"
-                          >
-                            <SplitVerticalIcon
-                              className="h-4 w-4 cursor-move text-muted-foreground"
-                            />
-                            <div className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape bg-surface-100 text-foreground"
+                    <div className="ml-8 border-l-2 border-border/20 pl-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-xs font-medium uppercase text-muted-foreground">
+                          Lessons
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {module.lessons.length}
+                        </div>
+                      </div>
+
+                      {module.lessons.length > 0 && (
+                        <div className="mb-4 space-y-2">
+                          {module.lessons.map((lesson) => (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center gap-3 rounded-lg border bg-surface-300 p-3 border-border/10"
                             >
-                              {lesson.type === "video" && <Video className="h-4 w-4" />}
-                              {lesson.type === "text" && <FileText className="h-4 w-4" />}
-                              {lesson.type === "quiz" && <Check className="h-4 w-4" />}
-                              {lesson.type === "code" && <Code className="h-4 w-4" />}
-                              {lesson.title}
-                            </div>
-                            <div className="flex-1">
-                              <div
-                                className="text-sm font-medium text-foreground"
-                              >
+                              <SplitVerticalIcon className="h-4 w-4 cursor-move text-muted-foreground" />
+                              <div className="flex items-center gap-2 rounded px-2 py-1 text-xs font-medium pill-shape bg-surface-100 text-foreground">
+                                {lesson.type === "video" && <Video className="h-4 w-4" />}
+                                {lesson.type === "text" && <FileText className="h-4 w-4" />}
+                                {lesson.type === "quiz" && <Check className="h-4 w-4" />}
+                                {lesson.type === "code" && <Code className="h-4 w-4" />}
                                 {lesson.title}
                               </div>
-                              <div
-                                className="text-xs text-muted-foreground"
-                              >
-                                {lesson.duration && (
-                                  <span className="block mb-1">{lesson.duration}</span>
-                                )}
-                                {lesson.type === "video" && lesson.url && (
-                                  <span className="truncate block">{lesson.url}</span>
-                                )}
-                                {lesson.type === "text" && lesson.content && (
-                                  <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
-                                )}
-                                {lesson.type === "quiz" && lesson.questions && (
-                                  <span className="truncate block">{lesson.questions.length} questions</span>
-                                )}
-                                {lesson.type === "code" && lesson.content && (
-                                  <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
-                                )}
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-foreground">
+                                  {lesson.title}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {lesson.duration && (
+                                    <span className="block mb-1">{lesson.duration}</span>
+                                  )}
+                                  {lesson.type === "video" && lesson.url && (
+                                    <span className="truncate block">{lesson.url}</span>
+                                  )}
+                                  {lesson.type === "text" && lesson.content && (
+                                    <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
+                                  )}
+                                  {lesson.type === "quiz" && lesson.questions && (
+                                    <span className="truncate block">{lesson.questions.length} questions</span>
+                                  )}
+                                  {lesson.type === "code" && lesson.content && (
+                                    <span className="truncate block">{lesson.content.substring(0, 50)}...</span>
+                                  )}
+                                </div>
                               </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeLesson(module.id, lesson.id)}
+                                className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => removeLesson(module.id, lesson.id)}
-                              className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                          ))}
+                        </div>
+                      )}
 
-                    <div className="flex flex-wrap gap-2 ml-8">
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "video")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Video className="h-4 w-4" />
-                        Add Video
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "text")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Add Reading
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "quiz")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Check className="h-4 w-4" />
-                        Add Quiz
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "code")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Code className="h-4 w-4" />
-                        Add Exercise
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "video")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Video className="h-4 w-4" />
+                          Add Video
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "text")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Add Reading
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "quiz")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Check className="h-4 w-4" />
+                          Add Quiz
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "code")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Code className="h-4 w-4" />
+                          Add Exercise
+                        </button>
+                      </div>
                   </div>
                 </div>
               ))}
@@ -825,6 +854,12 @@ export default function CreateCoursePage() {
           </Card>
         )}
 
+        {saveError && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {saveError}
+          </div>
+        )}
+
         <div className="flex justify-end gap-3">
           <Button
             type="button"
@@ -836,14 +871,14 @@ export default function CreateCoursePage() {
           </Button>
           <Button
             type="submit"
-            disabled={!isCourseReady}
+            disabled={!isCourseReady || isSavingCourse}
             className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
             style={{
-              opacity: isCourseReady ? 1 : 0.6,
-              cursor: isCourseReady ? "pointer" : "not-allowed",
+              opacity: isCourseReady && !isSavingCourse ? 1 : 0.6,
+              cursor: isCourseReady && !isSavingCourse ? "pointer" : "not-allowed",
             }}
           >
-            Create Course
+            {isSavingCourse ? "Creating..." : "Create Course"}
           </Button>
         </div>
       </form>

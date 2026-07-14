@@ -3,7 +3,7 @@ import type { QuizQuestion } from "./components/LessonModal";
 export type CourseStatus = "published" | "draft" | "archived";
 
 export interface Lesson {
-  id: number;
+  id: number | string;
   title: string;
   type: "video" | "text" | "quiz" | "code";
   duration?: string;
@@ -13,13 +13,13 @@ export interface Lesson {
 }
 
 export interface CourseModule {
-  id: number;
+  id: number | string;
   title: string;
   lessons: Lesson[];
 }
 
 export interface Course {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   status: CourseStatus;

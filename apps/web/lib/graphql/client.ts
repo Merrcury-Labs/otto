@@ -26,6 +26,13 @@ export async function graphqlFetch<TData>({
     }),
   });
 
+  const contentType = response.headers.get("content-type");
+  if (!contentType?.includes("application/json")) {
+    throw new Error(
+      `GraphQL endpoint returned non-JSON response (status ${response.status}).`
+    );
+  }
+
   const result = (await response.json()) as GraphqlResponse<TData>;
 
   if (!response.ok || result.errors?.length) {

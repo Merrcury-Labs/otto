@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -22,21 +22,271 @@ import {
   DotsThreeVertical,
   CheckCircle,
   Circle,
-  XCircle,
   Brain,
   ListChecks,
   BookOpen,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import { QuizPreviewModal } from "./components/QuizPreviewModal";
-import { quizzes } from "./data";
-import type { Quiz } from "./types";
+import type { Quiz, QuestionType } from "./types";
+import { graphqlFetch } from "../../lib/graphql/client";
+import { adminQuizzesQuery, deleteQuizMutation } from "../../lib/graphql/quizzes";
+
+type QuizStats = {
+  total: number;
+  published: number;
+  attempts: number;
+  averageScore: number;
+};
+
+type GraphqlQuiz = Omit<Quiz, "status" | "questions"> & {
+  status: Uppercase<Quiz["status"]>;
+  questions: Array<{
+    id: string | number;
+    question: string;
+    type: string;
+    points: number;
+    options: unknown;
+    correctAnswer?: unknown;
+    categories?: unknown;
+    hint?: string;
+  }>;
+};
+
+type AdminQuizzesData = {
+  quizzes: GraphqlQuiz[];
+  quizStats: QuizStats;
+};
+
+const emptyQuizStats: QuizStats = {
+  total: 0,
+  published: 0,
+  attempts: 0,
+  averageScore: 0,
+};
+
+const parseCorrectAnswer = (
+  value?: string | boolean | number | number[] | Record<string, unknown> | unknown[] | null,
+): Quiz["questions"][number]["correctAnswer"] => {
+  if (value == null || value === "") {
+    return undefined;
+  }
+
+  // Non-string values (booleans, numbers, arrays, objects) are already parsed
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  // String values may be JSON-encoded or plain strings — try parsing first
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+// Map backend question type codes to dashboard QuestionType values
+const mapQuestionType = (backendType: string): QuestionType => {
+  const typeMap: Record<string, QuestionType> = {
+    MCQ: "multiple-choice",
+    TF: "true-false",
+    REORDER: "drag-drop-order",
+    CATEGORIZE: "drag-drop-category",
+  };
+  return typeMap[backendType] ?? "multiple-choice";
+};
+
+// Convert backend options (JSON objects/arrays) to a flat string[] for the dashboard
+const normalizeOptions = (raw: unknown): string[] => {
+  if (Array.isArray(raw)) {
+    return raw.map(String);
+  }
+  if (typeof raw === "object" && raw !== null) {
+    const opts = raw as Record<string, unknown>;
+    // {choices: [...]} or {items: [...]}
+    if (Array.isArray(opts.choices)) return opts.choices.map(String);
+    if (Array.isArray(opts.items)) return opts.items.map(String);
+    // Flat object like {"A": "Option A", "B": "Option B"}
+    const values = Object.values(opts).filter((v) => typeof v !== "object" && !Array.isArray(v));
+    if (values.length > 0) return values.map(String);
+  }
+  return [];
+};
+
+// Extract category names from backend categories / options
+const normalizeCategories = (rawCategories: unknown, rawOptions: unknown): string[] => {
+  if (Array.isArray(rawCategories)) {
+    return rawCategories.map(String);
+  }
+  if (typeof rawCategories === "object" && rawCategories !== null) {
+    const cats = rawCategories as Record<string, unknown>;
+    // { "Center": [], "Spread": [] } — keys are category names
+    const keys = Object.keys(cats);
+    if (keys.length > 0 && keys.every((k) => Array.isArray(cats[k]))) {
+      return keys;
+    }
+    return keys;
+  }
+  // Check for buckets in options
+  if (typeof rawOptions === "object" && rawOptions !== null) {
+    const opts = rawOptions as Record<string, unknown>;
+    if (opts.buckets && typeof opts.buckets === "object" && !Array.isArray(opts.buckets)) {
+      return Object.keys(opts.buckets);
+    }
+  }
+  return [];
+};
+
+// Derive categoryMapping (itemIndex → categoryIndex) from backend correctAnswer
+const normalizeCategoryMapping = (
+  correctAnswer: unknown,
+  options: string[],
+  categories: string[],
+): Record<number, number> => {
+  if (!correctAnswer || typeof correctAnswer !== "object" || Array.isArray(correctAnswer)) {
+    return {};
+  }
+  const mapping: Record<number, number> = {};
+  const answer = correctAnswer as Record<string, unknown>;
+
+  // Check if it's a category→items format: {"Center": ["Mean"], "Spread": ["Range"]}
+  const firstVal = Object.values(answer)[0];
+  if (Array.isArray(firstVal)) {
+    for (const [cat, items] of Object.entries(answer)) {
+      if (!Array.isArray(items)) continue;
+      const catIdx = categories.indexOf(cat);
+      if (catIdx === -1) continue;
+      for (const item of items) {
+        const optIdx = options.indexOf(String(item));
+        if (optIdx !== -1) mapping[optIdx] = catIdx;
+      }
+    }
+    return mapping;
+  }
+
+  // It's an item→category format: {"Mean": "Center", "Range": "Spread"}
+  for (const [item, cat] of Object.entries(answer)) {
+    const optIdx = options.indexOf(String(item));
+    const catIdx = categories.indexOf(String(cat));
+    if (optIdx !== -1 && catIdx !== -1) mapping[optIdx] = catIdx;
+  }
+
+  // If keys are numeric indices (dashboard creation format)
+  if (Object.keys(answer).every((k) => /^\d+$/.test(k))) {
+    for (const [k, v] of Object.entries(answer)) {
+      const optIdx = Number(k);
+      const catIdx = typeof v === "number" ? v : Number(v);
+      if (!Number.isNaN(optIdx) && !Number.isNaN(catIdx)) {
+        mapping[optIdx] = catIdx;
+      }
+    }
+  }
+
+  return mapping;
+};
+
+// Resolve correctAnswer from backend format to dashboard index-based format
+const normalizeCorrectAnswer = (
+  type: QuestionType,
+  rawCorrect: unknown,
+  options: string[],
+): Quiz["questions"][number]["correctAnswer"] => {
+  if (rawCorrect == null) return undefined;
+
+  switch (type) {
+    case "multiple-choice": {
+      // Backend may store: index (0), string ("0"), letter ("A"), or option text
+      if (typeof rawCorrect === "number") return rawCorrect;
+      if (typeof rawCorrect === "string") {
+        if (/^\d+$/.test(rawCorrect)) return parseInt(rawCorrect, 10);
+        if (/^[A-Z]$/.test(rawCorrect)) return rawCorrect.charCodeAt(0) - 65;
+        // It's text — find matching option index
+        const idx = options.indexOf(rawCorrect);
+        return idx !== -1 ? idx : undefined;
+      }
+      return undefined;
+    }
+    case "true-false": {
+      // Backend stores: true/false boolean, 0/1 integer, "true"/"false" string
+      if (typeof rawCorrect === "boolean") return rawCorrect ? 0 : 1;
+      if (typeof rawCorrect === "number") return rawCorrect === 1 ? 0 : 1;
+      if (typeof rawCorrect === "string") {
+        const lower = rawCorrect.toLowerCase();
+        if (lower === "true" || rawCorrect === "1") return 0;
+        if (lower === "false" || rawCorrect === "0") return 1;
+      }
+      return 0;
+    }
+    case "checkbox": {
+      // Backend may store array of indices or text
+      if (Array.isArray(rawCorrect)) {
+        const indices = rawCorrect
+          .map((v) => {
+            if (typeof v === "number") return v;
+            if (typeof v === "string" && /^\d+$/.test(v)) return parseInt(v, 10);
+            const idx = options.indexOf(String(v));
+            return idx;
+          })
+          .filter((v) => v !== -1 && !Number.isNaN(v));
+        return indices;
+      }
+      return undefined;
+    }
+    default:
+      return parseCorrectAnswer(rawCorrect as string | boolean | number | number[] | Record<string, unknown> | unknown[] | null);
+  }
+};
+
+const normalizeQuiz = (quiz: GraphqlQuiz): Quiz => {
+  const questions: Quiz["questions"] = quiz.questions.map((q) => {
+    const type = mapQuestionType(q.type);
+    const options = normalizeOptions(q.options);
+    const categories = type === "drag-drop-category"
+      ? normalizeCategories(q.categories, q.options)
+      : undefined;
+    const categoryMapping = type === "drag-drop-category"
+      ? normalizeCategoryMapping(q.correctAnswer, options, categories ?? [])
+      : undefined;
+    const correctAnswer = normalizeCorrectAnswer(type, q.correctAnswer, options);
+
+    return {
+      id: Number(q.id) || q.id,
+      question: q.question,
+      type,
+      points: q.points,
+      options,
+      correctAnswer,
+      categories,
+      categoryMapping,
+      hint: q.hint,
+    };
+  });
+
+  return {
+    id: Number(quiz.id) || quiz.id,
+    title: quiz.title,
+    description: quiz.description,
+    duration: quiz.duration,
+    status: quiz.status.toLowerCase() as Quiz["status"],
+    courseId: quiz.courseId,
+    courseTitle: quiz.courseTitle,
+    attempts: quiz.attempts,
+    avgScore: quiz.avgScore,
+    createdAt: quiz.createdAt,
+    updatedAt: quiz.updatedAt,
+    questions,
+  };
+};
 
 export default function QuizzesPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [previewQuiz, setPreviewQuiz] = useState<Quiz | null>(null);
+  const [quizList, setQuizList] = useState<Quiz[]>([]);
+  const [quizStats, setQuizStats] = useState<QuizStats>(emptyQuizStats);
+  const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
+  const [quizError, setQuizError] = useState<string | null>(null);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -44,8 +294,6 @@ export default function QuizzesPage() {
         return <CheckCircle className="h-5 w-5 text-brand-success" />;
       case "draft":
         return <Circle className="h-5 w-5 text-brand-gold" />;
-      case "archived":
-        return <XCircle className="h-5 w-5 text-muted-foreground" />;
       default:
         return null;
     }
@@ -55,7 +303,6 @@ export default function QuizzesPage() {
     const variants = {
       published: "bg-brand-success text-white",
       draft: "bg-brand-gold text-white",
-      archived: "bg-muted text-muted-foreground",
     };
 
     return (
@@ -69,7 +316,41 @@ export default function QuizzesPage() {
     );
   };
 
-  const filteredQuizzes = quizzes.filter((quiz) => {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadQuizzes() {
+      const result = await graphqlFetch<AdminQuizzesData>({
+        query: adminQuizzesQuery,
+      });
+
+      if (isMounted) {
+        setQuizList(result.quizzes.map(normalizeQuiz));
+        setQuizStats(result.quizStats);
+        setQuizError(null);
+      }
+    }
+
+    loadQuizzes().catch((error) => {
+      if (isMounted) {
+        setQuizList([]);
+        setQuizStats(emptyQuizStats);
+        setQuizError(
+          error instanceof Error ? error.message : "Unable to load quizzes."
+        );
+      }
+    }).finally(() => {
+      if (isMounted) {
+        setIsLoadingQuizzes(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredQuizzes = useMemo(() => quizList.filter((quiz) => {
     const matchesSearch =
       quiz.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quiz.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -77,7 +358,7 @@ export default function QuizzesPage() {
     const matchesStatus =
       statusFilter === "all" || quiz.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }), [quizList, searchQuery, statusFilter]);
 
   const QuizCard = ({ quiz }: { quiz: Quiz }) => (
     <Card
@@ -334,7 +615,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {quizzes.length}
+              {quizStats.total}
             </div>
           </CardContent>
         </Card>
@@ -357,7 +638,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {quizzes.filter((q) => q.status === "published").length}
+              {quizStats.published}
             </div>
           </CardContent>
         </Card>
@@ -380,7 +661,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {quizzes.reduce((acc, quiz) => acc + quiz.attempts, 0)}
+              {quizStats.attempts}
             </div>
           </CardContent>
         </Card>
@@ -403,13 +684,7 @@ export default function QuizzesPage() {
               className="text-2xl font-normal text-foreground"
               style={{ letterSpacing: "-0.11px" }}
             >
-              {Math.round(
-                quizzes
-                  .filter((q) => q.status === "published")
-                  .reduce((acc, quiz) => acc + quiz.avgScore, 0) /
-                  Math.max(quizzes.filter((q) => q.status === "published").length, 1)
-              )}
-              %
+              {quizStats.averageScore}%
             </div>
           </CardContent>
         </Card>
@@ -437,7 +712,6 @@ export default function QuizzesPage() {
           <option value="all">All Status</option>
           <option value="published">Published</option>
           <option value="draft">Draft</option>
-          <option value="archived">Archived</option>
         </select>
         <div className="flex gap-2">
           <button
@@ -471,7 +745,22 @@ export default function QuizzesPage() {
             : "space-y-2"
         }`}
       >
-        {filteredQuizzes.length > 0 ? (
+        {isLoadingQuizzes ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Loading quizzes
+            </h3>
+          </div>
+        ) : quizError ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium mb-2 text-foreground">
+              Could not load quizzes
+            </h3>
+            <p>{quizError}</p>
+          </div>
+        ) : filteredQuizzes.length > 0 ? (
           filteredQuizzes.map((quiz) =>
             viewMode === "grid" ? (
               <QuizCard key={quiz.id} quiz={quiz} />
@@ -496,7 +785,7 @@ export default function QuizzesPage() {
           <p
             className="text-sm text-muted-foreground"
           >
-            Showing {filteredQuizzes.length} of {quizzes.length} quizzes
+            Showing {filteredQuizzes.length} of {quizList.length} quizzes
           </p>
           <div className="flex gap-2">
             <Button

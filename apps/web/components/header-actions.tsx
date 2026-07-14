@@ -1,8 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Bell, LogOut, User, Settings as SettingsIcon } from "lucide-react"
+import Link from "next/link"
+import { Bell, LogOut, Moon, Sun, User, Settings as SettingsIcon } from "lucide-react"
+import { useTheme } from "next-themes"
 
+import { signOutAction } from "@/app/actions/auth"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,10 +25,41 @@ import {
     AvatarImage,
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { authClient } from "@/lib/auth-client"
+
+function getInitials(name?: string | null, email?: string | null) {
+    const source = name?.trim() || email?.split("@")[0] || "User"
+    const parts = source.split(/\s+/).filter(Boolean)
+
+    if (parts.length > 1) {
+        return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase()
+    }
+
+    return source.slice(0, 2).toUpperCase()
+}
 
 export function HeaderActions() {
+    const { data: session, isPending } = authClient.useSession()
+    const { theme, setTheme } = useTheme()
+    const user = session?.user
+    const name = user?.name || "User"
+    const email = user?.email || ""
+    const image = user?.image || undefined
+    const initials = getInitials(user?.name, user?.email)
+
     return (
         <div className="ml-auto flex items-center gap-4">
+            {/* Theme toggle */}
+            <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+            </Button>
+
             {/* Notifications */}
             <Popover>
                 <PopoverTrigger asChild>
@@ -77,34 +111,44 @@ export function HeaderActions() {
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                         <Avatar className="h-10 w-10">
-                            <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop" alt="User avatar" />
-                            <AvatarFallback>M</AvatarFallback>
+                            <AvatarImage src={image} alt={name} />
+                            <AvatarFallback>{isPending ? "..." : initials}</AvatarFallback>
                         </Avatar>
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">Morné</p>
-                            <p className="text-xs leading-none text-muted-foreground">
-                                morne@example.com
-                            </p>
+                            <p className="text-sm font-medium leading-none">{isPending ? "Loading..." : name}</p>
+                            {email ? (
+                                <p className="text-xs leading-none text-muted-foreground">
+                                    {email}
+                                </p>
+                            ) : null}
                         </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Account</span>
+                    <DropdownMenuItem asChild>
+                        <Link href="/settings">
+                            <User className="mr-2 h-4 w-4" />
+                            <span>Account</span>
+                        </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <SettingsIcon className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
+                    <DropdownMenuItem asChild>
+                        <Link href="/settings">
+                            <SettingsIcon className="mr-2 h-4 w-4" />
+                            <span>Settings</span>
+                        </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Sign out</span>
-                    </DropdownMenuItem>
+                    <form action={signOutAction}>
+                        <DropdownMenuItem asChild className="text-destructive focus:bg-destructive focus:text-destructive-foreground">
+                            <button type="submit" className="w-full">
+                                <LogOut className="mr-2 h-4 w-4" />
+                                <span>Sign out</span>
+                            </button>
+                        </DropdownMenuItem>
+                    </form>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

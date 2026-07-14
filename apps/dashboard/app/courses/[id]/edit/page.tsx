@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { OttoEditor } from "@repo/editor";
 import {
   ArrowLeft,
   BookOpen,
@@ -25,10 +26,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/card";
-import LessonModal, { LessonFormData } from "../../components/LessonModal";
-import { CoursePreviewModal } from "../../components/CoursePreviewModal";
-import { getCourseById } from "../../data";
+import LessonModal, {
+  LessonFormData,
+} from "../../components/LessonModal";
 import type { CourseFormData, CourseStatus, Lesson } from "../../types";
+import {
+  type AdminCoursesData,
+  getCourseFormData,
+  getLessonTypeLabel,
+} from "../../utils";
+import { graphqlFetch } from "../../../../lib/graphql/client";
+import { adminCoursesQuery } from "../../../../lib/graphql/courses";
+import { saveCourse } from "../../persistence";
 
 function getLessonIcon(type: Lesson["type"]) {
   if (type === "video") return <Video className="h-4 w-4" />;
@@ -39,34 +48,80 @@ function getLessonIcon(type: Lesson["type"]) {
 
 export default function EditCoursePage() {
   const params = useParams<{ id: string }>();
-  const courseId = Number(params.id);
-  const course = getCourseById(courseId);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
-  const initialFormData = useMemo<CourseFormData | null>(() => {
-    if (!course) return null;
-
-    return {
-      title: course.title,
-      description: course.description,
-      thumbnail: course.thumbnail,
-      prerequisites: course.prerequisites,
-      tags: course.tags,
-      modules: course.modules,
-    };
-  }, [course]);
-
-  const [formData, setFormData] = useState<CourseFormData | null>(
-    initialFormData
-  );
-  const [status, setStatus] = useState<CourseStatus>(
-    course?.status || "draft"
-  );
+  const router = useRouter();
+  const [formData, setFormData] = useState<CourseFormData | null>(null);
+  const [status, setStatus] = useState<CourseStatus>("published");
+  const [isLoadingCourse, setIsLoadingCourse] = useState(true);
+  const [courseError, setCourseError] = useState<string | null>(null);
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
-  const [currentModuleId, setCurrentModuleId] = useState<number | null>(null);
+  const [currentModuleId, setCurrentModuleId] = useState<
+    Lesson["id"] | null
+  >(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
 
-  if (!course || !formData) {
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadCourse() {
+      const result = await graphqlFetch<AdminCoursesData>({
+        query: adminCoursesQuery,
+      });
+      const course = result.courses.find(
+        (item) => String(item.id) === params.id
+      );
+
+      if (!isMounted) return;
+
+      if (!course) {
+        setFormData(null);
+        setCourseError("Course not found.");
+        return;
+      }
+
+      setFormData(getCourseFormData(course));
+      setStatus("published");
+      setCourseError(null);
+    }
+
+    setIsLoadingCourse(true);
+    loadCourse()
+      .catch((error) => {
+        if (isMounted) {
+          setFormData(null);
+          setCourseError(
+            error instanceof Error ? error.message : "Unable to load course."
+          );
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingCourse(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [params.id]);
+
+  if (isLoadingCourse) {
+    return (
+      <div className="space-y-6 px-4">
+        <Card className="bg-card rounded-lg">
+          <CardContent className="py-12 text-center">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h1 className="text-xl font-medium text-foreground">
+              Loading course
+            </h1>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!formData) {
     return (
       <div className="space-y-6 px-4">
         <Button
@@ -88,7 +143,7 @@ export default function EditCoursePage() {
             <p
               className="mt-2 text-muted-foreground"
             >
-              This course may have been deleted or moved.
+              {courseError || "This course may have been deleted or moved."}
             </p>
           </CardContent>
         </Card>
@@ -130,14 +185,14 @@ export default function EditCoursePage() {
     });
   };
 
-  const removeModule = (moduleId: number) => {
+  const removeModule = (moduleId: Lesson["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.filter((module) => module.id !== moduleId),
     });
   };
 
-  const updateModuleTitle = (moduleId: number, title: string) => {
+  const updateModuleTitle = (moduleId: Lesson["id"], title: string) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
@@ -146,25 +201,10 @@ export default function EditCoursePage() {
     });
   };
 
-  const openLessonModal = (moduleId: number, type: Lesson["type"]) => {
+  const openLessonModal = (moduleId: Lesson["id"], type: Lesson["type"]) => {
     setCurrentModuleId(moduleId);
     setLessonType(type);
     setIsLessonModalOpen(true);
-  };
-
-  const getLessonTypeLabel = (type: Lesson["type"]) => {
-    switch (type) {
-      case "video":
-        return "Video";
-      case "text":
-        return "Reading";
-      case "quiz":
-        return "Quiz";
-      case "code":
-        return "Exercise";
-      default:
-        return "Lesson";
-    }
   };
 
   const handleLessonSave = (data: LessonFormData) => {
@@ -205,7 +245,7 @@ export default function EditCoursePage() {
     setCurrentModuleId(null);
   };
 
-  const removeLesson = (moduleId: number, lessonId: number) => {
+  const removeLesson = (moduleId: Lesson["id"], lessonId: Lesson["id"]) => {
     setFormData({
       ...formData,
       modules: formData.modules.map((module) =>
@@ -220,8 +260,8 @@ export default function EditCoursePage() {
   };
 
   const updateLessonTitle = (
-    moduleId: number,
-    lessonId: number,
+    moduleId: Lesson["id"],
+    lessonId: Lesson["id"],
     title: string
   ) => {
     setFormData({
@@ -240,8 +280,8 @@ export default function EditCoursePage() {
   };
 
   const updateLessonDuration = (
-    moduleId: number,
-    lessonId: number,
+    moduleId: Lesson["id"],
+    lessonId: Lesson["id"],
     duration: string
   ) => {
     setFormData({
@@ -273,13 +313,28 @@ export default function EditCoursePage() {
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log("Updating course:", {
-      id: course.id,
-      status,
-      ...formData,
-    });
+
+    if (!formData) return;
+
+    setIsSavingCourse(true);
+    setSaveError(null);
+
+    try {
+      await saveCourse(formData, {
+        id: params.id,
+        status,
+      });
+      router.push("/courses");
+      router.refresh();
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : "Unable to update course."
+      );
+    } finally {
+      setIsSavingCourse(false);
+    }
   };
 
   return (
@@ -310,7 +365,7 @@ export default function EditCoursePage() {
         </div>
         <Button
           type="button"
-          onClick={() => setIsPreviewOpen(true)}
+          onClick={() => router.push(`/courses/${params.id}/preview`)}
           className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
         >
           <Eye className="h-4 w-4 mr-2" />
@@ -365,17 +420,19 @@ export default function EditCoursePage() {
                   >
                     Course Description
                   </label>
-                  <textarea
-                    value={formData.description}
-                    onChange={(event) =>
+                  <OttoEditor
+                    content={formData.description}
+                    onChange={(json) =>
                       setFormData({
                         ...formData,
-                        description: event.target.value,
+                        description: json,
                       })
                     }
-                    rows={5}
-                    className="w-full resize-none rounded-md px-4 py-3 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
-                    required
+                    placeholder="Describe what students will learn in this course"
+                    showToolbar
+                    minHeight="120px"
+                    aiEnabled
+                    format="auto"
                   />
                 </div>
               </div>
@@ -566,94 +623,101 @@ export default function EditCoursePage() {
                       </Button>
                     </div>
 
-                    {module.lessons.length > 0 && (
-                      <div className="space-y-2 mb-4 ml-8">
-                        {module.lessons.map((lesson) => (
-                          <div
-                            key={lesson.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border bg-surface-300 border-border/10"
-                          >
-                            <SplitVerticalIcon
-                              className="h-4 w-4 cursor-move text-muted-foreground"
-                            />
-                            <div
-                              className="flex items-center gap-2 px-2 py-1 rounded text-xs font-medium pill-shape bg-surface-100 text-foreground"
-                            >
-                              {getLessonIcon(lesson.type)}
-                              {getLessonTypeLabel(lesson.type)}
-                            </div>
-                            <div className="grid flex-1 gap-2 md:grid-cols-[1fr_140px]">
-                              <input
-                                value={lesson.title}
-                                onChange={(event) =>
-                                  updateLessonTitle(
-                                    module.id,
-                                    lesson.id,
-                                    event.target.value
-                                  )
-                                }
-                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
-                              />
-                              <input
-                                value={lesson.duration || ""}
-                                onChange={(event) =>
-                                  updateLessonDuration(
-                                    module.id,
-                                    lesson.id,
-                                    event.target.value
-                                  )
-                                }
-                                placeholder="Duration"
-                                className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
-                              />
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => removeLesson(module.id, lesson.id)}
-                              className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
-                              aria-label={`Remove ${lesson.title}`}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
+                    <div className="ml-8 border-l-2 border-border/20 pl-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-xs font-medium uppercase text-muted-foreground">
+                          Lessons
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {module.lessons.length}
+                        </div>
                       </div>
-                    )}
 
-                    <div className="flex flex-wrap gap-2 ml-8">
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "video")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Video className="h-4 w-4" />
-                        Add Video
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "text")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Add Reading
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "quiz")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Check className="h-4 w-4" />
-                        Add Quiz
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openLessonModal(module.id, "code")}
-                        className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                      >
-                        <Code className="h-4 w-4" />
-                        Add Exercise
-                      </button>
+                      {module.lessons.length > 0 && (
+                        <div className="mb-4 space-y-2">
+                          {module.lessons.map((lesson) => (
+                            <div
+                              key={lesson.id}
+                              className="flex items-center gap-3 rounded-lg border bg-surface-300 p-3 border-border/10"
+                            >
+                              <SplitVerticalIcon className="h-4 w-4 cursor-move text-muted-foreground" />
+                              <div className="flex items-center gap-2 rounded px-2 py-1 text-xs font-medium pill-shape bg-surface-100 text-foreground">
+                                {getLessonIcon(lesson.type)}
+                                {getLessonTypeLabel(lesson.type)}
+                              </div>
+                              <div className="grid flex-1 gap-2 md:grid-cols-[1fr_140px]">
+                                <input
+                                  value={lesson.title}
+                                  onChange={(event) =>
+                                    updateLessonTitle(
+                                      module.id,
+                                      lesson.id,
+                                      event.target.value
+                                    )
+                                  }
+                                  className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
+                                />
+                                <input
+                                  value={lesson.duration || ""}
+                                  onChange={(event) =>
+                                    updateLessonDuration(
+                                      module.id,
+                                      lesson.id,
+                                      event.target.value
+                                    )
+                                  }
+                                  placeholder="Duration"
+                                  className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => removeLesson(module.id, lesson.id)}
+                                className="cursor-btn-hover focus-warm transition-all duration-150 text-destructive"
+                                aria-label={`Remove ${lesson.title}`}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "video")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Video className="h-4 w-4" />
+                          Add Video
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "text")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Add Reading
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "quiz")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Check className="h-4 w-4" />
+                          Add Quiz
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openLessonModal(module.id, "code")}
+                          className="flex items-center gap-2 px-3 py-2 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          <Code className="h-4 w-4" />
+                          Add Exercise
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -661,6 +725,12 @@ export default function EditCoursePage() {
             )}
           </CardContent>
         </Card>
+
+        {saveError && (
+          <div className="rounded-md border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {saveError}
+          </div>
+        )}
 
         <div className="flex justify-end gap-3">
           <Button
@@ -673,9 +743,10 @@ export default function EditCoursePage() {
           </Button>
           <Button
             type="submit"
+            disabled={isSavingCourse}
             className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
           >
-            Save Changes
+            {isSavingCourse ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </form>
@@ -688,12 +759,6 @@ export default function EditCoursePage() {
           setIsLessonModalOpen(false);
           setCurrentModuleId(null);
         }}
-      />
-
-      <CoursePreviewModal
-        course={formData}
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
       />
     </div>
   );

@@ -1,23 +1,118 @@
 export const publishedCoursesQuery = /* GraphQL */ `
-  query PublishedCourses($search: String, $category: String, $level: String) {
-    courses(
-      status: PUBLISHED
-      search: $search
-      category: $category
-      level: $level
-    ) {
+  query PublishedCourses {
+    courses {
       id
-      title
+      title: name
       description
-      instructor
-      duration
+      tutor {
+        id
+        name
+      }
+      thumbnail
+      image
+      lessonCount
       level
       category
-      status
-      progress
-      rating
-      lessons
+      prerequisites
+      students: enrolledStudents
+    }
+  }
+`;
+
+export const courseDetailQuery = /* GraphQL */ `
+  query CourseDetail {
+    courses {
+      id
+      title: name
+      description
+      tutor {
+        id
+        name
+      }
+      thumbnail
       image
+      lessonCount
+      level
+      category
+      prerequisites
+      students: enrolledStudents
+      modules {
+        id
+        title
+        description
+        order
+        lessons {
+          id
+          title
+          content
+          videoUrl
+          length
+          sectionName
+        }
+      }
+    }
+  }
+`;
+
+export const courseDetailWithEnrollmentQuery = /* GraphQL */ `
+  query CourseDetailWithEnrollment($studentId: ID!) {
+    courses {
+      id
+      title: name
+      description
+      tutor {
+        id
+        name
+      }
+      thumbnail
+      image
+      lessonCount
+      level
+      category
+      prerequisites
+      students: enrolledStudents
+      isEnrolled(studentId: $studentId)
+      enrollment(studentId: $studentId) {
+        id
+        progress
+        completed
+      }
+      modules {
+        id
+        title
+        description
+        order
+        lessons {
+          id
+          title
+          content
+          videoUrl
+          length
+          sectionName
+        }
+      }
+    }
+  }
+`;
+
+export const studentByUserIdQuery = /* GraphQL */ `
+  query StudentByUserId($userId: String!) {
+    studentByUserId(userId: $userId) {
+      id
+      name
+      email
+    }
+  }
+`;
+
+export const enrollStudentMutation = /* GraphQL */ `
+  mutation EnrollStudent($studentId: ID!, $courseId: ID!) {
+    enrollStudent(studentId: $studentId, courseId: $courseId) {
+      id
+      course {
+        id
+      }
+      progress
     }
   }
 `;
@@ -29,25 +124,6 @@ export const adminCoursesQuery = /* GraphQL */ `
       title
       description
       status
-    }
-  }
-`;
-
-export const courseQuery = /* GraphQL */ `
-  query Course($id: ID!) {
-    course(id: $id) {
-      id
-      title
-      description
-      instructor
-      duration
-      level
-      category
-      status
-      progress
-      rating
-      lessons
-      image
     }
   }
 `;

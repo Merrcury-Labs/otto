@@ -5,15 +5,15 @@ export type QuestionType =
   | "true-false"
   | "checkbox";
 
-export type QuizStatus = "published" | "draft" | "archived";
+export type QuizStatus = "published" | "draft";
 
 export interface QuizQuestion {
-  id: number;
+  id: number | string;
   question: string;
   type: QuestionType;
   points: number;
   options: string[];
-  correctAnswer?: number | number[];
+  correctAnswer?: string | boolean | number | number[] | Record<string, unknown> | unknown[];
   categories?: string[];
   categoryMapping?: Record<number, number>;
   hint?: string;
@@ -29,7 +29,7 @@ export interface QuizFormData {
 }
 
 export interface Quiz extends QuizFormData {
-  id: number;
+  id: number | string;
   status: QuizStatus;
   attempts: number;
   avgScore: number;

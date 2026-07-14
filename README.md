@@ -1,6 +1,8 @@
+<img src="apps/web/public/otto%20logo.svg" alt="Otto" height="80" />
+
 # Otto
 
-**Otto** is a modern Learning Management Platform (LMP) built as a performant monorepo. It provides a full-featured learning experience for students and powerful management tools for administrators — all wrapped in a warm, minimal design system inspired by Cursor.
+**Otto** is a modern Learning Management Platform (LMP) built as a performant monorepo. It provides a full-featured learning experience for students and powerful management tools for administrators — all wrapped in a warm, playful design system inspired by Clay.
 
 ---
 
@@ -246,43 +248,50 @@ Shared `tsconfig.json` base configurations used throughout the monorepo for cons
 
 ## Design System
 
-Otto uses a custom design system inspired by **Cursor's warm minimalism**. The system is built on CSS custom properties and Tailwind CSS utility classes.
+Otto uses a custom design system inspired by **Clay** — a vibrant, cream-canvas aesthetic with saturated brand-color accents and generous rounded shapes. The system is built on CSS custom properties and Tailwind CSS utility classes.
 
 ### Typography
 
-Three distinct font families are used to create visual hierarchy:
+Two font families create the display/body hierarchy:
 
 | Font | Usage | Style |
 |------|-------|-------|
-| **CursorGothic** | Display headings & UI labels | Clean geometric sans-serif |
-| **Jannon** | Body text & long-form content | Elegant serif for readability |
-| **Berkeley Mono** | Code blocks & monospace content | Classic monospace for clarity |
+| **Inter (weight 500)** | Display headings, hero text | Rounded sans-serif with negative letter-spacing |
+| **Inter (weight 400)** | Body text, UI labels, navigation | Clean geometric sans-serif for readability |
 
 ### Color Palette
 
 The color system uses CSS custom properties with automatic dark/light mode support. Key tokens include:
 
-- **Background / Foreground** — Base surface colors
-- **Primary / Secondary** — Brand accent colors
-- **Muted** — Subdued backgrounds and text
-- **Accent** — Highlighted elements
-- **Destructive** — Error and warning states
-- **Card** — Elevated surface colors
+- **Canvas** (`#fffaf0`) — Cream-tinted white page background
+- **Ink / Primary** (`#0a0a0a`) — Near-black for headlines and CTAs
+- **Surface Soft / Card / Strong** — Cream surface hierarchy for depth
+- **Brand Colors** — Pink, teal, lavender, peach, ochre, mint, coral for feature accents
+- **Hairline** (`#e5e5e5`) — Subtle 1px borders
+- **Semantic** — Success, warning, error states
 
 All color tokens have corresponding `-foreground` variants for accessible contrast.
 
+### Border Radius
+
+A generous radius scale that matches the rounded display type:
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `xs` | 6px | Small badges |
+| `sm` | 8px | Small buttons |
+| `md` | 12px | CTA buttons, text inputs |
+| `lg` | 16px | Content cards, testimonials |
+| `xl` | 24px | Feature cards |
+| `pill` | 9999px | Category tabs, badge pills |
+
 ### Spacing
 
-An 8px base grid with sub-8px increments for fine-tuned layouts. Consistent spacing tokens ensure visual rhythm across all components.
+A 4px base unit with tokens from `xxs` (4px) to `section` (96px). Consistent spacing tokens ensure visual rhythm across all components.
 
 ### Shadows & Depth
 
-A multi-layer shadow system for creating realistic elevation:
-
-- **sm** — Subtle lift for cards and containers
-- **md** — Standard elevation for dropdowns and modals
-- **lg** — Prominent elevation for overlays
-- **xl** — Maximum elevation for top-level modals
+Clay avoids heavy shadows — depth comes from saturated color contrast between cream canvas and bright feature cards. Light hairline borders and subtle shadows are used sparingly.
 
 ### Theme Support
 
@@ -321,7 +330,7 @@ Full dark and light mode support powered by `next-themes`. Theme switching is av
 | **Radix UI + shadcn/ui** | Accessible primitives with full customization control |
 | **No global state library** | Server components and React hooks reduce the need for Redux/Zustand |
 | **pnpm workspaces** | Fast, disk-efficient dependency management |
-| **Custom design system** | Cohesive brand identity with warm minimalism aesthetic |
+| **Custom design system** | Cohesive brand identity with warm cream canvas and playful Clay aesthetic |
 
 ---
 
