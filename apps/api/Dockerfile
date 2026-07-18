@@ -1,37 +1,39 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
 WORKDIR /app
 
-# System dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        libpq-dev \
-        postgresql-client \
-    && rm -rf /var/lib/apt/lists/*
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-# Copy application before installing so deployments without uv.lock in the
-# build context can still resolve dependencies from pyproject.toml.
 COPY . .
+RUN uv sync --frozen --no-dev
 
-# Install dependencies. Prefer the committed lockfile, but do not fail the
-# Docker COPY stage when Render builds an older context without uv.lock.
-RUN if [ -f uv.lock ]; then \
-        uv sync --frozen --no-dev; \
-    else \
-        uv sync --no-dev; \
-    fi
 
-# Make startup script executable
-RUN chmod +x /app/init-db.sh
+FROM python:3.12-slim-bookworm AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PATH=/app/.venv/bin:$PATH \
+    DJANGO_DEBUG=False
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client \
+    && rm -rf /var/lib/apt/lists/* \
+    && addgroup --system django \
+    && adduser --system --ingroup django --home /app django
+
+WORKDIR /app
+
+COPY --from=builder --chown=django:django /app /app
+RUN chmod 755 /app/init-db.sh
+
+USER django
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "./init-db.sh && uv run gunicorn config.wsgi:application --bind 0.0.0.0:8000"]
+ENTRYPOINT ["/app/init-db.sh"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-"]

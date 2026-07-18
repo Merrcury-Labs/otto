@@ -1,60 +1,60 @@
 #!/bin/sh
-# init-db.sh — Creates the PostgreSQL user and database if they don't exist,
-# then runs Django migrations before starting the server.
-# Requires psql to be available (provided by postgresql-client).
+# Wait for PostgreSQL, provision the application role/database idempotently,
+# apply migrations, and then replace this process with the container command.
 
-set -e
+set -eu
 
-DB_HOST="${POSTGRES_HOST:-host.docker.internal}"
+DB_HOST="${POSTGRES_HOST:-db}"
 DB_PORT="${POSTGRES_PORT:-5432}"
 DB_NAME="${POSTGRES_DB:-otto_lms}"
 DB_USER="${POSTGRES_USER:-otto_user}"
-DB_PASSWORD="${POSTGRES_PASSWORD:-otto_password}"
+DB_PASSWORD="${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}"
+ADMIN_DB="${POSTGRES_ADMIN_DB:-postgres}"
 ADMIN_USER="${POSTGRES_ADMIN_USER:-postgres}"
-ADMIN_PASSWORD="${POSTGRES_ADMIN_PASSWORD:-}"
+ADMIN_PASSWORD="${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD must be set}"
+MAX_RETRIES="${POSTGRES_CONNECT_RETRIES:-60}"
 
-echo "Checking PostgreSQL connectivity at ${DB_HOST}:${DB_PORT}..."
+case "$MAX_RETRIES" in
+  ''|0|*[!0-9]*)
+    echo "POSTGRES_CONNECT_RETRIES must be a positive integer." >&2
+    exit 1
+    ;;
+esac
 
-# Wait for Postgres to be ready
-until pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -q 2>/dev/null; do
-  echo "Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
+echo "Waiting for PostgreSQL at ${DB_HOST}:${DB_PORT}..."
+attempt=1
+export PGPASSWORD="$ADMIN_PASSWORD"
+
+while ! psql -X -w -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -d "$ADMIN_DB" \
+  -tAc 'SELECT 1' >/dev/null 2>&1; do
+  if [ "$attempt" -ge "$MAX_RETRIES" ]; then
+    echo "Could not connect to PostgreSQL after ${MAX_RETRIES} attempts." >&2
+    exit 1
+  fi
+  attempt=$((attempt + 1))
   sleep 2
 done
 
-echo "PostgreSQL is reachable. Creating user/database if needed..."
-
-# Build PGPASSWORD for the admin user (used for creation commands)
-export PGPASSWORD="$ADMIN_PASSWORD"
-
-# Create the user if it doesn't exist
-USER_EXISTS=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -d postgres -tAc \
-  "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'")
-
-if [ "$USER_EXISTS" != "1" ]; then
-  echo "Creating user '$DB_USER'..."
-  psql -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -d postgres -c \
-    "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
-  echo "User '$DB_USER' created."
-else
-  echo "User '$DB_USER' already exists."
-fi
-
-# Create the database if it doesn't exist
-DB_EXISTS=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -d postgres -tAc \
-  "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'")
-
-if [ "$DB_EXISTS" != "1" ]; then
-  echo "Creating database '$DB_NAME' owned by '$DB_USER'..."
-  psql -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -d postgres -c \
-    "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
-  echo "Database '$DB_NAME' created."
-else
-  echo "Database '$DB_NAME' already exists."
-fi
+echo "PostgreSQL is ready; ensuring application role and database exist..."
+psql -X -v ON_ERROR_STOP=1 -w \
+  -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -d "$ADMIN_DB" \
+  --set=db_name="$DB_NAME" --set=db_user="$DB_USER" \
+  --set=db_password="$DB_PASSWORD" <<'SQL'
+SELECT pg_advisory_lock(hashtext('otto database bootstrap'));
+SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password')
+WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'db_user') \gexec
+SELECT format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user')
+WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_database WHERE datname = :'db_name') \gexec
+SELECT format('ALTER DATABASE %I OWNER TO %I', :'db_name', :'db_user') \gexec
+SELECT pg_advisory_unlock(hashtext('otto database bootstrap'));
+SQL
 
 unset PGPASSWORD
+# Do not pass privileged database credentials to the long-running web process.
+unset POSTGRES_ADMIN_DB POSTGRES_ADMIN_USER POSTGRES_ADMIN_PASSWORD ADMIN_PASSWORD
 
-echo "Running Django migrations..."
-python manage.py migrate
+echo "Applying Django migrations..."
+python manage.py migrate --noinput
 
 echo "Database initialization complete."
+exec "$@"
