@@ -16,7 +16,7 @@ export function createAuth(baseURL: string) {
       user: process.env.DB_USER || "otto_admin",
       password: process.env.DB_PASSWORD || process.env.PASSWORD || "8390dfjdkHjh737",
       database: process.env.DB_NAME || process.env.DATABASE || "otto",
-      options: "-c search_path=lms_auth",
+      options: "-c search_path=auth",
       ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
     }),
     user: {
