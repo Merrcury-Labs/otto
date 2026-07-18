@@ -11,11 +11,8 @@ RUN apt-get update \
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
-
 COPY . .
-RUN chmod +x /app/init-db.sh
+RUN chmod +x /app/init-db.sh && uv sync --frozen --no-dev
 
 EXPOSE 8000
 
