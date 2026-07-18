@@ -17,14 +17,17 @@ RUN apt-get update \
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Copy dependency files first (better Docker caching)
-COPY pyproject.toml uv.lock ./
-
-# Install dependencies
-RUN uv sync --frozen --no-dev
-
-# Copy application
+# Copy application before installing so deployments without uv.lock in the
+# build context can still resolve dependencies from pyproject.toml.
 COPY . .
+
+# Install dependencies. Prefer the committed lockfile, but do not fail the
+# Docker COPY stage when Render builds an older context without uv.lock.
+RUN if [ -f uv.lock ]; then \
+        uv sync --frozen --no-dev; \
+    else \
+        uv sync --no-dev; \
+    fi
 
 # Make startup script executable
 RUN chmod +x /app/init-db.sh
