@@ -39,10 +39,14 @@ echo "PostgreSQL is ready; ensuring application role and database exist..."
 psql -X -v ON_ERROR_STOP=1 -w \
   -h "$DB_HOST" -p "$DB_PORT" -U "$ADMIN_USER" -d "$ADMIN_DB" \
   --set=db_name="$DB_NAME" --set=db_user="$DB_USER" \
+  --set=admin_user="$ADMIN_USER" \
   --set=db_password="$DB_PASSWORD" <<'SQL'
 SELECT pg_advisory_lock(hashtext('otto database bootstrap'));
 SELECT format('CREATE ROLE %I LOGIN PASSWORD %L', :'db_user', :'db_password')
 WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = :'db_user') \gexec
+SELECT format('GRANT %I TO %I', :'db_user', :'admin_user')
+WHERE :'db_user' <> :'admin_user'
+  AND NOT pg_has_role(:'admin_user', :'db_user', 'MEMBER') \gexec
 SELECT format('CREATE DATABASE %I OWNER %I', :'db_name', :'db_user')
 WHERE NOT EXISTS (SELECT FROM pg_catalog.pg_database WHERE datname = :'db_name') \gexec
 SELECT format('ALTER DATABASE %I OWNER TO %I', :'db_name', :'db_user') \gexec
