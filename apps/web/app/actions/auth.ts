@@ -9,8 +9,6 @@ export type AuthActionState = {
   error: string | null;
 };
 
-export const initialAuthActionState: AuthActionState = { error: null };
-
 export async function signUpAction(
   _previousState: AuthActionState,
   formData: FormData,
