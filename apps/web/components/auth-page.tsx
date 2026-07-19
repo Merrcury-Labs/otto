@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/input-group";
 import { AuthDivider } from "@/components/auth-divider";
 import {
-	initialAuthActionState,
+	type AuthActionState,
 	signInAction,
 	signUpAction,
 } from "@/app/actions/auth";
@@ -25,6 +25,8 @@ type AuthMode = "login" | "signup";
 type AuthPageProps = {
 	mode?: AuthMode;
 };
+
+const initialAuthActionState: AuthActionState = { error: null };
 
 const authCopy = {
 	login: {
