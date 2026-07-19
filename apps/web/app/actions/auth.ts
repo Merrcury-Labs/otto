@@ -13,6 +13,9 @@ export async function signUpAction(
   _previousState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  const cookieStore = await cookies();
+  cookieStore.delete("user_role");
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const name = String(formData.get("name") ?? "").trim();
@@ -39,6 +42,9 @@ export async function signInAction(
   _previousState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
+  const cookieStore = await cookies();
+  cookieStore.delete("user_role");
+
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
 
