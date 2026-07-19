@@ -25,6 +25,8 @@ RUN pnpm turbo run build --filter=web
 FROM base AS runner
 WORKDIR /app
 
+RUN npm install --global @better-auth/cli@1.4.21
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -36,11 +38,16 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
-# Copy auth lib source (needed by @better-auth/cli generate/migrate)
+# Copy the shared auth package used by the application.
 COPY --from=installer --chown=nextjs:nodejs /app/packages/auth ./packages/auth
+
+# Copy the files Better Auth CLI uses to discover and load the auth instance.
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/package.json ./apps/web/package.json
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/lib/auth.ts ./apps/web/lib/auth.ts
 
 # Copy init script
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/init-auth-db.sh ./apps/web/init-auth-db.sh
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/better-auth_migrations ./apps/web/better-auth_migrations
 RUN chmod +x ./apps/web/init-auth-db.sh
 
 USER nextjs
