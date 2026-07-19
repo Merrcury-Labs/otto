@@ -2,8 +2,6 @@ type ExecuteRestOptions = {
   headers?: Headers;
 };
 
-const DEFAULT_SERVER_URL = "http://localhost:8080";
-
 const HOP_BY_HOP_HEADERS = new Set([
   "connection",
   "keep-alive",
@@ -16,12 +14,15 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 
 const getBackendRestUrl = (path: string[], search: string) => {
-  const serverUrl =
+  const backendUrl =
     process.env.BACKEND_REST_URL ??
-    process.env.SERVER_URL ??
-    DEFAULT_SERVER_URL;
+    process.env.BE_URL;
 
-  const normalizedBase = serverUrl.endsWith("/") ? serverUrl : `${serverUrl}/`;
+  if (!backendUrl) {
+    throw new Error("BE_URL must be set when BACKEND_REST_URL is not configured.");
+  }
+
+  const normalizedBase = backendUrl.endsWith("/") ? backendUrl : `${backendUrl}/`;
   const url = new URL(path.map(encodeURIComponent).join("/"), normalizedBase);
   url.search = search;
 

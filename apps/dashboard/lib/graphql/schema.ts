@@ -50,7 +50,6 @@ type ExecuteGraphqlOptions = {
   headers?: Headers;
 };
 
-const DEFAULT_SERVER_URL = "http://127.0.0.1:8000";
 const MAX_GRAPHQL_QUERY_LENGTH = 12_000;
 const MAX_GRAPHQL_VARIABLES_LENGTH = 1_000_000;
 const GRAPHQL_REQUEST_TIMEOUT_MS = 15_000;
@@ -96,8 +95,12 @@ const getBackendGraphqlUrl = () => {
     return process.env.BACKEND_GRAPHQL_URL;
   }
 
-  const serverUrl = process.env.SERVER_URL ?? DEFAULT_SERVER_URL;
-  return new URL("/graphql", serverUrl).toString();
+  const backendUrl = process.env.BE_URL;
+  if (!backendUrl) {
+    throw new Error("BE_URL must be set when BACKEND_GRAPHQL_URL is not configured.");
+  }
+
+  return new URL("/graphql", backendUrl).toString();
 };
 
 const getForwardedHeaders = (headers?: Headers) => {

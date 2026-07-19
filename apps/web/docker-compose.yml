@@ -19,7 +19,7 @@ services:
       NEXT_PUBLIC_DASHBOARD_URL: ${NEXT_PUBLIC_DASHBOARD_URL:-http://localhost:3002}
       NEXT_PUBLIC_WEB_URL: ${NEXT_PUBLIC_WEB_URL:-http://localhost:3000}
       # Backend
-      SERVER_URL: ${SERVER_URL:-http://host.docker.internal:8000}
+      BE_URL: ${BE_URL:?BE_URL must be set}
       # AI
       AI_BASE_URL: ${AI_BASE_URL:-}
       AI_API_KEY: ${AI_API_KEY:-}
