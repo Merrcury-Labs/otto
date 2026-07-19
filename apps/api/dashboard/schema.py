@@ -7,7 +7,7 @@ from .models import Org, Tutor
 class TutorType:
     id: strawberry.ID
     name: str
-    bio: str
+    bio: str | None
     profile_picture: str
     email: str
 
@@ -20,7 +20,7 @@ class TutorType:
 class OrgType:
     id: strawberry.ID
     name: str
-    description: str
+    description: str | None
     logo: str
     website: str | None
     owner_user_id: str | None
