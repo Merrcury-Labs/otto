@@ -2,11 +2,6 @@ import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
 const AUTH_ROUTES = new Set(["/login", "/signup", "/onboarding"]);
-const DASHBOARD_URL = (() => {
-  const value = process.env.NEXT_PUBLIC_DASHBOARD_URL;
-  if (!value) throw new Error("NEXT_PUBLIC_DASHBOARD_URL must be set.");
-  return value;
-})();
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,29 +12,9 @@ export async function middleware(request: NextRequest) {
   const roleCookie = request.cookies.get("user_role")?.value;
   const role = roleCookie || null;
 
-  // If user is on an auth route and has a session
-  if (isAuthRoute && hasSession) {
-    if (pathname === "/onboarding" && role) {
-      // User already has a role, redirect away from onboarding
-      if (role === "org") {
-        return NextResponse.redirect(new URL(DASHBOARD_URL, request.url));
-      }
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
-    if ((pathname === "/login" || pathname === "/signup") && role) {
-      if (role === "org") {
-        return NextResponse.redirect(new URL(DASHBOARD_URL, request.url));
-      }
-      return NextResponse.redirect(new URL("/", request.url));
-    }
-
-    if ((pathname === "/login" || pathname === "/signup") && !role) {
-      return NextResponse.redirect(
-        new URL("/onboarding", request.url),
-      );
-    }
-
+  // Keep login, signup, and onboarding reachable. Cookie presence alone does
+  // not prove that a Better Auth session is still valid.
+  if (isAuthRoute) {
     return NextResponse.next();
   }
 
@@ -47,7 +22,9 @@ export async function middleware(request: NextRequest) {
   if (!isAuthRoute && !hasSession) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    response.cookies.delete("user_role");
+    return response;
   }
 
   // If user has a session but no role cookie, redirect to onboarding
