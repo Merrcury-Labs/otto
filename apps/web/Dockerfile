@@ -17,6 +17,9 @@ RUN pnpm install --frozen-lockfile
 
 COPY --from=pruner /app/out/full/ .
 
+ARG NEXT_PUBLIC_DASHBOARD_URL
+RUN test -n "$NEXT_PUBLIC_DASHBOARD_URL"
+ENV NEXT_PUBLIC_DASHBOARD_URL="$NEXT_PUBLIC_DASHBOARD_URL"
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm turbo run build --filter=web
