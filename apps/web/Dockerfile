@@ -25,6 +25,7 @@ RUN pnpm turbo run build --filter=web
 FROM base AS runner
 WORKDIR /app
 
+RUN apk add --no-cache postgresql-client
 RUN npm install --global @better-auth/cli@1.4.21
 RUN npm install --no-save better-auth@1.6.9 pg@8.20.0
 
