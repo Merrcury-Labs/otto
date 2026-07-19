@@ -19,9 +19,9 @@ psql -X -v ON_ERROR_STOP=1 -w \
 unset PGPASSWORD
 
 echo "Generating Better Auth schema..."
-better-auth generate
+better-auth generate --yes
 
 echo "Applying Better Auth schema..."
-better-auth migrate
+better-auth migrate --yes
 
 echo "better-auth schema initialized."
