@@ -1,0 +1,12 @@
+.git
+.gitignore
+**/.env
+**/.env.*
+**/.next
+**/.turbo
+**/.venv
+**/__pycache__
+**/node_modules
+**/graphify-out
+**/*.pyc
+**/*.log
