@@ -30,7 +30,8 @@ export default function DashboardLoginPage() {
       });
 
       if (result.error) {
-        setError(result.error.message || "Invalid email or password");
+        // Do not reveal whether the email address or password was incorrect.
+        setError("Invalid email or password.");
         return;
       }
 

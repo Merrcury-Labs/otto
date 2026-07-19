@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionState } from "react";
 import Link from "next/link";
 import { GithubIcon } from "@/components/icons/github-icon";
 import { GoogleIcon } from "@/components/icons/google-icon";
@@ -11,7 +12,11 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import { AuthDivider } from "@/components/auth-divider";
-import { signInAction, signUpAction } from "@/app/actions/auth";
+import {
+	initialAuthActionState,
+	signInAction,
+	signUpAction,
+} from "@/app/actions/auth";
 import { cn } from "@/lib/utils";
 import { AtIcon, LockIcon, UserIcon } from "@phosphor-icons/react";
 
@@ -46,6 +51,10 @@ export function AuthPage({ mode = "login" }: AuthPageProps) {
 	const copy = authCopy[mode];
 	const isSignup = mode === "signup";
 	const action = isSignup ? signUpAction : signInAction;
+	const [state, formAction, isPending] = useActionState(
+		action,
+		initialAuthActionState,
+	);
 
 	return (
 		<div className="relative w-full overflow-hidden md:h-screen">
@@ -67,7 +76,7 @@ export function AuthPage({ mode = "login" }: AuthPageProps) {
 							{copy.description}
 						</p>
 					</div>
-					<form action={action} className="space-y-2">
+					<form action={formAction} className="space-y-2">
 						{isSignup ? (
 							<InputGroup>
 								<InputGroupInput
@@ -107,8 +116,14 @@ export function AuthPage({ mode = "login" }: AuthPageProps) {
 							</InputGroupAddon>
 						</InputGroup>
 
-						<Button className="w-full" size="sm" type="submit">
-							{copy.button}
+						{state.error ? (
+							<p aria-live="polite" className="text-destructive text-sm" role="alert">
+								{state.error}
+							</p>
+						) : null}
+
+						<Button className="w-full" disabled={isPending} size="sm" type="submit">
+							{isPending ? "Please wait..." : copy.button}
 						</Button>
 					</form>
 					<AuthDivider>{copy.divider}</AuthDivider>
