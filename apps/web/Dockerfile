@@ -26,6 +26,7 @@ FROM base AS runner
 WORKDIR /app
 
 RUN npm install --global @better-auth/cli@1.4.21
+RUN npm install --no-save better-auth@1.6.9 pg@8.20.0
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -40,6 +41,8 @@ COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/publ
 
 # Copy the shared auth package used by the application.
 COPY --from=installer --chown=nextjs:nodejs /app/packages/auth ./packages/auth
+RUN mkdir -p /app/node_modules/@repo \
+    && ln -s /app/packages/auth /app/node_modules/@repo/auth
 
 # Copy the files Better Auth CLI uses to discover and load the auth instance.
 COPY --from=installer --chown=nextjs:nodejs /app/apps/web/package.json ./apps/web/package.json
