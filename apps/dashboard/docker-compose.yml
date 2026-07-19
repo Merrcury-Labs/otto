@@ -1,0 +1,33 @@
+services:
+  dashboard:
+    build:
+      context: ../../
+      dockerfile: apps/dashboard/Dockerfile
+      args:
+        NEXT_PUBLIC_WEB_URL: ${NEXT_PUBLIC_WEB_URL:?NEXT_PUBLIC_WEB_URL must be set}
+    ports:
+      - "${DASHBOARD_PORT:-3002}:3002"
+    environment:
+      PORT: "3002"
+      HOSTNAME: "0.0.0.0"
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?BETTER_AUTH_URL must be set}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET must be set}
+      DB_HOST: ${DB_HOST:?DB_HOST must be set}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_USER: ${DB_USER:?DB_USER must be set}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set}
+      DB_NAME: ${DB_NAME:?DB_NAME must be set}
+      BE_URL: ${BE_URL:?BE_URL must be set}
+      NEXT_PUBLIC_WEB_URL: ${NEXT_PUBLIC_WEB_URL:?NEXT_PUBLIC_WEB_URL must be set}
+      AI_PROVIDER: ${AI_PROVIDER:-zai}
+      AI_BASE_URL: ${AI_BASE_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--output-document=-", "http://127.0.0.1:3002/login"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
