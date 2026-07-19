@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { GraduationCap, Buildings, CircleNotch } from "@phosphor-icons/react";
 
+const DASHBOARD_URL = (() => {
+  const value = process.env.NEXT_PUBLIC_DASHBOARD_URL;
+  if (!value) throw new Error("NEXT_PUBLIC_DASHBOARD_URL must be set.");
+  return value;
+})();
+
 export default function OnboardingPage() {
   const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
@@ -25,9 +31,7 @@ export default function OnboardingPage() {
           if (data.role) {
             // User already has a role set — redirect accordingly
             if (data.role === "org") {
-              const dashboardUrl =
-                process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3002";
-              window.location.href = dashboardUrl;
+              window.location.href = DASHBOARD_URL;
             } else {
               router.push("/");
             }
@@ -43,9 +47,7 @@ export default function OnboardingPage() {
             });
 
             if (setRoleResponse.ok) {
-              const dashboardUrl =
-                process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3002";
-              window.location.href = dashboardUrl;
+              window.location.href = DASHBOARD_URL;
               return;
             }
           }
@@ -104,9 +106,7 @@ export default function OnboardingPage() {
       if (role === "student") {
         router.push("/");
       } else {
-        const dashboardUrl =
-          process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3002";
-        router.push(`${dashboardUrl}/create-org`);
+        window.location.href = new URL("/create-org", DASHBOARD_URL).toString();
       }
     } catch (error) {
       console.error("Failed to set role:", error);

@@ -2,7 +2,11 @@ import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
 const AUTH_ROUTES = new Set(["/login", "/signup", "/onboarding"]);
-const DASHBOARD_URL = process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3002";
+const DASHBOARD_URL = (() => {
+  const value = process.env.NEXT_PUBLIC_DASHBOARD_URL;
+  if (!value) throw new Error("NEXT_PUBLIC_DASHBOARD_URL must be set.");
+  return value;
+})();
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
