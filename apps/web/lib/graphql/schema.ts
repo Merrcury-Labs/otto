@@ -36,16 +36,19 @@ import {
 } from "@/lib/graphql/flashcards";
 
 // Proxying to real backend for certain read-only operations is optional and
-// controlled via BACKEND_GRAPHQL_URL or SERVER_URL environment variables.
-const DEFAULT_SERVER_URL = "http://127.0.0.1:8000";
+// controlled via BACKEND_GRAPHQL_URL or BE_URL environment variables.
 const GRAPHQL_REQUEST_TIMEOUT_MS = 15_000;
 const proxiedOperations = new Set(["PublishedCourses", "CourseDetail", "CourseDetailWithEnrollment", "StudentByUserId", "EnrollStudent", "PublishedQuizzes", "PublishedQuizzesWithProgress", "QuizDetail", "SubmitQuizAttempt", "PublishedFlashcardDecks", "FlashcardDeckDetail", "DueCards", "ReviewFlashcard", "CreateFlashcardDeck", "CreateFlashcard", "UpdateFlashcardDeck", "UpdateFlashcard", "DeleteFlashcardDeck", "DeleteFlashcard"]);
 
 const getBackendGraphqlUrl = () => {
   if (process.env.BACKEND_GRAPHQL_URL) return process.env.BACKEND_GRAPHQL_URL;
 
-  const serverUrl = process.env.SERVER_URL ?? DEFAULT_SERVER_URL;
-  return new URL("/graphql", serverUrl).toString();
+  const backendUrl = process.env.BE_URL;
+  if (!backendUrl) {
+    throw new Error("BE_URL must be set when BACKEND_GRAPHQL_URL is not configured.");
+  }
+
+  return new URL("/graphql", backendUrl).toString();
 };
 
 const getForwardedHeaders = (headers?: Headers) => {
