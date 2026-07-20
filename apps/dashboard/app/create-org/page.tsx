@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@repo/ui/button";
 import { Input } from "@repo/ui/input";
@@ -14,7 +13,6 @@ import {
 } from "@phosphor-icons/react";
 
 export default function CreateOrgPage() {
-  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +42,7 @@ export default function CreateOrgPage() {
         throw new Error(data.error || "Failed to create organization");
       }
 
-      router.push("/");
+      window.location.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -61,7 +59,7 @@ export default function CreateOrgPage() {
   }
 
   if (!session) {
-    router.push("/login");
+    window.location.replace("/login");
     return null;
   }
 

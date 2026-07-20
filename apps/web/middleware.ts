@@ -8,10 +8,6 @@ export async function middleware(request: NextRequest) {
   const hasSession = Boolean(getSessionCookie(request));
   const isAuthRoute = AUTH_ROUTES.has(pathname);
 
-  // Check for role cookie set during onboarding
-  const roleCookie = request.cookies.get("user_role")?.value;
-  const role = roleCookie || null;
-
   // Keep login, signup, and onboarding reachable. Cookie presence alone does
   // not prove that a Better Auth session is still valid.
   if (isAuthRoute) {
@@ -25,13 +21,6 @@ export async function middleware(request: NextRequest) {
     const response = NextResponse.redirect(loginUrl);
     response.cookies.delete("user_role");
     return response;
-  }
-
-  // If user has a session but no role cookie, redirect to onboarding
-  if (!isAuthRoute && hasSession && !role && pathname !== "/onboarding") {
-    return NextResponse.redirect(
-      new URL("/onboarding", request.url),
-    );
   }
 
   return NextResponse.next();

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@repo/ui/button";
 import { AtIcon, LockIcon } from "@phosphor-icons/react";
@@ -10,7 +9,6 @@ import { AtIcon, LockIcon } from "@phosphor-icons/react";
 const WEB_APP_URL = process.env.NEXT_PUBLIC_WEB_URL || "http://localhost:3000";
 
 export default function DashboardLoginPage() {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,19 +41,19 @@ export default function DashboardLoginPage() {
 
         if (!role) {
           // No role set, redirect to onboarding on the web app
-          window.location.href = `${WEB_APP_URL}/onboarding`;
+          window.location.replace(`${WEB_APP_URL}/onboarding`);
           return;
         }
 
         if (role === "student") {
           // Student users go to the web app
-          window.location.href = `${WEB_APP_URL}`;
+          window.location.replace(`${WEB_APP_URL}`);
           return;
         }
       }
 
       // Org users stay on dashboard
-      router.push("/");
+      window.location.replace("/");
     } catch (err) {
       setError("Something went wrong. Please try again.");
     } finally {

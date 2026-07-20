@@ -333,8 +333,7 @@ export function DashboardLayout({
                   className="text-destructive focus:bg-destructive focus:text-destructive-foreground cursor-pointer"
                   onSelect={async () => {
                     await authClient.signOut();
-                    document.cookie = "user_role=; path=/; max-age=0";
-                    window.location.href = "/login";
+                    window.location.replace("/login");
                   }}
                 >
                   <SignOut className="h-4 w-4 mr-2" />
