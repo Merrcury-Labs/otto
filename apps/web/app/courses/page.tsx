@@ -3,7 +3,6 @@
 import * as React from "react"
 import {
     BookOpen,
-    Clock,
     PlayCircle,
     Search,
     Star,
@@ -12,38 +11,18 @@ import {
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { courses } from "@/lib/data"
 import { graphqlFetch } from "@/lib/graphql/client"
 import { publishedCoursesQuery } from "@/lib/graphql/courses"
 import { type BackendCourse, normalizeCourse, type DisplayCourse } from "@/lib/graphql/normalize"
 
 type Course = DisplayCourse
 
-const initialPublishedCourses: Course[] = courses
-    .filter((course) => course.status === "published")
-    .map((c) => ({
-        id: c.id,
-        title: c.title,
-        description: c.description,
-        instructor: c.instructor,
-        duration: c.duration,
-        level: c.level,
-        category: c.category,
-        status: c.status.toUpperCase(),
-        progress: c.progress,
-        rating: c.rating,
-        lessons: c.lessons,
-        thumbnail: c.image,
-        image: c.image,
-        students: 0,
-        prerequisites: [],
-        modules: [],
-    }))
-
 const levels = ["All", "Beginner", "Intermediate", "Advanced"]
 
 export default function CoursesPage() {
-    const [courseList, setCourseList] = React.useState<Course[]>(initialPublishedCourses)
+    const [courseList, setCourseList] = React.useState<Course[]>([])
+    const [isLoading, setIsLoading] = React.useState(true)
+    const [loadError, setLoadError] = React.useState<string | null>(null)
     const [searchQuery, setSearchQuery] = React.useState("")
     const [selectedCategory, setSelectedCategory] = React.useState("All")
     const [selectedLevel, setSelectedLevel] = React.useState("All")
@@ -59,11 +38,15 @@ export default function CoursesPage() {
 
                 if (isMounted) {
                     setCourseList(result.courses.map(normalizeCourse))
+                    setLoadError(null)
                 }
             } catch {
                 if (isMounted) {
-                    setCourseList(initialPublishedCourses)
+                    setCourseList([])
+                    setLoadError("Courses could not be loaded. Please try again later.")
                 }
+            } finally {
+                if (isMounted) setIsLoading(false)
             }
         }
 
@@ -156,7 +139,11 @@ export default function CoursesPage() {
                 </div>
             </div>
 
-            {filteredCourses.length > 0 ? (
+            {isLoading ? (
+                <div className="flex items-center justify-center py-20 text-muted-foreground">
+                    Loading courses...
+                </div>
+            ) : filteredCourses.length > 0 ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredCourses.map((course) => (
                         <div
@@ -258,17 +245,23 @@ export default function CoursesPage() {
                     <div className="mb-4 rounded-full bg-secondary p-4">
                         <Search className="size-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-xl font-bold">No courses found</h3>
+                    <h3 className="text-xl font-bold">
+                        {loadError ? "Unable to load courses" : "No courses found"}
+                    </h3>
                     <p className="mt-2 text-muted-foreground">
-                        Try adjusting your search or filters to find what you&apos;re looking for.
+                        {loadError || (courseList.length === 0
+                            ? "No published courses are available yet."
+                            : "Try adjusting your search or filters to find what you’re looking for.")}
                     </p>
-                    <Button
-                        variant="link"
-                        onClick={clearFilters}
-                        className="mt-4"
-                    >
-                        Clear all filters
-                    </Button>
+                    {!loadError && courseList.length > 0 ? (
+                        <Button
+                            variant="link"
+                            onClick={clearFilters}
+                            className="mt-4"
+                        >
+                            Clear all filters
+                        </Button>
+                    ) : null}
                 </div>
             )}
         </div>

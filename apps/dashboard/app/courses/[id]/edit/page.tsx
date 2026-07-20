@@ -38,6 +38,7 @@ import {
 import { graphqlFetch } from "../../../../lib/graphql/client";
 import { adminCoursesQuery } from "../../../../lib/graphql/courses";
 import { saveCourse } from "../../persistence";
+import { uploadThumbnail } from "../../../../lib/course-thumbnail";
 
 function getLessonIcon(type: Lesson["type"]) {
   if (type === "video") return <Video className="h-4 w-4" />;
@@ -55,6 +56,8 @@ export default function EditCoursePage() {
   const [courseError, setCourseError] = useState<string | null>(null);
   const [isSavingCourse, setIsSavingCourse] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
   const [isLessonModalOpen, setIsLessonModalOpen] = useState(false);
   const [currentModuleId, setCurrentModuleId] = useState<
     Lesson["id"] | null
@@ -299,18 +302,22 @@ export default function EditCoursePage() {
     });
   };
 
-  const handleThumbnailUpload = (file: File | null) => {
+  const handleThumbnailUpload = async (file: File | null) => {
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setFormData((currentData) =>
-          currentData ? { ...currentData, thumbnail: reader.result as string } : null
-        );
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingThumbnail(true);
+    setThumbnailError(null);
+    try {
+      const thumbnail = await uploadThumbnail(file);
+      setFormData((currentData) =>
+        currentData ? { ...currentData, thumbnail } : null,
+      );
+    } catch (error) {
+      setThumbnailError(
+        error instanceof Error ? error.message : "Unable to upload thumbnail.",
+      );
+    } finally {
+      setIsUploadingThumbnail(false);
+    }
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -470,12 +477,21 @@ export default function EditCoursePage() {
                     type="file"
                     accept="image/*"
                     className="hidden"
+                    disabled={isUploadingThumbnail}
                     onChange={(event) =>
                       handleThumbnailUpload(event.target.files?.[0] || null)
                     }
                   />
-                  Replace Thumbnail
+                  {isUploadingThumbnail ? "Uploading..." : "Replace Thumbnail"}
                 </label>
+                {thumbnailError ? (
+                  <p className="text-sm text-destructive" role="alert">
+                    {thumbnailError}
+                  </p>
+                ) : null}
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG, GIF, or WebP. Maximum 5MB.
+                </p>
               </div>
             </div>
 
@@ -743,7 +759,7 @@ export default function EditCoursePage() {
           </Button>
           <Button
             type="submit"
-            disabled={isSavingCourse}
+            disabled={isSavingCourse || isUploadingThumbnail}
             className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
           >
             {isSavingCourse ? "Saving..." : "Save Changes"}
