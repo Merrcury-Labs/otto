@@ -1,4 +1,3 @@
-import { auth } from "@/lib/auth";
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -9,12 +8,10 @@ export async function middleware(request: NextRequest) {
   const hasSession = Boolean(getSessionCookie(request));
   const isPublicRoute = PUBLIC_ROUTES.has(pathname);
 
-  // Allow public routes without session
+  // Always keep login reachable. A session-cookie-shaped value can be stale
+  // or invalid, so its presence alone must not redirect a signed-out user to
+  // the dashboard (this is especially visible with persisted prod cookies).
   if (isPublicRoute) {
-    // If user is on login page and already has a session, redirect to home
-    if (hasSession) {
-      return NextResponse.redirect(new URL("/", request.url));
-    }
     return NextResponse.next();
   }
 
