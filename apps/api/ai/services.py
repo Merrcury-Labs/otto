@@ -12,6 +12,11 @@ def queue_generation_job(job, task_dispatcher):
             raise ValueError(f'Job cannot be queued from status {job.status}.')
         if job.attempt_count >= job.max_attempts:
             raise ValueError('Job has reached its maximum number of attempts.')
+        incomplete_documents = job.source_documents.exclude(
+            status='READY'
+        ).exists()
+        if incomplete_documents:
+            raise ValueError('All source documents must finish processing before queueing.')
 
         job.status = GenerationJob.Status.QUEUED
         job.current_stage = 'queued'

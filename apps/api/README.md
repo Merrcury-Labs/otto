@@ -67,6 +67,13 @@ Until the LangGraph workflow is implemented, queued jobs fail explicitly with
 `WORKFLOW_NOT_CONFIGURED`. Set `GENERATION_WORKFLOW_RUNNER` to the dotted path of the
 workflow entry point when that implementation is added.
 
+Source material can be uploaded with
+`POST /api/ai/generation-jobs/{id}/documents/` as multipart form data using the
+`file` field. PDF, DOCX, Markdown, HTML, and plain-text files are extracted on the
+`documents` Celery queue. Chunk text retains page numbers for PDFs and headings for
+DOCX documents. The default upload limit is 25 MiB and can be changed with
+`SOURCE_DOCUMENT_MAX_BYTES`.
+
 ### Prerequisites
 
 - Python 3.12+

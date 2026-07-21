@@ -1,8 +1,14 @@
 import uuid
+from pathlib import Path
 
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
+
+
+def source_document_upload_path(instance, filename):
+    suffix = Path(filename).suffix.lower()
+    return f'generation-jobs/{instance.job_id}/sources/{instance.id}{suffix}'
 
 
 class GenerationJob(models.Model):
@@ -142,3 +148,70 @@ class GenerationJobEvent(models.Model):
 
     def __str__(self):
         return f'{self.job_id}: {self.event_type}'
+
+
+class SourceDocument(models.Model):
+    class Status(models.TextChoices):
+        UPLOADED = 'UPLOADED', 'Uploaded'
+        PROCESSING = 'PROCESSING', 'Processing'
+        READY = 'READY', 'Ready'
+        FAILED = 'FAILED', 'Failed'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job = models.ForeignKey(
+        GenerationJob, related_name='source_documents', on_delete=models.CASCADE
+    )
+    file = models.FileField(upload_to=source_document_upload_path, max_length=500)
+    original_filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100)
+    file_size = models.PositiveBigIntegerField()
+    sha256 = models.CharField(max_length=64, db_index=True)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.UPLOADED, db_index=True
+    )
+    page_count = models.PositiveIntegerField(default=0)
+    character_count = models.PositiveBigIntegerField(default=0)
+    extraction_task_id = models.CharField(max_length=255, blank=True)
+    error_code = models.CharField(max_length=100, blank=True)
+    error_message = models.TextField(blank=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('created_at',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('job', 'sha256'), name='unique_source_document_per_job'
+            )
+        ]
+
+    def __str__(self):
+        return self.original_filename
+
+
+class SourceChunk(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(
+        SourceDocument, related_name='chunks', on_delete=models.CASCADE
+    )
+    position = models.PositiveIntegerField()
+    page_number = models.PositiveIntegerField(null=True, blank=True)
+    heading = models.CharField(max_length=500, blank=True)
+    content = models.TextField()
+    content_hash = models.CharField(max_length=64)
+    character_count = models.PositiveIntegerField()
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('position',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('document', 'position'), name='unique_source_chunk_position'
+            )
+        ]
+        indexes = [models.Index(fields=('document', 'page_number'))]
+
+    def __str__(self):
+        return f'{self.document_id}:{self.position}'

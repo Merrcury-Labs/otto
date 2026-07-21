@@ -165,6 +165,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = Path(os.environ.get('DJANGO_MEDIA_ROOT', BASE_DIR / 'media'))
+SOURCE_DOCUMENT_MAX_BYTES = int(os.environ.get('SOURCE_DOCUMENT_MAX_BYTES', str(25 * 1024 * 1024)))
 
 # Background course-generation jobs. PostgreSQL remains the source of truth for
 # user-visible job state; Celery's result backend is intentionally not used for it.
@@ -177,6 +180,7 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 CELERY_TASK_DEFAULT_QUEUE = 'generation'
 CELERY_TASK_ROUTES = {
+    'ai.tasks.extract_source_document': {'queue': 'documents'},
     'ai.tasks.start_generation_job': {'queue': 'generation'},
     'ai.tasks.resume_generation_job': {'queue': 'generation'},
     'ai.tasks.recover_stalled_jobs': {'queue': 'maintenance'},

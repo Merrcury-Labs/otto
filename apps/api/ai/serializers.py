@@ -1,8 +1,20 @@
+import hashlib
+from pathlib import Path
+
 from django.db import transaction
-from django.utils import timezone
 from rest_framework import serializers
 
-from .models import GenerationJob, GenerationJobEvent
+from .models import GenerationJob, GenerationJobEvent, SourceChunk, SourceDocument
+
+
+SUPPORTED_SOURCE_EXTENSIONS = {'.pdf', '.docx', '.txt', '.md', '.html', '.htm'}
+SUPPORTED_CONTENT_TYPES = {
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'text/plain',
+    'text/markdown',
+    'text/html',
+}
 
 
 class GenerationJobEventSerializer(serializers.ModelSerializer):
@@ -53,3 +65,70 @@ class GenerationJobSerializer(serializers.ModelSerializer):
 
 class QueueGenerationJobSerializer(serializers.Serializer):
     force = serializers.BooleanField(default=False)
+
+
+class SourceChunkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SourceChunk
+        fields = (
+            'id', 'position', 'page_number', 'heading', 'content', 'content_hash',
+            'character_count', 'metadata', 'created_at',
+        )
+        read_only_fields = fields
+
+
+class SourceDocumentSerializer(serializers.ModelSerializer):
+    chunk_count = serializers.IntegerField(source='chunks.count', read_only=True)
+
+    class Meta:
+        model = SourceDocument
+        fields = (
+            'id', 'job', 'file', 'original_filename', 'content_type', 'file_size',
+            'sha256', 'status', 'page_count', 'character_count', 'chunk_count',
+            'extraction_task_id', 'error_code', 'error_message', 'processed_at',
+            'created_at', 'updated_at',
+        )
+        read_only_fields = (
+            'id', 'job', 'original_filename', 'content_type', 'file_size', 'sha256',
+            'status', 'page_count', 'character_count', 'chunk_count',
+            'extraction_task_id', 'error_code', 'error_message', 'processed_at',
+            'created_at', 'updated_at',
+        )
+
+    def validate_file(self, uploaded_file):
+        max_size = self.context['max_upload_size']
+        extension = Path(uploaded_file.name).suffix.lower()
+        if extension not in SUPPORTED_SOURCE_EXTENSIONS:
+            raise serializers.ValidationError(
+                f'Unsupported file type. Allowed: {", ".join(sorted(SUPPORTED_SOURCE_EXTENSIONS))}.'
+            )
+        if uploaded_file.content_type not in SUPPORTED_CONTENT_TYPES:
+            raise serializers.ValidationError('The uploaded content type is not supported.')
+        if uploaded_file.size <= 0:
+            raise serializers.ValidationError('The uploaded file is empty.')
+        if uploaded_file.size > max_size:
+            raise serializers.ValidationError(
+                f'The uploaded file exceeds the {max_size} byte limit.'
+            )
+        return uploaded_file
+
+    def create(self, validated_data):
+        uploaded_file = validated_data['file']
+        digest = hashlib.sha256()
+        for part in uploaded_file.chunks():
+            digest.update(part)
+        uploaded_file.seek(0)
+        if SourceDocument.objects.filter(
+            job=self.context['job'], sha256=digest.hexdigest()
+        ).exists():
+            raise serializers.ValidationError(
+                {'file': 'This document has already been uploaded to the job.'}
+            )
+        return SourceDocument.objects.create(
+            job=self.context['job'],
+            original_filename=Path(uploaded_file.name).name,
+            content_type=uploaded_file.content_type,
+            file_size=uploaded_file.size,
+            sha256=digest.hexdigest(),
+            **validated_data,
+        )

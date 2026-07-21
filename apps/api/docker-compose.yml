@@ -58,6 +58,9 @@ services:
       POSTGRES_ADMIN_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD must be set}
       POSTGRES_CONNECT_RETRIES: ${POSTGRES_CONNECT_RETRIES:-60}
       CELERY_BROKER_URL: redis://redis:6379/0
+      DJANGO_MEDIA_ROOT: /app/media
+    volumes:
+      - generation_media:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -77,7 +80,7 @@ services:
     restart: unless-stopped
     init: true
     entrypoint: []
-    command: ["celery", "-A", "config", "worker", "-Q", "generation,maintenance", "--loglevel=INFO"]
+    command: ["celery", "-A", "config", "worker", "-Q", "documents,generation,maintenance", "--loglevel=INFO"]
     environment:
       DJANGO_DEBUG: "False"
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
@@ -88,6 +91,9 @@ services:
       POSTGRES_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
       GENERATION_WORKFLOW_RUNNER: ${GENERATION_WORKFLOW_RUNNER:-}
+      DJANGO_MEDIA_ROOT: /app/media
+    volumes:
+      - generation_media:/app/media
     depends_on:
       db:
         condition: service_healthy
@@ -146,6 +152,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  generation_media:
 
 networks:
   backend:

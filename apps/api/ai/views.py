@@ -1,13 +1,20 @@
+from django.conf import settings
 from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import GenerationJob
-from .serializers import GenerationJobSerializer, QueueGenerationJobSerializer
+from .models import GenerationJob, SourceDocument
+from .serializers import (
+    GenerationJobSerializer,
+    QueueGenerationJobSerializer,
+    SourceChunkSerializer,
+    SourceDocumentSerializer,
+)
 from .services import queue_generation_job
-from .tasks import start_generation_job
+from .tasks import extract_source_document, start_generation_job
 
 
 class GenerationJobViewSet(viewsets.ModelViewSet):
@@ -46,3 +53,76 @@ class GenerationJobViewSet(viewsets.ModelViewSet):
             changed = job.request_cancellation()
         response_status = status.HTTP_202_ACCEPTED if changed else status.HTTP_409_CONFLICT
         return Response(GenerationJobSerializer(job).data, status=response_status)
+
+    @action(
+        detail=True,
+        methods=('get', 'post'),
+        parser_classes=(MultiPartParser, FormParser),
+    )
+    def documents(self, request, pk=None):
+        job = self.get_object()
+        if request.method == 'GET':
+            documents = job.source_documents.prefetch_related('chunks').all()
+            return Response(SourceDocumentSerializer(documents, many=True).data)
+        if job.status != GenerationJob.Status.DRAFT:
+            return Response(
+                {'detail': 'Documents can only be uploaded while the job is a draft.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        serializer = SourceDocumentSerializer(
+            data=request.data,
+            context={'job': job, 'max_upload_size': settings.SOURCE_DOCUMENT_MAX_BYTES},
+        )
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            document = serializer.save()
+            job.add_event(
+                'DOCUMENT_UPLOADED',
+                f'Uploaded source document {document.original_filename}.',
+                {'document_id': str(document.id)},
+            )
+
+            def dispatch_extraction():
+                try:
+                    result = extract_source_document.delay(str(document.id))
+                except Exception as exc:
+                    SourceDocument.objects.filter(pk=document.pk).update(
+                        status=SourceDocument.Status.FAILED,
+                        error_code='QUEUE_DISPATCH_FAILED',
+                        error_message=str(exc),
+                    )
+                    return
+                SourceDocument.objects.filter(pk=document.pk).update(
+                    extraction_task_id=result.id
+                )
+
+            transaction.on_commit(dispatch_extraction)
+        return Response(SourceDocumentSerializer(document).data, status=status.HTTP_202_ACCEPTED)
+
+
+class SourceDocumentViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = SourceDocument.objects.select_related('job').prefetch_related('chunks')
+    serializer_class = SourceDocumentSerializer
+    authentication_classes = ()
+    permission_classes = (AllowAny,)
+
+    @action(detail=True, methods=('get',))
+    def chunks(self, request, pk=None):
+        return Response(SourceChunkSerializer(self.get_object().chunks.all(), many=True).data)
+
+    @action(detail=True, methods=('post',))
+    def retry(self, request, pk=None):
+        document = self.get_object()
+        if document.status != SourceDocument.Status.FAILED:
+            return Response(
+                {'detail': 'Only failed documents can be retried.'},
+                status=status.HTTP_409_CONFLICT,
+            )
+        document.status = SourceDocument.Status.UPLOADED
+        document.error_code = ''
+        document.error_message = ''
+        document.save()
+        result = extract_source_document.delay(str(document.id))
+        document.extraction_task_id = result.id
+        document.save(update_fields=('extraction_task_id', 'updated_at'))
+        return Response(SourceDocumentSerializer(document).data, status=status.HTTP_202_ACCEPTED)

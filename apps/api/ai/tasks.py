@@ -6,11 +6,82 @@ from django.db import models, transaction
 from django.utils import timezone
 from django.utils.module_loading import import_string
 
-from .models import GenerationJob
+from .extraction import chunk_sections, extract_sections
+from .models import GenerationJob, SourceChunk, SourceDocument
 
 
 class WorkflowNotConfigured(RuntimeError):
     pass
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(ConnectionError, TimeoutError),
+    retry_backoff=True,
+    retry_jitter=True,
+    max_retries=3,
+    name='ai.tasks.extract_source_document',
+)
+def extract_source_document(self, document_id):
+    with transaction.atomic():
+        document = SourceDocument.objects.select_for_update().select_related('job').get(
+            pk=document_id
+        )
+        if document.status == SourceDocument.Status.READY:
+            return {'document_id': str(document.id), 'status': document.status, 'ignored': True}
+        document.status = SourceDocument.Status.PROCESSING
+        document.extraction_task_id = self.request.id or document.extraction_task_id
+        document.error_code = ''
+        document.error_message = ''
+        document.save()
+        document.job.add_event(
+            'DOCUMENT_PROCESSING',
+            f'Processing source document {document.original_filename}.',
+            {'document_id': str(document.id)},
+        )
+
+    try:
+        sections = extract_sections(document)
+        chunks = chunk_sections(sections)
+        if not chunks:
+            raise ValueError('No readable text was found in the document.')
+        with transaction.atomic():
+            document = SourceDocument.objects.select_for_update().select_related('job').get(
+                pk=document_id
+            )
+            document.chunks.all().delete()
+            SourceChunk.objects.bulk_create(
+                [SourceChunk(document=document, position=index, **chunk) for index, chunk in enumerate(chunks)]
+            )
+            document.status = SourceDocument.Status.READY
+            document.page_count = max(
+                (section.page_number or 0 for section in sections), default=0
+            )
+            document.character_count = sum(chunk['character_count'] for chunk in chunks)
+            document.processed_at = timezone.now()
+            document.save()
+            document.job.add_event(
+                'DOCUMENT_READY',
+                f'Source document {document.original_filename} is ready.',
+                {'document_id': str(document.id), 'chunk_count': len(chunks)},
+            )
+        return {'document_id': str(document.id), 'status': document.status, 'chunks': len(chunks)}
+    except Exception as exc:
+        with transaction.atomic():
+            document = SourceDocument.objects.select_for_update().select_related('job').get(
+                pk=document_id
+            )
+            document.status = SourceDocument.Status.FAILED
+            document.error_code = 'EXTRACTION_FAILED'
+            document.error_message = str(exc)
+            document.processed_at = timezone.now()
+            document.save()
+            document.job.add_event(
+                'DOCUMENT_FAILED',
+                f'Could not process source document {document.original_filename}.',
+                {'document_id': str(document.id), 'error_code': document.error_code},
+            )
+        raise
 
 
 def _workflow_runner():
