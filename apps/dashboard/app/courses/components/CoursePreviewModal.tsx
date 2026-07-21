@@ -3,6 +3,7 @@
 import { BookOpen, Check, Code, FileText, Play, X } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import Image from "next/image";
+import { getCourseDescriptionText } from "../utils";
 import type { CourseFormData, Lesson } from "../types";
 
 interface CoursePreviewModalProps {
@@ -119,7 +120,7 @@ export function CoursePreviewModal({
                 <p
                   className="text-base leading-7 text-muted-foreground"
                 >
-                  {course.description ||
+                  {getCourseDescriptionText(course.description) ||
                     "Your course description will help students understand the value of this course."}
                 </p>
               </div>

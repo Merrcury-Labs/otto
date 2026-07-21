@@ -51,6 +51,14 @@ export const parseLines = (value?: string) =>
     .filter(Boolean) ?? [];
 
 export const getImageUrl = (value?: string) => {
+  const normalizedValue = value?.trim();
+  if (
+    normalizedValue?.startsWith("/") ||
+    normalizedValue?.startsWith("data:image/")
+  ) {
+    return normalizedValue;
+  }
+
   const imageUrl = value
     ?.match(/https?:\/\/\S+|\/\/\S+|\S+unsplash\.com\S*/i)?.[0]
     .trim()
@@ -96,6 +104,10 @@ export const getDisplayableImageUrl = (value: string) => {
     if (unsplashPhotoId) {
       return `https://unsplash.com/photos/${unsplashPhotoId}/download?force=true&w=900`;
     }
+
+    if (url.protocol === "https:" || url.protocol === "http:") {
+      return value;
+    }
   } catch {
     return "";
   }
@@ -108,6 +120,35 @@ export const getCourseImageUrl = (course: BackendCourse) =>
     .map(getImageUrl)
     .map(getDisplayableImageUrl)
     .find(Boolean) ?? "";
+
+type EditorNode = {
+  type?: string;
+  text?: string;
+  content?: EditorNode[];
+};
+
+const getEditorNodeText = (node: EditorNode): string => {
+  if (node.type === "text") return node.text ?? "";
+  if (node.type === "hardBreak") return "\n";
+
+  const content = node.content?.map(getEditorNodeText).join("") ?? "";
+  return node.type === "paragraph" || node.type === "heading"
+    ? `${content}\n`
+    : content;
+};
+
+export const getCourseDescriptionText = (description?: string) => {
+  if (!description) return "";
+
+  try {
+    const document = JSON.parse(description) as EditorNode;
+    if (document.type !== "doc") return description;
+
+    return getEditorNodeText(document).replace(/\n{3,}/g, "\n\n").trim();
+  } catch {
+    return description;
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Lesson utilities
