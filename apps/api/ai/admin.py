@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .models import (
     ArtifactReview,
+    AIUsageRecord,
     GeneratedArtifact,
     GenerationJob,
     GenerationJobEvent,
@@ -103,3 +104,13 @@ class ResearchSourceAdmin(admin.ModelAdmin):
 class ResearchFindingAdmin(admin.ModelAdmin):
     list_display = ('question', 'source', 'confidence', 'created_at')
     search_fields = ('claim', 'evidence')
+
+
+@admin.register(AIUsageRecord)
+class AIUsageRecordAdmin(admin.ModelAdmin):
+    list_display = (
+        'job', 'operation', 'provider', 'model', 'total_tokens',
+        'estimated_cost_usd', 'success', 'created_at',
+    )
+    list_filter = ('provider', 'operation', 'success')
+    search_fields = ('job__id', 'request_id', 'model')

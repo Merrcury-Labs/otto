@@ -1,21 +1,26 @@
+import json
 from datetime import timedelta
+from types import SimpleNamespace
 from io import BytesIO
 from tempfile import TemporaryDirectory
 from unittest.mock import Mock, patch
 
 from django.core.files.base import ContentFile
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
 from docx import Document as DocxDocument
+from pydantic import BaseModel
 
 from dashboard.models import Org, Tutor
 from users.models import User
 
 from .models import (
     ArtifactReview,
+    AIUsageRecord,
     GeneratedArtifact,
     GenerationJob,
     ResearchQuestion,
@@ -27,9 +32,19 @@ from .services import queue_generation_job
 from .tasks import extract_source_document, recover_stalled_jobs, start_generation_job
 from .workflow import resume_generation_workflow, run_generation_workflow
 from .persistence import persist_approved_course
+from .providers import (
+    AIBudgetExceeded,
+    AIRateLimitExceeded,
+    _enforce_rate_limit,
+    structured_chat_completion,
+)
 
 
-def fake_web_research_provider(*, questions, brief, documents):
+class TinyStructuredOutput(BaseModel):
+    value: str
+
+
+def fake_web_research_provider(*, job_id=None, questions, brief, documents):
     return {
         'sources': [
             {
@@ -358,6 +373,73 @@ class GenerationJobTestCase(TestCase):
         self.assertEqual(source.publisher, 'Example University')
         self.assertEqual(source.reliability_score, 0.9)
         self.assertEqual(source.findings.get().confidence, 0.9)
+
+    @override_settings(
+        AI_API_KEY='test-key',
+        AI_PROVIDER='test-provider',
+        AI_MODEL='test-model',
+        AI_INPUT_COST_PER_MILLION='1',
+        AI_OUTPUT_COST_PER_MILLION='2',
+        AI_MAX_OUTPUT_TOKENS=50,
+    )
+    @patch('ai.providers._client')
+    def test_structured_provider_tracks_tokens_cost_and_schema(self, client_factory):
+        job = self.create_job(max_ai_tokens=1000)
+        response = SimpleNamespace(
+            id='provider-request-1',
+            choices=[SimpleNamespace(message=SimpleNamespace(content=json.dumps({'value': 'ok'})))],
+            usage=SimpleNamespace(prompt_tokens=10, completion_tokens=5),
+        )
+        client = client_factory.return_value
+        client.chat.completions.create.return_value = response
+
+        result = structured_chat_completion(
+            job_id=str(job.id),
+            operation='test_schema',
+            schema_model=TinyStructuredOutput,
+            system_prompt='Return structured test output.',
+            payload={'input': 'hello'},
+        )
+
+        self.assertEqual(result, {'value': 'ok'})
+        usage = job.ai_usage_records.get()
+        self.assertEqual(usage.provider, 'test-provider')
+        self.assertEqual(usage.total_tokens, 15)
+        self.assertEqual(str(usage.estimated_cost_usd), '0.000020')
+        request = client.chat.completions.create.call_args.kwargs
+        self.assertEqual(request['response_format']['type'], 'json_schema')
+
+        api_response = self.client.get(
+            reverse('ai:generation-job-usage', args=(job.id,))
+        )
+        self.assertEqual(api_response.status_code, 200)
+        self.assertEqual(api_response.data['totals']['total_tokens'], 15)
+
+    @override_settings(AI_MAX_OUTPUT_TOKENS=50)
+    def test_provider_rejects_request_that_exceeds_job_token_budget(self):
+        job = self.create_job(max_ai_tokens=2)
+
+        with self.assertRaises(AIBudgetExceeded):
+            structured_chat_completion(
+                job_id=str(job.id),
+                operation='over_budget',
+                schema_model=TinyStructuredOutput,
+                system_prompt='A prompt long enough to exceed two approximate tokens.',
+                payload={'input': 'hello'},
+            )
+
+        self.assertFalse(AIUsageRecord.objects.filter(job=job).exists())
+
+    @override_settings(
+        AI_PROVIDER='rate-test-provider',
+        AI_MODEL='rate-test-model',
+        AI_REQUESTS_PER_MINUTE=1,
+    )
+    def test_provider_rate_limit_is_enforced(self):
+        cache.clear()
+        _enforce_rate_limit()
+        with self.assertRaises(AIRateLimitExceeded):
+            _enforce_rate_limit()
 
     @override_settings(LANGGRAPH_DATABASE_URL='')
     def test_blueprint_workflow_resumes_after_approval(self):

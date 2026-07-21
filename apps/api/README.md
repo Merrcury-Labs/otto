@@ -82,8 +82,8 @@ The original requester can approve a draft or request a revision with
 
 The initial blueprint generator is deterministic and provider-free. Replace it with
 an LLM-backed structured generator by setting `CURRICULUM_BLUEPRINT_GENERATOR` to a
-dotted Python callable accepting `brief`, `sources`, `feedback`, and
-`previous_blueprint` keyword arguments.
+dotted Python callable accepting `job_id`, `brief`, `sources`, `research`, `feedback`,
+and `previous_blueprint` keyword arguments.
 
 After blueprint approval, LangGraph generates and validates a complete course package
 containing lesson bodies, questions, and flashcards. The package pauses at a second
@@ -96,8 +96,9 @@ The write is idempotent through `GenerationJob.result_course`, so a resumed or r
 persistence step returns the existing course instead of creating a duplicate.
 
 Set `COURSE_PACKAGE_GENERATOR` to replace the provider-free package generator. Its
-callable receives `blueprint`, `sources`, `feedback`, and `previous_package` keyword
-arguments and must return data matching the generated course-package schema.
+callable receives `job_id`, `blueprint`, `sources`, `research`, `feedback`, and
+`previous_package` keyword arguments and must return data matching the generated
+course-package schema.
 
 Before blueprint design, the workflow creates and executes curriculum research
 questions. Results are available from
@@ -108,9 +109,33 @@ are excluded from generator context.
 
 The default `COURSE_RESEARCH_PROVIDER` searches uploaded document chunks. A web or
 database research integration can replace it with a dotted callable accepting
-`questions`, `brief`, and `documents`, and returning validated `sources` and
+`job_id`, `questions`, `brief`, and `documents`, and returning validated `sources` and
 `findings`. Web sources must include a valid URL; every finding must reference a
 declared source and one of the planned questions.
+
+## AI provider and budgets
+
+The backend follows the same OpenAI-compatible provider settings as Otto's web apps:
+`AI_PROVIDER`, `AI_BASE_URL`, `AI_API_KEY`, and `AI_MODEL`. To enable real model
+generation, set:
+
+```text
+CURRICULUM_BLUEPRINT_GENERATOR=ai.providers.llm_blueprint_generator
+COURSE_PACKAGE_GENERATOR=ai.providers.llm_course_package_generator
+```
+
+Set `COURSE_RESEARCH_PROVIDER=ai.providers.openai_web_research_provider` only for a
+provider/model supporting the Responses API `web_search` tool. Returned web URLs are
+rejected unless they appear in the provider response's citation annotations.
+
+Each job accepts `max_ai_tokens` and optional `max_ai_cost_usd`. Usage is available
+from `GET /api/ai/generation-jobs/{id}/usage/`. Configure provider-specific prices
+with `AI_INPUT_COST_PER_MILLION` and `AI_OUTPUT_COST_PER_MILLION`; they default to
+zero so Otto never invents pricing. `AI_REQUESTS_PER_MINUTE` is enforced across
+workers through Redis, and the client performs at most two SDK retries.
+
+Structured output defaults to JSON Schema. Set `AI_STRUCTURED_OUTPUT_MODE=json_object`
+for compatible providers that do not implement strict JSON Schema responses.
 
 ### Prerequisites
 

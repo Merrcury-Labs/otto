@@ -212,4 +212,31 @@ COURSE_RESEARCH_PROVIDER = os.environ.get(
 )
 RESEARCH_MIN_RELIABILITY = float(os.environ.get('RESEARCH_MIN_RELIABILITY', '0.5'))
 RESEARCH_MIN_CONFIDENCE = float(os.environ.get('RESEARCH_MIN_CONFIDENCE', '0.5'))
+AI_PROVIDER = os.environ.get('AI_PROVIDER', 'zai')
+AI_BASE_URL = os.environ.get('AI_BASE_URL', 'https://api.z.ai/v1')
+AI_API_KEY = os.environ.get('AI_API_KEY', '')
+AI_MODEL = os.environ.get('AI_MODEL', 'glm-5.2')
+AI_STRUCTURED_OUTPUT_MODE = os.environ.get('AI_STRUCTURED_OUTPUT_MODE', 'json_schema')
+AI_REQUEST_TIMEOUT_SECONDS = float(os.environ.get('AI_REQUEST_TIMEOUT_SECONDS', '120'))
+AI_MAX_OUTPUT_TOKENS = int(os.environ.get('AI_MAX_OUTPUT_TOKENS', '16000'))
+AI_MAX_CONTEXT_CHARACTERS = int(os.environ.get('AI_MAX_CONTEXT_CHARACTERS', '120000'))
+# Pricing is deployment/provider specific. Zero means usage is tracked without
+# inventing a price; operators can configure actual per-million-token rates.
+AI_INPUT_COST_PER_MILLION = os.environ.get('AI_INPUT_COST_PER_MILLION', '0')
+AI_OUTPUT_COST_PER_MILLION = os.environ.get('AI_OUTPUT_COST_PER_MILLION', '0')
+AI_REQUESTS_PER_MINUTE = int(os.environ.get('AI_REQUESTS_PER_MINUTE', '30'))
+AI_RATE_LIMIT_CACHE_URL = os.environ.get('AI_RATE_LIMIT_CACHE_URL', '')
+CACHES = {
+    'default': (
+        {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': AI_RATE_LIMIT_CACHE_URL,
+        }
+        if AI_RATE_LIMIT_CACHE_URL
+        else {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'otto-ai-rate-limits',
+        }
+    )
+}
 LANGGRAPH_DATABASE_URL = os.environ.get('LANGGRAPH_DATABASE_URL', '')

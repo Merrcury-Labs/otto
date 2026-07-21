@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import transaction
+from django.db import models, transaction
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from .models import ArtifactReview, GeneratedArtifact, GenerationJob, SourceDocument
 from .serializers import (
+    AIUsageRecordSerializer,
     BlueprintReviewSerializer,
     GeneratedArtifactSerializer,
     FinalReviewSerializer,
@@ -118,6 +119,27 @@ class GenerationJobViewSet(viewsets.ModelViewSet):
             {
                 'questions': ResearchQuestionSerializer(questions, many=True).data,
                 'sources': ResearchSourceSerializer(sources, many=True).data,
+            }
+        )
+
+    @action(detail=True, methods=('get',))
+    def usage(self, request, pk=None):
+        job = self.get_object()
+        records = job.ai_usage_records.all()
+        totals = records.filter(success=True).aggregate(
+            input_tokens=models.Sum('input_tokens'),
+            output_tokens=models.Sum('output_tokens'),
+            total_tokens=models.Sum('total_tokens'),
+            estimated_cost_usd=models.Sum('estimated_cost_usd'),
+        )
+        return Response(
+            {
+                'budget': {
+                    'max_ai_tokens': job.max_ai_tokens,
+                    'max_ai_cost_usd': job.max_ai_cost_usd,
+                },
+                'totals': {key: value or 0 for key, value in totals.items()},
+                'records': AIUsageRecordSerializer(records, many=True).data,
             }
         )
 

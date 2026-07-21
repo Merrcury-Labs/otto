@@ -72,7 +72,7 @@ def heuristic_research_planner(*, brief, documents):
     ]
 
 
-def document_research_provider(*, questions, brief, documents):
+def document_research_provider(*, job_id=None, questions, brief, documents):
     """Search uploaded chunks locally; configure COURSE_RESEARCH_PROVIDER for web research."""
     sources = {}
     findings = []

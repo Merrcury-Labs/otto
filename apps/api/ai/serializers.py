@@ -8,6 +8,7 @@ from users.models import User
 
 from .models import (
     ArtifactReview,
+    AIUsageRecord,
     GeneratedArtifact,
     GenerationJob,
     GenerationJobEvent,
@@ -46,6 +47,7 @@ class GenerationJobSerializer(serializers.ModelSerializer):
             'celery_task_id', 'status', 'current_stage', 'progress_percent',
             'status_message', 'course_brief', 'input_config', 'graph_thread_id',
             'graph_checkpoint_id', 'attempt_count', 'max_attempts', 'heartbeat_at',
+            'max_ai_tokens', 'max_ai_cost_usd',
             'queued_at', 'started_at', 'waiting_since', 'completed_at', 'failed_at',
             'cancel_requested_at', 'error_code', 'error_message', 'error_details',
             'created_at', 'updated_at', 'events',
@@ -220,5 +222,16 @@ class ResearchQuestionSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'query', 'rationale', 'priority', 'status', 'created_at',
             'updated_at', 'findings',
+        )
+        read_only_fields = fields
+
+
+class AIUsageRecordSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AIUsageRecord
+        fields = (
+            'id', 'operation', 'provider', 'model', 'request_id', 'input_tokens',
+            'output_tokens', 'total_tokens', 'estimated_cost_usd', 'latency_ms',
+            'success', 'error_code', 'metadata', 'created_at',
         )
         read_only_fields = fields

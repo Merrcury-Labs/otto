@@ -165,6 +165,7 @@ def execute_research(state: BlueprintState):
     job.save()
     provider = import_string(settings.COURSE_RESEARCH_PROVIDER)
     raw_result = provider(
+        job_id=str(job.id),
         questions=state['research_questions'],
         brief=job.course_brief,
         documents=_source_context(job),
@@ -241,6 +242,7 @@ def design_blueprint(state: BlueprintState):
     job.save()
     generator = import_string(settings.CURRICULUM_BLUEPRINT_GENERATOR)
     blueprint = generator(
+        job_id=str(job.id),
         brief=job.course_brief,
         sources=_source_context(job),
         research=_research_context(job),
@@ -365,6 +367,7 @@ def generate_course_package(state: BlueprintState):
     )
     generator = import_string(settings.COURSE_PACKAGE_GENERATOR)
     package = generator(
+        job_id=str(job.id),
         blueprint=state['blueprint'],
         sources=_source_context(job),
         research=_research_context(job),

@@ -89,6 +89,14 @@ class GenerationJob(models.Model):
     graph_checkpoint_id = models.CharField(max_length=255, blank=True)
     attempt_count = models.PositiveIntegerField(default=0)
     max_attempts = models.PositiveIntegerField(default=3)
+    max_ai_tokens = models.PositiveIntegerField(default=250000)
+    max_ai_cost_usd = models.DecimalField(
+        max_digits=10,
+        decimal_places=4,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+    )
     heartbeat_at = models.DateTimeField(null=True, blank=True, db_index=True)
     queued_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
@@ -373,3 +381,30 @@ class ResearchFinding(models.Model):
 
     def __str__(self):
         return self.claim[:100]
+
+
+class AIUsageRecord(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job = models.ForeignKey(
+        GenerationJob, related_name='ai_usage_records', on_delete=models.CASCADE
+    )
+    operation = models.CharField(max_length=100, db_index=True)
+    provider = models.CharField(max_length=100)
+    model = models.CharField(max_length=255)
+    request_id = models.CharField(max_length=255, blank=True, db_index=True)
+    input_tokens = models.PositiveIntegerField(default=0)
+    output_tokens = models.PositiveIntegerField(default=0)
+    total_tokens = models.PositiveIntegerField(default=0)
+    estimated_cost_usd = models.DecimalField(max_digits=12, decimal_places=6, default=0)
+    latency_ms = models.PositiveIntegerField(default=0)
+    success = models.BooleanField(default=True, db_index=True)
+    error_code = models.CharField(max_length=100, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('created_at',)
+        indexes = [models.Index(fields=('job', 'operation', 'created_at'))]
+
+    def __str__(self):
+        return f'{self.job_id}:{self.operation}:{self.total_tokens}'
