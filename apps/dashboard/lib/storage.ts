@@ -35,16 +35,14 @@ export async function uploadCourseThumbnail(
   const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const bucket =
-    process.env.R2_DASHBOARD ??
-    process.env.R2_BUCKET_NAME;
+  const bucket = process.env.R2_BUCKET_NAME;
   const publicUrl = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
 
   const missingVariables = [
     !accountId && "R2_ACCOUNT_ID",
     !accessKeyId && "R2_ACCESS_KEY_ID",
     !secretAccessKey && "R2_SECRET_ACCESS_KEY",
-    !bucket && "R2_DASHBOARD (or R2_BUCKET_NAME)",
+    !bucket && "R2_BUCKET_NAME",
     !publicUrl && "R2_PUBLIC_URL",
   ].filter((variable): variable is string => Boolean(variable));
 
