@@ -31,6 +31,10 @@ import { Button } from "@repo/ui/button";
 import type { Course } from "./types";
 import { graphqlFetch } from "../../lib/graphql/client";
 import { adminCoursesQuery } from "../../lib/graphql/courses";
+import {
+  getCourseDescriptionText,
+  getCourseImageUrl,
+} from "./utils";
 
 type CourseStats = {
   total: number;
@@ -43,7 +47,7 @@ type BackendCourse = {
   id: string;
   title: string;
   description: string;
-  tutor: string;
+  tutor?: { id: string; name: string } | null;
   thumbnail?: string;
   image?: string;
   lessonCount: number;
@@ -70,65 +74,6 @@ const parseLines = (value?: string) =>
     .map((item) => item.trim())
     .filter(Boolean) ?? [];
 
-const getImageUrl = (value?: string) => {
-  const imageUrl = value
-    ?.match(/https?:\/\/\S+|\/\/\S+|\S+unsplash\.com\S*/i)?.[0]
-    .trim()
-    .replace(/[),.;]+$/, "");
-
-  if (!imageUrl) return "";
-  if (imageUrl.startsWith("//")) return `https:${imageUrl}`;
-  if (/^https?:\/\//i.test(imageUrl) || imageUrl.startsWith("data:")) {
-    return imageUrl;
-  }
-  if (imageUrl.includes("unsplash.com")) return `https://${imageUrl}`;
-
-  return imageUrl;
-};
-
-const getUnsplashPhotoId = (url: URL) => {
-  if (url.hostname !== "unsplash.com") return "";
-
-  const [, resource, slug] = url.pathname.split("/");
-
-  if (resource !== "photos" || !slug) return "";
-
-  return slug.split("-").at(-1) ?? "";
-};
-
-const getDisplayableImageUrl = (value: string) => {
-  if (!value) return "";
-  if (value.startsWith("data:image/") || value.startsWith("/")) return value;
-
-  try {
-    const url = new URL(value);
-    const imageHosts = ["images.unsplash.com", "plus.unsplash.com"];
-
-    if (
-      imageHosts.includes(url.hostname) ||
-      /\.(avif|gif|jpe?g|png|webp)$/i.test(url.pathname)
-    ) {
-      return value;
-    }
-
-    const unsplashPhotoId = getUnsplashPhotoId(url);
-
-    if (unsplashPhotoId) {
-      return `https://unsplash.com/photos/${unsplashPhotoId}/download?force=true&w=900`;
-    }
-  } catch {
-    return "";
-  }
-
-  return "";
-};
-
-const getCourseImageUrl = (course: BackendCourse) =>
-  [course.thumbnail, course.image]
-    .map(getImageUrl)
-    .map(getDisplayableImageUrl)
-    .find(Boolean) ?? "";
-
 const getCourseStats = (courses: Course[]): CourseStats => ({
   total: courses.length,
   published: courses.filter((course) => course.status === "published").length,
@@ -144,7 +89,7 @@ const getCourseStats = (courses: Course[]): CourseStats => ({
 const normalizeCourse = (course: BackendCourse): Course => ({
   id: course.id,
   title: course.title,
-  description: course.description,
+  description: getCourseDescriptionText(course.description),
   status: "published",
   students: course.students,
   quizzes: 0,
