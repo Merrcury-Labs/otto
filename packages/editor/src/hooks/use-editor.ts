@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useEditor as useTiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Highlight from "@tiptap/extension-highlight";
@@ -17,6 +17,9 @@ import {
 } from "../extensions";
 import type { EditorUser } from "../types";
 import { useYjsProvider } from "../providers/yjs-provider";
+import { defaultMarkdownParser } from "prosemirror-markdown";
+
+const MARKDOWN_BLOCK_PATTERN = /^(?:#{1,6}\s|>\s|[-*+]\s|\d+\.\s|```)/m;
 
 interface UseOttoEditorOptions {
   content: string;
@@ -117,8 +120,51 @@ export function useOttoEditor({
       attributes: {
         class: "otto-editor-body outline-none",
       },
+      handlePaste: (view, event) => {
+        const text = event.clipboardData?.getData("text/plain") ?? "";
+        if (!MARKDOWN_BLOCK_PATTERN.test(text)) return false;
+
+        const markdownDocument = defaultMarkdownParser.parse(text);
+        const editorDocument = view.state.schema.nodeFromJSON(
+          markdownDocument.toJSON(),
+        );
+        view.dispatch(
+          view.state.tr.replaceSelection(editorDocument.slice(0)).scrollIntoView(),
+        );
+        return true;
+      },
     },
   });
+
+  // Tiptap treats `content` as initial state. Synchronize later content loads
+  // (for example, opening an existing lesson) without resetting the cursor
+  // when the change originated from this editor.
+  useEffect(() => {
+    if (!editor || (collaborative && doc)) return;
+
+    const nextResolvedContent =
+      format === "prosemirror" ? content : detectAndConvert(content);
+    let nextContent: string | Record<string, unknown> = nextResolvedContent;
+
+    try {
+      const parsed = JSON.parse(nextResolvedContent);
+      if (parsed && typeof parsed === "object" && parsed.type === "doc") {
+        nextContent = parsed;
+      }
+    } catch {
+      // Plain text is accepted directly by Tiptap.
+    }
+
+    const nextDocument =
+      typeof nextContent === "string"
+        ? nextContent
+        : JSON.stringify(nextContent);
+    const currentDocument = JSON.stringify(editor.getJSON());
+
+    if (currentDocument !== nextDocument) {
+      editor.commands.setContent(nextContent, false);
+    }
+  }, [collaborative, content, doc, editor, format]);
 
   return editor;
 }
