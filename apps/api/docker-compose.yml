@@ -92,6 +92,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       GENERATION_WORKFLOW_RUNNER: ${GENERATION_WORKFLOW_RUNNER:-ai.workflow.run_generation_workflow}
       CURRICULUM_BLUEPRINT_GENERATOR: ${CURRICULUM_BLUEPRINT_GENERATOR:-ai.generators.heuristic_blueprint_generator}
+      COURSE_PACKAGE_GENERATOR: ${COURSE_PACKAGE_GENERATOR:-ai.generators.heuristic_course_package_generator}
       DJANGO_MEDIA_ROOT: /app/media
     volumes:
       - generation_media:/app/media

@@ -18,6 +18,7 @@ from .models import ArtifactReview, GeneratedArtifact, GenerationJob, SourceDocu
 from .services import queue_generation_job
 from .tasks import extract_source_document, recover_stalled_jobs, start_generation_job
 from .workflow import resume_generation_workflow, run_generation_workflow
+from .persistence import persist_approved_course
 
 
 class GenerationJobTestCase(TestCase):
@@ -276,9 +277,41 @@ class GenerationJobTestCase(TestCase):
 
         job.refresh_from_db()
         artifact = job.artifacts.get(type=GeneratedArtifact.Type.BLUEPRINT, version=1)
-        self.assertFalse(result['interrupted'])
-        self.assertEqual(job.status, GenerationJob.Status.BLUEPRINT_APPROVED)
+        package = job.artifacts.get(type=GeneratedArtifact.Type.COURSE_PACKAGE, version=1)
+        self.assertTrue(result['interrupted'])
+        self.assertEqual(job.status, GenerationJob.Status.WAITING_FOR_FINAL_APPROVAL)
         self.assertEqual(artifact.status, GeneratedArtifact.Status.APPROVED)
+        self.assertEqual(package.status, GeneratedArtifact.Status.DRAFT)
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    def test_final_approval_persists_complete_course_once(self):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+        run_generation_workflow(str(job.id))
+        resume_generation_workflow(str(job.id), {'decision': 'APPROVE', 'feedback': ''})
+        package = job.artifacts.get(type=GeneratedArtifact.Type.COURSE_PACKAGE, version=1)
+
+        result = resume_generation_workflow(
+            str(job.id), {'decision': 'APPROVE', 'feedback': ''}
+        )
+
+        job.refresh_from_db()
+        package.refresh_from_db()
+        course = job.result_course
+        self.assertFalse(result['interrupted'])
+        self.assertEqual(job.status, GenerationJob.Status.COMPLETED)
+        self.assertEqual(job.progress_percent, 100)
+        self.assertEqual(package.status, GeneratedArtifact.Status.APPROVED)
+        self.assertEqual(course.modules.count(), 1)
+        self.assertEqual(course.lessons.count(), 1)
+        self.assertEqual(course.quizzes.count(), 1)
+        self.assertEqual(course.quizzes.get().questions.count(), 5)
+        self.assertEqual(course.flashcard_decks.count(), 1)
+        self.assertEqual(course.flashcard_decks.get().cards.count(), 10)
+        self.assertEqual(course.quizzes.get().status, 'DRAFT')
+        self.assertEqual(course.flashcard_decks.get().status, 'DRAFT')
+
+        repeated = persist_approved_course(str(job.id), str(package.id))
+        self.assertEqual(repeated.id, course.id)
 
     @override_settings(LANGGRAPH_DATABASE_URL='')
     def test_blueprint_revision_creates_new_artifact_version(self):
@@ -321,5 +354,47 @@ class GenerationJobTestCase(TestCase):
         self.assertEqual(review.decided_by, self.user)
         self.assertEqual(review.decision, ArtifactReview.Decision.APPROVE)
         delay.assert_called_once()
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    @patch('ai.views.resume_generation_job.delay')
+    def test_final_review_endpoint_records_and_dispatches_approval(self, delay):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+        run_generation_workflow(str(job.id))
+        resume_generation_workflow(str(job.id), {'decision': 'APPROVE', 'feedback': ''})
+        package = job.artifacts.get(type=GeneratedArtifact.Type.COURSE_PACKAGE, version=1)
+        delay.return_value = Mock(id='final-resume-task-1')
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse('ai:generation-job-review-final', args=(job.id,)),
+                {
+                    'decided_by': str(self.user.id),
+                    'decision': ArtifactReview.Decision.APPROVE,
+                },
+                format='json',
+            )
+
+        self.assertEqual(response.status_code, 202)
+        self.assertEqual(package.reviews.get().decision, ArtifactReview.Decision.APPROVE)
+        delay.assert_called_once()
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    def test_final_revision_creates_new_course_package_version(self):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+        run_generation_workflow(str(job.id))
+        resume_generation_workflow(str(job.id), {'decision': 'APPROVE', 'feedback': ''})
+
+        result = resume_generation_workflow(
+            str(job.id),
+            {'decision': 'REVISE', 'feedback': 'Add clearer applied examples.'},
+        )
+
+        job.refresh_from_db()
+        first = job.artifacts.get(type=GeneratedArtifact.Type.COURSE_PACKAGE, version=1)
+        second = job.artifacts.get(type=GeneratedArtifact.Type.COURSE_PACKAGE, version=2)
+        self.assertTrue(result['interrupted'])
+        self.assertEqual(job.status, GenerationJob.Status.WAITING_FOR_FINAL_APPROVAL)
+        self.assertEqual(first.status, GeneratedArtifact.Status.REVISION_REQUESTED)
+        self.assertEqual(second.status, GeneratedArtifact.Status.DRAFT)
 
 # Create your tests here.

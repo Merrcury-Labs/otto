@@ -221,6 +221,7 @@ class SourceChunk(models.Model):
 class GeneratedArtifact(models.Model):
     class Type(models.TextChoices):
         BLUEPRINT = 'BLUEPRINT', 'Curriculum blueprint'
+        COURSE_PACKAGE = 'COURSE_PACKAGE', 'Generated course package'
 
     class Status(models.TextChoices):
         DRAFT = 'DRAFT', 'Draft'

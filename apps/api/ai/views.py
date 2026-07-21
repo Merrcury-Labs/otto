@@ -10,6 +10,7 @@ from .models import ArtifactReview, GeneratedArtifact, GenerationJob, SourceDocu
 from .serializers import (
     BlueprintReviewSerializer,
     GeneratedArtifactSerializer,
+    FinalReviewSerializer,
     GenerationJobSerializer,
     QueueGenerationJobSerializer,
     SourceChunkSerializer,
@@ -135,6 +136,59 @@ class GenerationJobViewSet(viewsets.ModelViewSet):
             if artifact.reviews.exists():
                 return Response(
                     {'detail': 'A review has already been submitted for this blueprint version.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            review = ArtifactReview.objects.create(
+                artifact=artifact,
+                decided_by=decided_by,
+                decision=serializer.validated_data['decision'],
+                feedback=serializer.validated_data['feedback'],
+            )
+            review_payload = {
+                'decision': review.decision,
+                'feedback': review.feedback,
+                'review_id': str(review.id),
+            }
+
+            def dispatch_resume():
+                result = resume_generation_job.delay(str(job.id), review_payload)
+                GenerationJob.objects.filter(pk=job.pk).update(celery_task_id=result.id)
+
+            transaction.on_commit(dispatch_resume)
+        return Response(
+            GeneratedArtifactSerializer(artifact).data,
+            status=status.HTTP_202_ACCEPTED,
+        )
+
+    @action(detail=True, methods=('post',))
+    def review_final(self, request, pk=None):
+        serializer = FinalReviewSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        with transaction.atomic():
+            job = GenerationJob.objects.select_for_update().get(pk=self.get_object().pk)
+            if job.status != GenerationJob.Status.WAITING_FOR_FINAL_APPROVAL:
+                return Response(
+                    {'detail': 'This job is not waiting for final approval.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            decided_by = serializer.validated_data['decided_by']
+            if decided_by.id != job.requested_by_id:
+                return Response(
+                    {'detail': 'Only the job requester can review this course package.'},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+            artifact = job.artifacts.filter(
+                type=GeneratedArtifact.Type.COURSE_PACKAGE,
+                status=GeneratedArtifact.Status.DRAFT,
+            ).order_by('-version').first()
+            if artifact is None:
+                return Response(
+                    {'detail': 'No draft course package is available for review.'},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            if artifact.reviews.exists():
+                return Response(
+                    {'detail': 'A review has already been submitted for this package version.'},
                     status=status.HTTP_409_CONFLICT,
                 )
             review = ArtifactReview.objects.create(

@@ -140,10 +140,17 @@ def resume_generation_job(self, job_id, review):
 
     with transaction.atomic():
         job = GenerationJob.objects.select_for_update().get(pk=job_id)
-        if job.status != GenerationJob.Status.WAITING_FOR_BLUEPRINT_APPROVAL:
+        if job.status not in {
+            GenerationJob.Status.WAITING_FOR_BLUEPRINT_APPROVAL,
+            GenerationJob.Status.WAITING_FOR_FINAL_APPROVAL,
+        }:
             return {'job_id': str(job.id), 'status': job.status, 'ignored': True}
-        job.current_stage = 'resuming_blueprint_review'
-        job.status_message = 'Applying curriculum blueprint review.'
+        review_stage = (
+            'blueprint' if job.status == GenerationJob.Status.WAITING_FOR_BLUEPRINT_APPROVAL
+            else 'course package'
+        )
+        job.current_stage = 'resuming_review'
+        job.status_message = f'Applying {review_stage} review.'
         job.heartbeat_at = timezone.now()
         job.celery_task_id = self.request.id or job.celery_task_id
         job.save()

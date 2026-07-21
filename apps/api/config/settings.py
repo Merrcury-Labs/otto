@@ -201,4 +201,7 @@ GENERATION_WORKFLOW_RUNNER = os.environ.get(
 CURRICULUM_BLUEPRINT_GENERATOR = os.environ.get(
     'CURRICULUM_BLUEPRINT_GENERATOR', 'ai.generators.heuristic_blueprint_generator'
 )
+COURSE_PACKAGE_GENERATOR = os.environ.get(
+    'COURSE_PACKAGE_GENERATOR', 'ai.generators.heuristic_course_package_generator'
+)
 LANGGRAPH_DATABASE_URL = os.environ.get('LANGGRAPH_DATABASE_URL', '')

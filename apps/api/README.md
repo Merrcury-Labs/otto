@@ -85,6 +85,20 @@ an LLM-backed structured generator by setting `CURRICULUM_BLUEPRINT_GENERATOR` t
 dotted Python callable accepting `brief`, `sources`, `feedback`, and
 `previous_blueprint` keyword arguments.
 
+After blueprint approval, LangGraph generates and validates a complete course package
+containing lesson bodies, questions, and flashcards. The package pauses at a second
+human-review gate. Submit the final decision to
+`POST /api/ai/generation-jobs/{id}/review-final/` using the same review fields.
+
+Final approval writes the course hierarchy in one transaction. Modules and lessons
+are created with the course, while quizzes and flashcard decks are saved as `DRAFT`.
+The write is idempotent through `GenerationJob.result_course`, so a resumed or repeated
+persistence step returns the existing course instead of creating a duplicate.
+
+Set `COURSE_PACKAGE_GENERATOR` to replace the provider-free package generator. Its
+callable receives `blueprint`, `sources`, `feedback`, and `previous_package` keyword
+arguments and must return data matching the generated course-package schema.
+
 ### Prerequisites
 
 - Python 3.12+

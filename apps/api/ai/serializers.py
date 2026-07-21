@@ -173,3 +173,7 @@ class BlueprintReviewSerializer(serializers.Serializer):
                 {'feedback': 'Feedback is required when requesting a revision.'}
             )
         return attrs
+
+
+class FinalReviewSerializer(BlueprintReviewSerializer):
+    pass
