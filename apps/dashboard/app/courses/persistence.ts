@@ -8,6 +8,7 @@ import {
   updateModuleMutation,
   updateCourseMutation,
 } from "../../lib/graphql/courses";
+import { tutorsQuery } from "../../lib/graphql/orgs";
 
 type SaveCourseOptions = {
   id?: string;
@@ -17,10 +18,10 @@ type SaveCourseOptions = {
 const getLessonCount = (course: CourseFormData) =>
   course.modules.reduce((total, module) => total + module.lessons.length, 0);
 
-const getCoursePayload = (course: CourseFormData) => ({
+const getCoursePayload = (course: CourseFormData, tutorId: string) => ({
   name: course.title,
   description: course.description,
-  tutor: "",
+  tutorId,
   lessonCount: getLessonCount(course),
   level: course.tags[1] ?? "",
   category: course.tags[0] ?? "",
@@ -29,10 +30,10 @@ const getCoursePayload = (course: CourseFormData) => ({
   prerequisites: course.prerequisites.join("\n"),
 });
 
-const getUpdateCoursePayload = (course: CourseFormData) => ({
+const getUpdateCoursePayload = (course: CourseFormData, tutorId: string) => ({
   name: course.title,
   description: course.description,
-  tutor: "",
+  tutorId,
   thumbnail: course.thumbnail,
   image: course.thumbnail,
   lessonCount: getLessonCount(course),
@@ -210,14 +211,28 @@ const saveCourseRecord = async (
   course: CourseFormData,
   options: SaveCourseOptions
 ) => {
-  const payload = getCoursePayload(course);
+  const { tutors } = await graphqlFetch<{
+    tutors: Array<{ id: string }>;
+  }>({
+    query: tutorsQuery,
+    operationName: "Tutors",
+  });
+  const tutorId = course.tutorId ?? tutors[0]?.id;
+
+  if (!tutorId) {
+    throw new Error(
+      "Your organization does not have a tutor. Add a tutor before saving a course.",
+    );
+  }
+
+  const payload = getCoursePayload(course, tutorId);
 
   if (options.id) {
     return graphqlFetch<unknown>({
       query: updateCourseMutation,
       variables: {
         id: options.id,
-        ...getUpdateCoursePayload(course),
+        ...getUpdateCoursePayload(course, tutorId),
       },
     });
   }

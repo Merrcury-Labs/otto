@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
           logo: logo || "",
           website: website || null,
           ownerUserId: session.user.id,
+          ownerName: session.user.name,
+          ownerEmail: session.user.email,
         },
       },
       { headers: request.headers },

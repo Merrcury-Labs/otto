@@ -46,6 +46,8 @@ const ORG_SCOPED_OPERATIONS = new Set([
   "AdminCourses",
   "CourseList",
   "AdminQuizzes",
+  "Tutors",
+  "CreateTutorForOwner",
 ]);
 
 export async function POST(request: NextRequest) {

@@ -7,6 +7,7 @@ import type { CourseFormData, CourseModule, Lesson } from "./types";
 
 export type BackendCourse = {
   id: string;
+  tutor?: { id: string } | null;
   title: string;
   description: string;
   thumbnail?: string;
@@ -200,6 +201,7 @@ export const normalizeModules = (modules?: BackendModule[]) =>
     })) ?? [];
 
 export const getCourseFormData = (course: BackendCourse): CourseFormData => ({
+  tutorId: course.tutor?.id,
   title: course.title,
   description: course.description,
   thumbnail: getCourseImageUrl(course),
