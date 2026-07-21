@@ -32,6 +32,7 @@ const getInitialLessonFormData = (
 export default function LessonModal({
   isOpen,
   lessonType,
+  initialData,
   onSave,
   onClose,
 }: LessonModalProps) {
@@ -41,9 +42,11 @@ export default function LessonModal({
 
   useEffect(() => {
     if (isOpen) {
-      setLessonFormData(getInitialLessonFormData(lessonType));
+      setLessonFormData(
+        initialData ?? getInitialLessonFormData(lessonType),
+      );
     }
-  }, [isOpen, lessonType]);
+  }, [initialData, isOpen, lessonType]);
 
   const addQuestion = () => {
     const quizType = lessonFormData.quizType || "multiple-choice";
@@ -114,7 +117,11 @@ export default function LessonModal({
         className="flex h-[calc(100dvh-2rem)] max-h-[44rem] w-full max-w-lg flex-col overflow-hidden rounded-lg shadow-2xl bg-card"
         onClick={(e) => e.stopPropagation()}
       >
-        <LessonModalHeader lessonType={lessonType} onClose={onClose} />
+        <LessonModalHeader
+          lessonType={lessonType}
+          isEditing={Boolean(initialData)}
+          onClose={onClose}
+        />
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
           <LessonDetailsFields
@@ -165,6 +172,7 @@ export default function LessonModal({
 
         <LessonModalFooter
           lessonType={lessonType}
+          isEditing={Boolean(initialData)}
           onClose={onClose}
           onSave={handleSave}
         />
