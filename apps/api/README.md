@@ -11,6 +11,7 @@ A Learning Management System backend built with Django, exposing both **REST** a
 | GraphQL API    | Strawberry GraphQL + Django adapter |
 | Database       | PostgreSQL 16 (SQLite for tests)   |
 | Containerization | Docker + Docker Compose          |
+| Background jobs | Celery + Redis                    |
 
 ## Features
 
@@ -53,6 +54,18 @@ Quiz ──1:N── Attempt ──N:1── User
 ```
 
 ## Getting Started
+
+## Course-generation jobs
+
+The initial asynchronous job foundation is available under `/api/ai/generation-jobs/`.
+Creating a job stores a draft; calling `POST /api/ai/generation-jobs/{id}/queue/`
+dispatches it to Celery after the database transaction commits. PostgreSQL is the
+authoritative source for status and event history.
+
+The `generation-worker` and `celery-beat` Compose services use Redis as their broker.
+Until the LangGraph workflow is implemented, queued jobs fail explicitly with
+`WORKFLOW_NOT_CONFIGURED`. Set `GENERATION_WORKFLOW_RUNNER` to the dotted path of the
+workflow entry point when that implementation is added.
 
 ### Prerequisites
 

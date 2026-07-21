@@ -7,3 +7,4 @@ strawberry-graphql
 strawberry-graphql-django
 pytest
 python-dotenv
+celery[redis]>=5.5,<6

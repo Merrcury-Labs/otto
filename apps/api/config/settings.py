@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'flashcards',
     'quizzes',
     'users',
+    'ai',
 ]
 
 MIDDLEWARE = [
@@ -164,3 +165,30 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Background course-generation jobs. PostgreSQL remains the source of truth for
+# user-visible job state; Celery's result backend is intentionally not used for it.
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = None
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = int(os.environ.get('CELERY_TASK_TIME_LIMIT', '3600'))
+CELERY_TASK_SOFT_TIME_LIMIT = int(os.environ.get('CELERY_TASK_SOFT_TIME_LIMIT', '3300'))
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_DEFAULT_QUEUE = 'generation'
+CELERY_TASK_ROUTES = {
+    'ai.tasks.start_generation_job': {'queue': 'generation'},
+    'ai.tasks.resume_generation_job': {'queue': 'generation'},
+    'ai.tasks.recover_stalled_jobs': {'queue': 'maintenance'},
+}
+CELERY_BEAT_SCHEDULE = {
+    'recover-stalled-generation-jobs': {
+        'task': 'ai.tasks.recover_stalled_jobs',
+        'schedule': int(os.environ.get('GENERATION_RECOVERY_INTERVAL_SECONDS', '300')),
+    },
+}
+
+GENERATION_JOB_STALE_AFTER_SECONDS = int(
+    os.environ.get('GENERATION_JOB_STALE_AFTER_SECONDS', '900')
+)
+GENERATION_WORKFLOW_RUNNER = os.environ.get('GENERATION_WORKFLOW_RUNNER', '')
