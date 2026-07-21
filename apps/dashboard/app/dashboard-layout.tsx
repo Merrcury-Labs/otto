@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -29,7 +30,6 @@ import {
   Brain,
   Notebook,
   SignOut,
-  User,
   GearSix,
 } from "@phosphor-icons/react";
 import { ThemeToggle } from "../components/theme-toggle";
@@ -233,10 +233,10 @@ export function DashboardLayout({
                   asChild
                   className="cursor-btn-hover focus-warm transition-all duration-150"
                 >
-                  <a href="#">
+                  <Link href="/tutors">
                     <Users className="h-4 w-4 text-sidebar-foreground" />
-                    <span className="text-sidebar-foreground">Community</span>
-                  </a>
+                    <span className="text-sidebar-foreground">Tutors</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -298,9 +298,12 @@ export function DashboardLayout({
                   className="relative h-9 w-9 rounded-full flex items-center justify-center text-sm font-medium bg-surface-300 text-foreground cursor-pointer hover:bg-surface-400 focus-warm transition-all duration-150 outline-none focus:ring-2 focus:ring-ring/20"
                 >
                   {user?.image ? (
-                    <img
+                    <Image
                       src={user.image}
                       alt={user.name || "User"}
+                      width={36}
+                      height={36}
+                      unoptimized
                       className="h-9 w-9 rounded-full object-cover"
                     />
                   ) : (

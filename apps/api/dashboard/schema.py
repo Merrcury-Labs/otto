@@ -1,4 +1,5 @@
 import strawberry
+from django.db import transaction
 
 from .models import Org, Tutor
 
@@ -62,14 +63,24 @@ class DashboardMutation:
         logo: str = "",
         website: str | None = None,
         owner_user_id: str | None = None,
+        owner_name: str | None = None,
+        owner_email: str | None = None,
     ) -> OrgType:
-        return Org.objects.create(
-            name=name,
-            description=description,
-            logo=logo,
-            website=website,
-            owner_user_id=owner_user_id,
-        )
+        with transaction.atomic():
+            org = Org.objects.create(
+                name=name,
+                description=description,
+                logo=logo,
+                website=website,
+                owner_user_id=owner_user_id,
+            )
+            if owner_user_id and owner_name and owner_email:
+                Tutor.objects.create(
+                    name=owner_name.strip(),
+                    email=owner_email.strip().lower(),
+                    org=org,
+                )
+            return org
 
     @strawberry.mutation
     def update_org(
@@ -110,6 +121,31 @@ class DashboardMutation:
             name=name,
             email=email,
             org_id=org_id,
+            bio=bio,
+            profile_picture=profile_picture,
+        )
+
+    @strawberry.mutation
+    def create_tutor_for_owner(
+        self,
+        owner_user_id: str,
+        name: str,
+        email: str,
+        bio: str | None = None,
+        profile_picture: str = "",
+    ) -> TutorType:
+        org = Org.objects.get(owner_user_id=owner_user_id)
+        normalized_email = email.strip().lower()
+        existing_tutor = Tutor.objects.filter(
+            org=org,
+            email__iexact=normalized_email,
+        ).first()
+        if existing_tutor:
+            return existing_tutor
+        return Tutor.objects.create(
+            name=name.strip(),
+            email=normalized_email,
+            org=org,
             bio=bio,
             profile_picture=profile_picture,
         )

@@ -13,6 +13,8 @@ import {
 import {
   orgByOwnerQuery,
   createOrgMutation,
+  createTutorForOwnerMutation,
+  tutorsQuery,
 } from "./orgs";
 import {
   adminFlashcardDecksQuery,
@@ -51,7 +53,7 @@ type ExecuteGraphqlOptions = {
 };
 
 const MAX_GRAPHQL_QUERY_LENGTH = 12_000;
-const MAX_GRAPHQL_VARIABLES_LENGTH = 1_000_000;
+const MAX_GRAPHQL_VARIABLES_LENGTH = 4 * 1024 * 1024;
 const GRAPHQL_REQUEST_TIMEOUT_MS = 15_000;
 
 const registeredOperations = new Map(
@@ -84,6 +86,8 @@ const registeredOperations = new Map(
     UpdateLesson: updateLessonMutation,
     OrgByOwner: orgByOwnerQuery,
     CreateOrg: createOrgMutation,
+    Tutors: tutorsQuery,
+    CreateTutorForOwner: createTutorForOwnerMutation,
   }).map(([operationName, query]) => [
     operationName,
     query.replace(/\s+/g, " ").trim(),

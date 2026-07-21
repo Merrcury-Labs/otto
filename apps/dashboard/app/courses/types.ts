@@ -36,6 +36,7 @@ export interface Course {
 }
 
 export interface CourseFormData {
+  tutorId?: string;
   title: string;
   description: string;
   thumbnail: string;

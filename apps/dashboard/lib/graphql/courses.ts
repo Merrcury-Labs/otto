@@ -47,7 +47,7 @@ export const createCourseMutation = /* GraphQL */ `
   mutation CreateCourse(
     $name: String!
     $description: String!
-    $tutor: String!
+    $tutorId: ID!
     $lessonCount: Int!
     $level: String!
     $category: String!
@@ -58,7 +58,7 @@ export const createCourseMutation = /* GraphQL */ `
     createCourse(
       name: $name
       description: $description
-      tutor: $tutor
+      tutorId: $tutorId
       lessonCount: $lessonCount
       level: $level
       category: $category
@@ -76,7 +76,7 @@ export const updateCourseMutation = /* GraphQL */ `
     $id: ID!
     $name: String
     $description: String
-    $tutor: String
+    $tutorId: ID
     $thumbnail: String
     $image: String
     $lessonCount: Int
@@ -88,7 +88,7 @@ export const updateCourseMutation = /* GraphQL */ `
       id: $id
       name: $name
       description: $description
-      tutor: $tutor
+      tutorId: $tutorId
       thumbnail: $thumbnail
       image: $image
       lessonCount: $lessonCount
