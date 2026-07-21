@@ -15,7 +15,7 @@ export function LessonModalHeader({
 
   return (
     <div
-      className="flex items-center justify-between p-6 border-b border-border/10"
+      className="flex shrink-0 items-center justify-between border-b border-border/10 p-6"
     >
       <div>
         <h2
