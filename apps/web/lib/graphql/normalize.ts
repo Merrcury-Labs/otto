@@ -89,6 +89,14 @@ export const parseLines = (value?: string) =>
     .filter(Boolean) ?? [];
 
 export const getImageUrl = (value?: string) => {
+  const normalizedValue = value?.trim();
+  if (
+    normalizedValue?.startsWith("/") ||
+    normalizedValue?.startsWith("data:image/")
+  ) {
+    return normalizedValue;
+  }
+
   const imageUrl = value
     ?.match(/https?:\/\/\S+|\/\/\S+|\S+unsplash\.com\S*/i)?.[0]
     .trim()
@@ -142,6 +150,12 @@ const getDisplayableImageUrl = (value: string) => {
     if (unsplashPhotoId) {
       return `https://images.unsplash.com/photo-${unsplashPhotoId}?w=800&auto=format&fit=crop&q=60`;
     }
+
+    // Uploaded assets may be served by an R2 custom domain without a file
+    // extension in the public URL.
+    if (url.protocol === "https:" || url.protocol === "http:") {
+      return value;
+    }
   } catch {
     return "";
   }
@@ -154,6 +168,35 @@ export const getCourseImageUrl = (course: BackendCourse) =>
     .map(getImageUrl)
     .map(getDisplayableImageUrl)
     .find(Boolean) ?? "";
+
+type EditorNode = {
+  type?: string;
+  text?: string;
+  content?: EditorNode[];
+};
+
+const getEditorNodeText = (node: EditorNode): string => {
+  if (node.type === "text") return node.text ?? "";
+  if (node.type === "hardBreak") return "\n";
+
+  const content = node.content?.map(getEditorNodeText).join("") ?? "";
+  return node.type === "paragraph" || node.type === "heading"
+    ? `${content}\n`
+    : content;
+};
+
+export const getCourseDescriptionText = (description?: string) => {
+  if (!description) return "";
+
+  try {
+    const document = JSON.parse(description) as EditorNode;
+    if (document.type !== "doc") return description;
+
+    return getEditorNodeText(document).replace(/\n{3,}/g, "\n\n").trim();
+  } catch {
+    return description;
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Lesson utilities
@@ -334,7 +377,7 @@ export const normalizeCourse = (course: BackendCourse): DisplayCourse => {
   return {
     id: course.id,
     title: course.title,
-    description: course.description,
+    description: getCourseDescriptionText(course.description),
     instructor: course.tutor?.name ?? "",
     duration: course.lessonCount ? `${course.lessonCount} lessons` : "",
     level: course.level,

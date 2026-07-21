@@ -27,7 +27,7 @@ services:
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:?R2_ACCOUNT_ID must be set}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:?R2_ACCESS_KEY_ID must be set}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:?R2_SECRET_ACCESS_KEY must be set}
-      R2_DASHBOARD: ${R2_DASHBOARD:?R2_DASHBOARD must be set}
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME:?R2_BUCKET_NAME must be set}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL:?R2_PUBLIC_URL must be set}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--output-document=-", "http://127.0.0.1:3002/login"]

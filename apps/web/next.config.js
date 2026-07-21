@@ -1,3 +1,5 @@
+/* global process */
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
@@ -19,8 +21,11 @@ const nextConfig = {
       ...(process.env.R2_PUBLIC_URL
         ? [
             {
-              protocol: "https",
-              hostname: process.env.R2_PUBLIC_URL.replace("https://", ""),
+              protocol: new URL(process.env.R2_PUBLIC_URL).protocol.replace(
+                ":",
+                "",
+              ),
+              hostname: new URL(process.env.R2_PUBLIC_URL).hostname,
             },
           ]
         : []),
