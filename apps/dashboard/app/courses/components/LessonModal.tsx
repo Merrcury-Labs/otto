@@ -111,12 +111,12 @@ export default function LessonModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-lg shadow-2xl bg-card"
+        className="flex h-[calc(100dvh-2rem)] max-h-[44rem] w-full max-w-lg flex-col overflow-hidden rounded-lg shadow-2xl bg-card"
         onClick={(e) => e.stopPropagation()}
       >
         <LessonModalHeader lessonType={lessonType} onClose={onClose} />
 
-        <div className="p-6 space-y-4">
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-6">
           <LessonDetailsFields
             lessonFormData={lessonFormData}
             onDurationChange={(duration) =>

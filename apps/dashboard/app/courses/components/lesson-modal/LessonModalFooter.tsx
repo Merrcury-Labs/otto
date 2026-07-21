@@ -13,7 +13,7 @@ export function LessonModalFooter({
   onSave,
 }: LessonModalFooterProps) {
   return (
-    <div className="flex justify-end gap-3 p-6">
+    <div className="flex shrink-0 justify-end gap-3 border-t border-border/10 p-6">
       <Button
         type="button"
         variant="outline"
