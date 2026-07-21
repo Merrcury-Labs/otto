@@ -1,4 +1,6 @@
-def heuristic_blueprint_generator(*, brief, sources, feedback='', previous_blueprint=None):
+def heuristic_blueprint_generator(
+    *, brief, sources, research=None, feedback='', previous_blueprint=None
+):
     """Initial provider-free generator; replace through CURRICULUM_BLUEPRINT_GENERATOR."""
     topic = str(brief.get('topic') or brief.get('title') or '').strip() or 'Untitled course'
     audience = str(brief.get('audience') or '').strip() or 'general learners'
@@ -52,7 +54,7 @@ def heuristic_blueprint_generator(*, brief, sources, feedback='', previous_bluep
 
 
 def heuristic_course_package_generator(
-    *, blueprint, sources, feedback='', previous_package=None
+    *, blueprint, sources, research=None, feedback='', previous_package=None
 ):
     """Provider-free package generator used until an LLM-backed callable is configured."""
     source_by_id = {source['chunk_id']: source for source in sources}

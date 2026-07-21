@@ -204,4 +204,12 @@ CURRICULUM_BLUEPRINT_GENERATOR = os.environ.get(
 COURSE_PACKAGE_GENERATOR = os.environ.get(
     'COURSE_PACKAGE_GENERATOR', 'ai.generators.heuristic_course_package_generator'
 )
+COURSE_RESEARCH_PLANNER = os.environ.get(
+    'COURSE_RESEARCH_PLANNER', 'ai.research.heuristic_research_planner'
+)
+COURSE_RESEARCH_PROVIDER = os.environ.get(
+    'COURSE_RESEARCH_PROVIDER', 'ai.research.document_research_provider'
+)
+RESEARCH_MIN_RELIABILITY = float(os.environ.get('RESEARCH_MIN_RELIABILITY', '0.5'))
+RESEARCH_MIN_CONFIDENCE = float(os.environ.get('RESEARCH_MIN_CONFIDENCE', '0.5'))
 LANGGRAPH_DATABASE_URL = os.environ.get('LANGGRAPH_DATABASE_URL', '')

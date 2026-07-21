@@ -93,6 +93,10 @@ services:
       GENERATION_WORKFLOW_RUNNER: ${GENERATION_WORKFLOW_RUNNER:-ai.workflow.run_generation_workflow}
       CURRICULUM_BLUEPRINT_GENERATOR: ${CURRICULUM_BLUEPRINT_GENERATOR:-ai.generators.heuristic_blueprint_generator}
       COURSE_PACKAGE_GENERATOR: ${COURSE_PACKAGE_GENERATOR:-ai.generators.heuristic_course_package_generator}
+      COURSE_RESEARCH_PLANNER: ${COURSE_RESEARCH_PLANNER:-ai.research.heuristic_research_planner}
+      COURSE_RESEARCH_PROVIDER: ${COURSE_RESEARCH_PROVIDER:-ai.research.document_research_provider}
+      RESEARCH_MIN_RELIABILITY: ${RESEARCH_MIN_RELIABILITY:-0.5}
+      RESEARCH_MIN_CONFIDENCE: ${RESEARCH_MIN_CONFIDENCE:-0.5}
       DJANGO_MEDIA_ROOT: /app/media
     volumes:
       - generation_media:/app/media

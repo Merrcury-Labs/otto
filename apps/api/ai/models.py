@@ -282,3 +282,94 @@ class ArtifactReview(models.Model):
 
     def __str__(self):
         return f'{self.artifact_id}:{self.decision}'
+
+
+class ResearchQuestion(models.Model):
+    class Status(models.TextChoices):
+        PLANNED = 'PLANNED', 'Planned'
+        COMPLETED = 'COMPLETED', 'Completed'
+        NO_RESULTS = 'NO_RESULTS', 'No results'
+        FAILED = 'FAILED', 'Failed'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job = models.ForeignKey(
+        GenerationJob, related_name='research_questions', on_delete=models.CASCADE
+    )
+    query = models.TextField()
+    rationale = models.TextField(blank=True)
+    priority = models.PositiveSmallIntegerField(default=1)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.PLANNED, db_index=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('priority', 'created_at')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('job', 'query'), name='unique_research_question_per_job'
+            )
+        ]
+
+    def __str__(self):
+        return self.query
+
+
+class ResearchSource(models.Model):
+    class Type(models.TextChoices):
+        DOCUMENT = 'DOCUMENT', 'Uploaded document'
+        WEB = 'WEB', 'Web source'
+        DATABASE = 'DATABASE', 'Database source'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job = models.ForeignKey(
+        GenerationJob, related_name='research_sources', on_delete=models.CASCADE
+    )
+    type = models.CharField(max_length=20, choices=Type.choices)
+    canonical_uri = models.CharField(max_length=1000)
+    url = models.URLField(max_length=1000, blank=True)
+    title = models.CharField(max_length=500)
+    publisher = models.CharField(max_length=255, blank=True)
+    authors = models.JSONField(default=list, blank=True)
+    published_at = models.DateField(null=True, blank=True)
+    retrieved_at = models.DateTimeField(default=timezone.now)
+    reliability_score = models.FloatField(
+        default=0.5, validators=[MinValueValidator(0), MaxValueValidator(1)]
+    )
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-reliability_score', 'title')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('job', 'canonical_uri'), name='unique_research_source_per_job'
+            )
+        ]
+
+    def __str__(self):
+        return self.title
+
+
+class ResearchFinding(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    question = models.ForeignKey(
+        ResearchQuestion, related_name='findings', on_delete=models.CASCADE
+    )
+    source = models.ForeignKey(
+        ResearchSource, related_name='findings', on_delete=models.CASCADE
+    )
+    claim = models.TextField()
+    evidence = models.TextField()
+    confidence = models.FloatField(
+        default=0.5, validators=[MinValueValidator(0), MaxValueValidator(1)]
+    )
+    source_locator = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('question__priority', '-confidence', 'created_at')
+
+    def __str__(self):
+        return self.claim[:100]

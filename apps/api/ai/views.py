@@ -13,6 +13,8 @@ from .serializers import (
     FinalReviewSerializer,
     GenerationJobSerializer,
     QueueGenerationJobSerializer,
+    ResearchQuestionSerializer,
+    ResearchSourceSerializer,
     SourceChunkSerializer,
     SourceDocumentSerializer,
 )
@@ -106,6 +108,18 @@ class GenerationJobViewSet(viewsets.ModelViewSet):
     def artifacts(self, request, pk=None):
         artifacts = self.get_object().artifacts.prefetch_related('reviews').all()
         return Response(GeneratedArtifactSerializer(artifacts, many=True).data)
+
+    @action(detail=True, methods=('get',))
+    def research(self, request, pk=None):
+        job = self.get_object()
+        questions = job.research_questions.prefetch_related('findings__source').all()
+        sources = job.research_sources.all()
+        return Response(
+            {
+                'questions': ResearchQuestionSerializer(questions, many=True).data,
+                'sources': ResearchSourceSerializer(sources, many=True).data,
+            }
+        )
 
     @action(detail=True, methods=('post',))
     def review_blueprint(self, request, pk=None):

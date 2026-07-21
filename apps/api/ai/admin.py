@@ -5,6 +5,9 @@ from .models import (
     GeneratedArtifact,
     GenerationJob,
     GenerationJobEvent,
+    ResearchFinding,
+    ResearchQuestion,
+    ResearchSource,
     SourceChunk,
     SourceDocument,
 )
@@ -73,3 +76,30 @@ class GeneratedArtifactAdmin(admin.ModelAdmin):
 class ArtifactReviewAdmin(admin.ModelAdmin):
     list_display = ('artifact', 'decision', 'decided_by', 'created_at')
     list_filter = ('decision',)
+
+
+class ResearchFindingInline(admin.TabularInline):
+    model = ResearchFinding
+    extra = 0
+    readonly_fields = ('source', 'claim', 'evidence', 'confidence', 'source_locator', 'created_at')
+
+
+@admin.register(ResearchQuestion)
+class ResearchQuestionAdmin(admin.ModelAdmin):
+    list_display = ('query', 'job', 'priority', 'status', 'updated_at')
+    list_filter = ('status', 'priority')
+    search_fields = ('query', 'job__id')
+    inlines = (ResearchFindingInline,)
+
+
+@admin.register(ResearchSource)
+class ResearchSourceAdmin(admin.ModelAdmin):
+    list_display = ('title', 'job', 'type', 'publisher', 'reliability_score')
+    list_filter = ('type',)
+    search_fields = ('title', 'publisher', 'url', 'canonical_uri')
+
+
+@admin.register(ResearchFinding)
+class ResearchFindingAdmin(admin.ModelAdmin):
+    list_display = ('question', 'source', 'confidence', 'created_at')
+    search_fields = ('claim', 'evidence')

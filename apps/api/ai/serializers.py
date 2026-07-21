@@ -1,6 +1,7 @@
 import hashlib
 from pathlib import Path
 
+from django.conf import settings
 from django.db import transaction
 from rest_framework import serializers
 from users.models import User
@@ -10,6 +11,9 @@ from .models import (
     GeneratedArtifact,
     GenerationJob,
     GenerationJobEvent,
+    ResearchFinding,
+    ResearchQuestion,
+    ResearchSource,
     SourceChunk,
     SourceDocument,
 )
@@ -177,3 +181,44 @@ class BlueprintReviewSerializer(serializers.Serializer):
 
 class FinalReviewSerializer(BlueprintReviewSerializer):
     pass
+
+
+class ResearchSourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResearchSource
+        fields = (
+            'id', 'type', 'canonical_uri', 'url', 'title', 'publisher', 'authors',
+            'published_at', 'retrieved_at', 'reliability_score', 'metadata', 'created_at',
+        )
+        read_only_fields = fields
+
+
+class ResearchFindingSerializer(serializers.ModelSerializer):
+    source = ResearchSourceSerializer(read_only=True)
+    usable = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ResearchFinding
+        fields = (
+            'id', 'source', 'claim', 'evidence', 'confidence', 'usable', 'source_locator',
+            'created_at',
+        )
+        read_only_fields = fields
+
+    def get_usable(self, obj):
+        return (
+            obj.confidence >= settings.RESEARCH_MIN_CONFIDENCE
+            and obj.source.reliability_score >= settings.RESEARCH_MIN_RELIABILITY
+        )
+
+
+class ResearchQuestionSerializer(serializers.ModelSerializer):
+    findings = ResearchFindingSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ResearchQuestion
+        fields = (
+            'id', 'query', 'rationale', 'priority', 'status', 'created_at',
+            'updated_at', 'findings',
+        )
+        read_only_fields = fields

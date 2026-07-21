@@ -99,6 +99,19 @@ Set `COURSE_PACKAGE_GENERATOR` to replace the provider-free package generator. I
 callable receives `blueprint`, `sources`, `feedback`, and `previous_package` keyword
 arguments and must return data matching the generated course-package schema.
 
+Before blueprint design, the workflow creates and executes curriculum research
+questions. Results are available from
+`GET /api/ai/generation-jobs/{id}/research/`, including source metadata, confidence,
+reliability, and document page/chunk locators. Findings below
+`RESEARCH_MIN_RELIABILITY` or `RESEARCH_MIN_CONFIDENCE` remain visible for audit but
+are excluded from generator context.
+
+The default `COURSE_RESEARCH_PROVIDER` searches uploaded document chunks. A web or
+database research integration can replace it with a dotted callable accepting
+`questions`, `brief`, and `documents`, and returning validated `sources` and
+`findings`. Web sources must include a valid URL; every finding must reference a
+declared source and one of the planned questions.
+
 ### Prerequisites
 
 - Python 3.12+

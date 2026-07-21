@@ -14,11 +14,46 @@ from docx import Document as DocxDocument
 from dashboard.models import Org, Tutor
 from users.models import User
 
-from .models import ArtifactReview, GeneratedArtifact, GenerationJob, SourceDocument
+from .models import (
+    ArtifactReview,
+    GeneratedArtifact,
+    GenerationJob,
+    ResearchQuestion,
+    ResearchSource,
+    SourceChunk,
+    SourceDocument,
+)
 from .services import queue_generation_job
 from .tasks import extract_source_document, recover_stalled_jobs, start_generation_job
 from .workflow import resume_generation_workflow, run_generation_workflow
 from .persistence import persist_approved_course
+
+
+def fake_web_research_provider(*, questions, brief, documents):
+    return {
+        'sources': [
+            {
+                'provider_key': 'official-astronomy-source',
+                'type': 'WEB',
+                'title': 'Official astronomy reference',
+                'url': 'https://example.edu/astronomy',
+                'publisher': 'Example University',
+                'authors': ['A. Researcher'],
+                'published_at': '2026-01-15',
+                'reliability_score': 0.9,
+            }
+        ],
+        'findings': [
+            {
+                'question_query': questions[0]['query'],
+                'source_key': 'official-astronomy-source',
+                'claim': 'Astronomy studies celestial objects and phenomena beyond Earth.',
+                'evidence': 'The reference defines astronomy as the study of celestial objects.',
+                'confidence': 0.9,
+                'source_locator': {'section': 'Definition'},
+            }
+        ],
+    }
 
 
 class GenerationJobTestCase(TestCase):
@@ -265,6 +300,64 @@ class GenerationJobTestCase(TestCase):
         self.assertEqual(artifact.status, GeneratedArtifact.Status.DRAFT)
         self.assertEqual(artifact.content['objectives'][0]['id'], 'LO-1')
         self.assertTrue(job.graph_checkpoint_id)
+        self.assertEqual(job.research_questions.count(), 3)
+        self.assertEqual(
+            job.research_questions.filter(status=ResearchQuestion.Status.NO_RESULTS).count(),
+            3,
+        )
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    def test_document_research_persists_findings_with_chunk_provenance(self):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+        document = SourceDocument.objects.create(
+            job=job,
+            file='astronomy.txt',
+            original_filename='astronomy.txt',
+            content_type='text/plain',
+            file_size=100,
+            sha256='d' * 64,
+            status=SourceDocument.Status.READY,
+        )
+        chunk = SourceChunk.objects.create(
+            document=document,
+            position=0,
+            page_number=2,
+            heading='Astronomy foundations',
+            content='Astronomy foundational concepts include stars, planets, gravity, and orbits.',
+            content_hash='e' * 64,
+            character_count=75,
+        )
+
+        run_generation_workflow(str(job.id))
+
+        source = job.research_sources.get()
+        finding = source.findings.first()
+        self.assertEqual(source.type, ResearchSource.Type.DOCUMENT)
+        self.assertEqual(finding.source_locator['chunk_id'], str(chunk.id))
+        self.assertEqual(finding.source_locator['page_number'], 2)
+        self.assertTrue(
+            job.research_questions.filter(status=ResearchQuestion.Status.COMPLETED).exists()
+        )
+
+        response = self.client.get(reverse('ai:generation-job-research', args=(job.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['sources'][0]['title'], 'astronomy.txt')
+
+    @override_settings(
+        LANGGRAPH_DATABASE_URL='',
+        COURSE_RESEARCH_PROVIDER='ai.tests.fake_web_research_provider',
+    )
+    def test_configured_web_provider_records_url_and_quality_metadata(self):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+
+        run_generation_workflow(str(job.id))
+
+        source = job.research_sources.get()
+        self.assertEqual(source.type, ResearchSource.Type.WEB)
+        self.assertEqual(source.url, 'https://example.edu/astronomy')
+        self.assertEqual(source.publisher, 'Example University')
+        self.assertEqual(source.reliability_score, 0.9)
+        self.assertEqual(source.findings.get().confidence, 0.9)
 
     @override_settings(LANGGRAPH_DATABASE_URL='')
     def test_blueprint_workflow_resumes_after_approval(self):

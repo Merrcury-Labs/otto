@@ -13,9 +13,16 @@ from pydantic import ValidationError
 from typing_extensions import TypedDict
 
 from .blueprints import CurriculumBlueprint
-from .models import GeneratedArtifact, GenerationJob
+from .models import (
+    GeneratedArtifact,
+    GenerationJob,
+    ResearchFinding,
+    ResearchQuestion,
+    ResearchSource,
+)
 from .packages import GeneratedCoursePackage
 from .persistence import persist_approved_course
+from .research import PlannedResearchQuestion, ResearchProviderResult
 
 
 class BlueprintState(TypedDict, total=False):
@@ -30,6 +37,8 @@ class BlueprintState(TypedDict, total=False):
     package_validation_errors: list[dict]
     package_revision_count: int
     package_feedback: str
+    research_questions: list[dict]
+    research_findings: list[dict]
 
 
 _memory_checkpointer = InMemorySaver()
@@ -78,14 +87,163 @@ def _source_context(job):
     ]
 
 
+def _research_context(job):
+    return [
+        {
+            'question': finding.question.query,
+            'claim': finding.claim,
+            'evidence': finding.evidence,
+            'confidence': finding.confidence,
+            'source': {
+                'id': str(finding.source_id),
+                'type': finding.source.type,
+                'title': finding.source.title,
+                'url': finding.source.url,
+                'publisher': finding.source.publisher,
+                'published_at': (
+                    finding.source.published_at.isoformat()
+                    if finding.source.published_at else None
+                ),
+                'reliability_score': finding.source.reliability_score,
+            },
+            'source_locator': finding.source_locator,
+        }
+        for finding in ResearchFinding.objects.filter(
+            question__job=job,
+            confidence__gte=settings.RESEARCH_MIN_CONFIDENCE,
+            source__reliability_score__gte=settings.RESEARCH_MIN_RELIABILITY,
+        )
+        .select_related('question', 'source')
+        .all()
+    ]
+
+
+def plan_research(state: BlueprintState):
+    job = GenerationJob.objects.prefetch_related('source_documents__chunks').get(
+        pk=state['job_id']
+    )
+    job.status = GenerationJob.Status.RESEARCHING
+    job.current_stage = 'planning_research'
+    job.progress_percent = 18
+    job.status_message = 'Planning research for the curriculum.'
+    job.heartbeat_at = timezone.now()
+    job.save()
+    planner = import_string(settings.COURSE_RESEARCH_PLANNER)
+    raw_questions = planner(brief=job.course_brief, documents=_source_context(job))
+    questions = [
+        PlannedResearchQuestion.model_validate(question).model_dump(mode='json')
+        for question in raw_questions
+    ]
+    with transaction.atomic():
+        job.research_questions.all().delete()
+        ResearchQuestion.objects.bulk_create(
+            [
+                ResearchQuestion(
+                    job=job,
+                    query=question['query'],
+                    rationale=question['rationale'],
+                    priority=question['priority'],
+                )
+                for question in questions
+            ]
+        )
+        job.add_event(
+            'RESEARCH_PLANNED',
+            f'Planned {len(questions)} curriculum research questions.',
+        )
+    return {'research_questions': questions}
+
+
+def execute_research(state: BlueprintState):
+    job = GenerationJob.objects.prefetch_related('source_documents__chunks').get(
+        pk=state['job_id']
+    )
+    job.current_stage = 'executing_research'
+    job.progress_percent = 24
+    job.status_message = 'Collecting and validating curriculum research.'
+    job.heartbeat_at = timezone.now()
+    job.save()
+    provider = import_string(settings.COURSE_RESEARCH_PROVIDER)
+    raw_result = provider(
+        questions=state['research_questions'],
+        brief=job.course_brief,
+        documents=_source_context(job),
+    )
+    result = ResearchProviderResult.model_validate(raw_result)
+    with transaction.atomic():
+        job.research_sources.all().delete()
+        source_by_key = {}
+        for source_data in result.sources:
+            url = str(source_data.url) if source_data.url else ''
+            source = ResearchSource.objects.create(
+                job=job,
+                type=source_data.type,
+                canonical_uri=url or source_data.provider_key,
+                url=url,
+                title=source_data.title,
+                publisher=source_data.publisher,
+                authors=source_data.authors,
+                published_at=source_data.published_at,
+                reliability_score=source_data.reliability_score,
+                metadata=source_data.metadata,
+            )
+            source_by_key[source_data.provider_key] = source
+        question_by_query = {
+            question.query: question for question in job.research_questions.all()
+        }
+        finding_counts = {query: 0 for query in question_by_query}
+        persisted_findings = []
+        for finding_data in result.findings:
+            question = question_by_query.get(finding_data.question_query)
+            if question is None:
+                raise ValueError(
+                    f'Research finding references an unknown question: {finding_data.question_query}'
+                )
+            finding = ResearchFinding.objects.create(
+                question=question,
+                source=source_by_key[finding_data.source_key],
+                claim=finding_data.claim,
+                evidence=finding_data.evidence,
+                confidence=finding_data.confidence,
+                source_locator=finding_data.source_locator,
+            )
+            finding_counts[question.query] += 1
+            persisted_findings.append(str(finding.id))
+        for query, question in question_by_query.items():
+            question.status = (
+                ResearchQuestion.Status.COMPLETED
+                if finding_counts[query]
+                else ResearchQuestion.Status.NO_RESULTS
+            )
+            question.save(update_fields=('status', 'updated_at'))
+        job.add_event(
+            'RESEARCH_COMPLETED',
+            f'Validated {len(result.sources)} sources and {len(result.findings)} findings.',
+            {
+                'minimum_reliability': settings.RESEARCH_MIN_RELIABILITY,
+                'minimum_confidence': settings.RESEARCH_MIN_CONFIDENCE,
+            },
+        )
+    return {
+        'research_findings': _research_context(job),
+    }
+
+
 def design_blueprint(state: BlueprintState):
     job = GenerationJob.objects.prefetch_related('source_documents__chunks').get(
         pk=state['job_id']
     )
+    job.status = GenerationJob.Status.DESIGNING_CURRICULUM
+    job.current_stage = 'designing_curriculum'
+    job.progress_percent = 30
+    job.status_message = 'Designing the curriculum blueprint from validated research.'
+    job.heartbeat_at = timezone.now()
+    job.save()
     generator = import_string(settings.CURRICULUM_BLUEPRINT_GENERATOR)
     blueprint = generator(
         brief=job.course_brief,
         sources=_source_context(job),
+        research=_research_context(job),
         feedback=state.get('feedback', ''),
         previous_blueprint=state.get('blueprint'),
     )
@@ -209,6 +367,7 @@ def generate_course_package(state: BlueprintState):
     package = generator(
         blueprint=state['blueprint'],
         sources=_source_context(job),
+        research=_research_context(job),
         feedback=state.get('package_feedback', ''),
         previous_package=state.get('course_package'),
     )
@@ -348,6 +507,8 @@ def persist_approved_course_node(state: BlueprintState):
 def build_blueprint_graph(checkpointer):
     builder = StateGraph(BlueprintState)
     builder.add_node('design_blueprint', design_blueprint)
+    builder.add_node('plan_research', plan_research)
+    builder.add_node('execute_research', execute_research)
     builder.add_node('validate_blueprint', validate_blueprint)
     builder.add_node('automatic_revision', automatic_revision)
     builder.add_node('validation_failed', validation_failed)
@@ -361,7 +522,9 @@ def build_blueprint_graph(checkpointer):
     builder.add_node('persist_course_package_artifact', persist_course_package_artifact)
     builder.add_node('review_course_package', review_course_package)
     builder.add_node('persist_approved_course', persist_approved_course_node)
-    builder.add_edge(START, 'design_blueprint')
+    builder.add_edge(START, 'plan_research')
+    builder.add_edge('plan_research', 'execute_research')
+    builder.add_edge('execute_research', 'design_blueprint')
     builder.add_edge('design_blueprint', 'validate_blueprint')
     builder.add_conditional_edges('validate_blueprint', validation_route)
     builder.add_edge('automatic_revision', 'design_blueprint')
@@ -413,10 +576,10 @@ def _record_graph_result(job_id, graph, config, result):
 
 def run_generation_workflow(job_id):
     job = GenerationJob.objects.get(pk=job_id)
-    job.status = GenerationJob.Status.DESIGNING_CURRICULUM
-    job.current_stage = 'designing_curriculum'
-    job.progress_percent = 30
-    job.status_message = 'Designing the curriculum blueprint.'
+    job.status = GenerationJob.Status.RESEARCHING
+    job.current_stage = 'starting_research'
+    job.progress_percent = 15
+    job.status_message = 'Preparing curriculum research.'
     job.heartbeat_at = timezone.now()
     job.save()
     config = _config(job_id)
