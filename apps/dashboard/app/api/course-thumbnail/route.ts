@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { orgByOwnerQuery } from "@/lib/graphql/orgs";
 import { executeGraphqlRequest } from "@/lib/graphql/schema";
 import {
+  ThumbnailStorageConfigurationError,
   uploadCourseThumbnail,
   validateCourseThumbnail,
 } from "@/lib/storage";
@@ -65,6 +66,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ thumbnailUrl });
   } catch (error) {
     console.error("Course thumbnail upload failed:", error);
+
+    if (error instanceof ThumbnailStorageConfigurationError) {
+      return NextResponse.json(
+        { error: "Course thumbnail storage is not configured." },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json(
       { error: "Unable to upload thumbnail." },
       { status: 500 },

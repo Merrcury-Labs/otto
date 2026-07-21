@@ -8,6 +8,15 @@ const ALLOWED_IMAGE_TYPES = new Set([
 ]);
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
+export class ThumbnailStorageConfigurationError extends Error {
+  constructor(missingVariables: string[]) {
+    super(
+      `Course thumbnail storage is missing: ${missingVariables.join(", ")}.`,
+    );
+    this.name = "ThumbnailStorageConfigurationError";
+  }
+}
+
 export function validateCourseThumbnail(file: File): string | null {
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     return "Only JPG, PNG, GIF, and WebP images are supported.";
@@ -26,11 +35,21 @@ export async function uploadCourseThumbnail(
   const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  const bucket = process.env.R2_DASHBOARD;
+  const bucket =
+    process.env.R2_DASHBOARD ??
+    process.env.R2_BUCKET_NAME;
   const publicUrl = process.env.R2_PUBLIC_URL?.replace(/\/$/, "");
 
+  const missingVariables = [
+    !accountId && "R2_ACCOUNT_ID",
+    !accessKeyId && "R2_ACCESS_KEY_ID",
+    !secretAccessKey && "R2_SECRET_ACCESS_KEY",
+    !bucket && "R2_DASHBOARD (or R2_BUCKET_NAME)",
+    !publicUrl && "R2_PUBLIC_URL",
+  ].filter((variable): variable is string => Boolean(variable));
+
   if (!accountId || !accessKeyId || !secretAccessKey || !bucket || !publicUrl) {
-    throw new Error("Course thumbnail storage is not configured.");
+    throw new ThumbnailStorageConfigurationError(missingVariables);
   }
 
   const extensions: Record<string, string> = {
