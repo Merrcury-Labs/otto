@@ -4,11 +4,13 @@ import { getLessonTypeLabel } from "./utils";
 
 interface LessonModalHeaderProps {
   lessonType: "video" | "text" | "quiz" | "code";
+  isEditing?: boolean;
   onClose: () => void;
 }
 
 export function LessonModalHeader({
   lessonType,
+  isEditing = false,
   onClose,
 }: LessonModalHeaderProps) {
   const lessonLabel = getLessonTypeLabel(lessonType);
@@ -22,7 +24,7 @@ export function LessonModalHeader({
           className="text-xl font-normal text-foreground"
           style={{ letterSpacing: "-0.11px" }}
         >
-          Add {lessonLabel}
+          {isEditing ? "Edit" : "Add"} {lessonLabel}
         </h2>
         <p className="text-sm mt-1 text-muted-foreground">
           {lessonLabel.toLowerCase()} details

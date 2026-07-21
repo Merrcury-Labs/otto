@@ -3,12 +3,14 @@ import { getLessonTypeLabel } from "./utils";
 
 interface LessonModalFooterProps {
   lessonType: "video" | "text" | "quiz" | "code";
+  isEditing?: boolean;
   onClose: () => void;
   onSave: () => void;
 }
 
 export function LessonModalFooter({
   lessonType,
+  isEditing = false,
   onClose,
   onSave,
 }: LessonModalFooterProps) {
@@ -27,7 +29,7 @@ export function LessonModalFooter({
         onClick={onSave}
         className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
       >
-        {getLessonTypeLabel(lessonType)}
+        {isEditing ? "Save Changes" : getLessonTypeLabel(lessonType)}
       </Button>
     </div>
   );

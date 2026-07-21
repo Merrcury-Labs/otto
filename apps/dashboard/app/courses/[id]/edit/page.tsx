@@ -17,6 +17,7 @@ import {
   Trash,
   Video,
   X,
+  PencilSimple,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import {
@@ -63,6 +64,7 @@ export default function EditCoursePage() {
     Lesson["id"] | null
   >(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -207,6 +209,14 @@ export default function EditCoursePage() {
   const openLessonModal = (moduleId: Lesson["id"], type: Lesson["type"]) => {
     setCurrentModuleId(moduleId);
     setLessonType(type);
+    setEditingLesson(null);
+    setIsLessonModalOpen(true);
+  };
+
+  const openReadingEditor = (moduleId: Lesson["id"], lesson: Lesson) => {
+    setCurrentModuleId(moduleId);
+    setLessonType("text");
+    setEditingLesson(lesson);
     setIsLessonModalOpen(true);
   };
 
@@ -217,9 +227,10 @@ export default function EditCoursePage() {
     if (!currentModule) return;
 
     const newLesson: Lesson = {
-      id: Date.now(),
+      id: editingLesson?.id ?? Date.now(),
       title:
         data.title ||
+        editingLesson?.title ||
         `${getLessonTypeLabel(data.type)} ${currentModule.lessons.length + 1}`,
       type: data.type,
       duration: data.duration || "",
@@ -239,13 +250,21 @@ export default function EditCoursePage() {
       ...formData,
       modules: formData.modules.map((module) =>
         module.id === currentModuleId
-          ? { ...module, lessons: [...module.lessons, newLesson] }
+          ? {
+              ...module,
+              lessons: editingLesson
+                ? module.lessons.map((lesson) =>
+                    lesson.id === editingLesson.id ? newLesson : lesson,
+                  )
+                : [...module.lessons, newLesson],
+            }
           : module
       ),
     });
 
     setIsLessonModalOpen(false);
     setCurrentModuleId(null);
+    setEditingLesson(null);
   };
 
   const removeLesson = (moduleId: Lesson["id"], lessonId: Lesson["id"]) => {
@@ -686,6 +705,17 @@ export default function EditCoursePage() {
                                   className="rounded-md px-3 py-2 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                                 />
                               </div>
+                              {lesson.type === "text" ? (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  onClick={() => openReadingEditor(module.id, lesson)}
+                                  aria-label={`Edit ${lesson.title}`}
+                                  className="cursor-btn-hover focus-warm transition-all duration-150 text-foreground"
+                                >
+                                  <PencilSimple className="h-4 w-4" />
+                                </Button>
+                              ) : null}
                               <Button
                                 type="button"
                                 variant="ghost"
@@ -770,10 +800,21 @@ export default function EditCoursePage() {
       <LessonModal
         isOpen={isLessonModalOpen}
         lessonType={lessonType}
+        initialData={
+          editingLesson
+            ? {
+                title: editingLesson.title,
+                type: editingLesson.type,
+                duration: editingLesson.duration ?? "",
+                content: editingLesson.content ?? "",
+              }
+            : null
+        }
         onSave={handleLessonSave}
         onClose={() => {
           setIsLessonModalOpen(false);
           setCurrentModuleId(null);
+          setEditingLesson(null);
         }}
       />
     </div>

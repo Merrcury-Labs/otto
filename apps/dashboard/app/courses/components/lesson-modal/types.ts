@@ -30,6 +30,7 @@ export interface LessonFormData {
 export interface LessonModalProps {
   isOpen: boolean;
   lessonType: "video" | "text" | "quiz" | "code";
+  initialData?: LessonFormData | null;
   onSave: (data: LessonFormData) => void;
   onClose: () => void;
 }
