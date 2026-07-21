@@ -19,6 +19,7 @@ class GenerationJob(models.Model):
         INGESTING_DOCUMENTS = 'INGESTING_DOCUMENTS', 'Ingesting documents'
         RESEARCHING = 'RESEARCHING', 'Researching'
         DESIGNING_CURRICULUM = 'DESIGNING_CURRICULUM', 'Designing curriculum'
+        BLUEPRINT_APPROVED = 'BLUEPRINT_APPROVED', 'Blueprint approved'
         WAITING_FOR_BLUEPRINT_APPROVAL = (
             'WAITING_FOR_BLUEPRINT_APPROVAL',
             'Waiting for blueprint approval',
@@ -215,3 +216,68 @@ class SourceChunk(models.Model):
 
     def __str__(self):
         return f'{self.document_id}:{self.position}'
+
+
+class GeneratedArtifact(models.Model):
+    class Type(models.TextChoices):
+        BLUEPRINT = 'BLUEPRINT', 'Curriculum blueprint'
+
+    class Status(models.TextChoices):
+        DRAFT = 'DRAFT', 'Draft'
+        APPROVED = 'APPROVED', 'Approved'
+        REVISION_REQUESTED = 'REVISION_REQUESTED', 'Revision requested'
+        SUPERSEDED = 'SUPERSEDED', 'Superseded'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    job = models.ForeignKey(
+        GenerationJob, related_name='artifacts', on_delete=models.CASCADE
+    )
+    type = models.CharField(max_length=30, choices=Type.choices)
+    version = models.PositiveIntegerField()
+    status = models.CharField(
+        max_length=30, choices=Status.choices, default=Status.DRAFT, db_index=True
+    )
+    content = models.JSONField(default=dict)
+    validation_errors = models.JSONField(default=list, blank=True)
+    source_document_ids = models.JSONField(default=list, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('type', '-version')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('job', 'type', 'version'), name='unique_generated_artifact_version'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.job_id}:{self.type}:v{self.version}'
+
+
+class ArtifactReview(models.Model):
+    class Decision(models.TextChoices):
+        APPROVE = 'APPROVE', 'Approve'
+        REVISE = 'REVISE', 'Request revision'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    artifact = models.ForeignKey(
+        GeneratedArtifact, related_name='reviews', on_delete=models.CASCADE
+    )
+    decided_by = models.ForeignKey(
+        'users.User', related_name='artifact_reviews', on_delete=models.PROTECT
+    )
+    decision = models.CharField(max_length=20, choices=Decision.choices)
+    feedback = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('created_at',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=('artifact',), name='one_review_per_artifact_version'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.artifact_id}:{self.decision}'

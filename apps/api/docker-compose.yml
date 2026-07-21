@@ -90,7 +90,8 @@ services:
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
-      GENERATION_WORKFLOW_RUNNER: ${GENERATION_WORKFLOW_RUNNER:-}
+      GENERATION_WORKFLOW_RUNNER: ${GENERATION_WORKFLOW_RUNNER:-ai.workflow.run_generation_workflow}
+      CURRICULUM_BLUEPRINT_GENERATOR: ${CURRICULUM_BLUEPRINT_GENERATOR:-ai.generators.heuristic_blueprint_generator}
       DJANGO_MEDIA_ROOT: /app/media
     volumes:
       - generation_media:/app/media

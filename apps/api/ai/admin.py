@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import GenerationJob, GenerationJobEvent, SourceChunk, SourceDocument
+from .models import (
+    ArtifactReview,
+    GeneratedArtifact,
+    GenerationJob,
+    GenerationJobEvent,
+    SourceChunk,
+    SourceDocument,
+)
 
 
 class GenerationJobEventInline(admin.TabularInline):
@@ -45,3 +52,24 @@ class SourceDocumentAdmin(admin.ModelAdmin):
 class SourceChunkAdmin(admin.ModelAdmin):
     list_display = ('document', 'position', 'page_number', 'character_count')
     search_fields = ('document__original_filename', 'content')
+
+
+class ArtifactReviewInline(admin.TabularInline):
+    model = ArtifactReview
+    extra = 0
+    readonly_fields = ('decided_by', 'decision', 'feedback', 'created_at')
+
+
+@admin.register(GeneratedArtifact)
+class GeneratedArtifactAdmin(admin.ModelAdmin):
+    list_display = ('job', 'type', 'version', 'status', 'updated_at')
+    list_filter = ('type', 'status')
+    search_fields = ('job__id',)
+    readonly_fields = ('created_at', 'updated_at')
+    inlines = (ArtifactReviewInline,)
+
+
+@admin.register(ArtifactReview)
+class ArtifactReviewAdmin(admin.ModelAdmin):
+    list_display = ('artifact', 'decision', 'decided_by', 'created_at')
+    list_filter = ('decision',)

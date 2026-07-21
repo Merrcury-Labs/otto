@@ -63,9 +63,10 @@ dispatches it to Celery after the database transaction commits. PostgreSQL is th
 authoritative source for status and event history.
 
 The `generation-worker` and `celery-beat` Compose services use Redis as their broker.
-Until the LangGraph workflow is implemented, queued jobs fail explicitly with
-`WORKFLOW_NOT_CONFIGURED`. Set `GENERATION_WORKFLOW_RUNNER` to the dotted path of the
-workflow entry point when that implementation is added.
+Queued jobs run a LangGraph curriculum-blueprint workflow. The workflow validates
+objective alignment, saves a versioned blueprint artifact, and pauses durably for
+human review. Production deployments use LangGraph's PostgreSQL checkpointer;
+SQLite test environments use an in-memory checkpointer.
 
 Source material can be uploaded with
 `POST /api/ai/generation-jobs/{id}/documents/` as multipart form data using the
@@ -73,6 +74,16 @@ Source material can be uploaded with
 `documents` Celery queue. Chunk text retains page numbers for PDFs and headings for
 DOCX documents. The default upload limit is 25 MiB and can be changed with
 `SOURCE_DOCUMENT_MAX_BYTES`.
+
+Blueprint drafts can be read from `GET /api/ai/generation-jobs/{id}/artifacts/`.
+The original requester can approve a draft or request a revision with
+`POST /api/ai/generation-jobs/{id}/review-blueprint/`, providing `decided_by`,
+`decision` (`APPROVE` or `REVISE`), and revision `feedback` when applicable.
+
+The initial blueprint generator is deterministic and provider-free. Replace it with
+an LLM-backed structured generator by setting `CURRICULUM_BLUEPRINT_GENERATOR` to a
+dotted Python callable accepting `brief`, `sources`, `feedback`, and
+`previous_blueprint` keyword arguments.
 
 ### Prerequisites
 

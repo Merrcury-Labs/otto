@@ -3,8 +3,16 @@ from pathlib import Path
 
 from django.db import transaction
 from rest_framework import serializers
+from users.models import User
 
-from .models import GenerationJob, GenerationJobEvent, SourceChunk, SourceDocument
+from .models import (
+    ArtifactReview,
+    GeneratedArtifact,
+    GenerationJob,
+    GenerationJobEvent,
+    SourceChunk,
+    SourceDocument,
+)
 
 
 SUPPORTED_SOURCE_EXTENSIONS = {'.pdf', '.docx', '.txt', '.md', '.html', '.htm'}
@@ -132,3 +140,36 @@ class SourceDocumentSerializer(serializers.ModelSerializer):
             sha256=digest.hexdigest(),
             **validated_data,
         )
+
+
+class ArtifactReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArtifactReview
+        fields = ('id', 'artifact', 'decided_by', 'decision', 'feedback', 'created_at')
+        read_only_fields = ('id', 'artifact', 'created_at')
+
+
+class GeneratedArtifactSerializer(serializers.ModelSerializer):
+    reviews = ArtifactReviewSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = GeneratedArtifact
+        fields = (
+            'id', 'job', 'type', 'version', 'status', 'content',
+            'validation_errors', 'source_document_ids', 'created_at', 'updated_at',
+            'reviews',
+        )
+        read_only_fields = fields
+
+
+class BlueprintReviewSerializer(serializers.Serializer):
+    decided_by = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    decision = serializers.ChoiceField(choices=ArtifactReview.Decision.choices)
+    feedback = serializers.CharField(required=False, allow_blank=True, default='')
+
+    def validate(self, attrs):
+        if attrs['decision'] == ArtifactReview.Decision.REVISE and not attrs['feedback'].strip():
+            raise serializers.ValidationError(
+                {'feedback': 'Feedback is required when requesting a revision.'}
+            )
+        return attrs

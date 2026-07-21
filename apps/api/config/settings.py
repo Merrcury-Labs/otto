@@ -195,4 +195,10 @@ CELERY_BEAT_SCHEDULE = {
 GENERATION_JOB_STALE_AFTER_SECONDS = int(
     os.environ.get('GENERATION_JOB_STALE_AFTER_SECONDS', '900')
 )
-GENERATION_WORKFLOW_RUNNER = os.environ.get('GENERATION_WORKFLOW_RUNNER', '')
+GENERATION_WORKFLOW_RUNNER = os.environ.get(
+    'GENERATION_WORKFLOW_RUNNER', 'ai.workflow.run_generation_workflow'
+)
+CURRICULUM_BLUEPRINT_GENERATOR = os.environ.get(
+    'CURRICULUM_BLUEPRINT_GENERATOR', 'ai.generators.heuristic_blueprint_generator'
+)
+LANGGRAPH_DATABASE_URL = os.environ.get('LANGGRAPH_DATABASE_URL', '')

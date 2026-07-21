@@ -14,9 +14,10 @@ from docx import Document as DocxDocument
 from dashboard.models import Org, Tutor
 from users.models import User
 
-from .models import GenerationJob, SourceDocument
+from .models import ArtifactReview, GeneratedArtifact, GenerationJob, SourceDocument
 from .services import queue_generation_job
 from .tasks import extract_source_document, recover_stalled_jobs, start_generation_job
+from .workflow import resume_generation_workflow, run_generation_workflow
 
 
 class GenerationJobTestCase(TestCase):
@@ -113,6 +114,21 @@ class GenerationJobTestCase(TestCase):
         self.assertEqual(result['status'], GenerationJob.Status.FAILED)
         self.assertEqual(job.error_code, 'WORKFLOW_NOT_CONFIGURED')
         self.assertEqual(job.attempt_count, 1)
+
+    @override_settings(
+        GENERATION_WORKFLOW_RUNNER='ai.workflow.run_generation_workflow',
+        LANGGRAPH_DATABASE_URL='',
+    )
+    def test_worker_runs_blueprint_graph_to_approval_interrupt(self):
+        job = self.create_job(status=GenerationJob.Status.QUEUED)
+
+        result = start_generation_job.apply(args=(str(job.id),)).get()
+
+        job.refresh_from_db()
+        self.assertTrue(result['interrupted'])
+        self.assertEqual(job.status, GenerationJob.Status.WAITING_FOR_BLUEPRINT_APPROVAL)
+        self.assertEqual(job.attempt_count, 1)
+        self.assertTrue(job.artifacts.filter(type=GeneratedArtifact.Type.BLUEPRINT).exists())
 
     @override_settings(GENERATION_JOB_STALE_AFTER_SECONDS=60)
     @patch('ai.tasks.start_generation_job.delay')
@@ -233,5 +249,77 @@ class GenerationJobTestCase(TestCase):
 
         with self.assertRaisesMessage(ValueError, 'must finish processing'):
             queue_generation_job(job, Mock())
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    def test_blueprint_workflow_pauses_with_versioned_artifact(self):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+
+        result = run_generation_workflow(str(job.id))
+
+        job.refresh_from_db()
+        artifact = job.artifacts.get(type=GeneratedArtifact.Type.BLUEPRINT, version=1)
+        self.assertTrue(result['interrupted'])
+        self.assertEqual(job.status, GenerationJob.Status.WAITING_FOR_BLUEPRINT_APPROVAL)
+        self.assertEqual(job.progress_percent, 40)
+        self.assertEqual(artifact.status, GeneratedArtifact.Status.DRAFT)
+        self.assertEqual(artifact.content['objectives'][0]['id'], 'LO-1')
+        self.assertTrue(job.graph_checkpoint_id)
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    def test_blueprint_workflow_resumes_after_approval(self):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+        run_generation_workflow(str(job.id))
+
+        result = resume_generation_workflow(
+            str(job.id), {'decision': 'APPROVE', 'feedback': ''}
+        )
+
+        job.refresh_from_db()
+        artifact = job.artifacts.get(type=GeneratedArtifact.Type.BLUEPRINT, version=1)
+        self.assertFalse(result['interrupted'])
+        self.assertEqual(job.status, GenerationJob.Status.BLUEPRINT_APPROVED)
+        self.assertEqual(artifact.status, GeneratedArtifact.Status.APPROVED)
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    def test_blueprint_revision_creates_new_artifact_version(self):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+        run_generation_workflow(str(job.id))
+
+        result = resume_generation_workflow(
+            str(job.id),
+            {'decision': 'REVISE', 'feedback': 'Use more practical examples.'},
+        )
+
+        job.refresh_from_db()
+        first = job.artifacts.get(version=1)
+        second = job.artifacts.get(version=2)
+        self.assertTrue(result['interrupted'])
+        self.assertEqual(job.status, GenerationJob.Status.WAITING_FOR_BLUEPRINT_APPROVAL)
+        self.assertEqual(first.status, GeneratedArtifact.Status.REVISION_REQUESTED)
+        self.assertEqual(second.status, GeneratedArtifact.Status.DRAFT)
+
+    @override_settings(LANGGRAPH_DATABASE_URL='')
+    @patch('ai.views.resume_generation_job.delay')
+    def test_review_endpoint_records_and_dispatches_approval(self, delay):
+        job = self.create_job(status=GenerationJob.Status.STARTING)
+        run_generation_workflow(str(job.id))
+        artifact = job.artifacts.get(version=1)
+        delay.return_value = Mock(id='resume-task-1')
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse('ai:generation-job-review-blueprint', args=(job.id,)),
+                {
+                    'decided_by': str(self.user.id),
+                    'decision': ArtifactReview.Decision.APPROVE,
+                },
+                format='json',
+            )
+
+        self.assertEqual(response.status_code, 202)
+        review = artifact.reviews.get()
+        self.assertEqual(review.decided_by, self.user)
+        self.assertEqual(review.decision, ArtifactReview.Decision.APPROVE)
+        delay.assert_called_once()
 
 # Create your tests here.

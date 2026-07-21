@@ -135,8 +135,24 @@ def start_generation_job(self, job_id):
 
 
 @shared_task(bind=True, name='ai.tasks.resume_generation_job')
-def resume_generation_job(self, job_id):
-    return start_generation_job.run(job_id)
+def resume_generation_job(self, job_id, review):
+    from .workflow import resume_generation_workflow
+
+    with transaction.atomic():
+        job = GenerationJob.objects.select_for_update().get(pk=job_id)
+        if job.status != GenerationJob.Status.WAITING_FOR_BLUEPRINT_APPROVAL:
+            return {'job_id': str(job.id), 'status': job.status, 'ignored': True}
+        job.current_stage = 'resuming_blueprint_review'
+        job.status_message = 'Applying curriculum blueprint review.'
+        job.heartbeat_at = timezone.now()
+        job.celery_task_id = self.request.id or job.celery_task_id
+        job.save()
+        job.add_event('BLUEPRINT_REVIEW_RECEIVED', job.status_message)
+    try:
+        return resume_generation_workflow(str(job.id), review)
+    except Exception as exc:
+        _mark_failed(job.id, 'WORKFLOW_RESUME_FAILED', str(exc))
+        raise
 
 
 def _mark_failed(job_id, code, message):
