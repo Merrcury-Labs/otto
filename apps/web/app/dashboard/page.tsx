@@ -14,7 +14,6 @@ import {
     FileText,
     Users,
 } from "lucide-react"
-import { courses } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { graphqlFetch } from "@/lib/graphql/client"
 import { publishedCoursesQuery, studentByUserIdQuery } from "@/lib/graphql/courses"
@@ -43,29 +42,7 @@ function getGreetingTime(): string {
 
 export default function DashboardPage() {
     const router = useRouter()
-    const enrolledCourses = courses.filter(c => c.progress > 0)
-
-    const [courseList, setCourseList] = React.useState<DisplayCourse[]>(
-        enrolledCourses.map((c) => ({
-            id: c.id,
-            title: c.title,
-            description: c.description,
-            instructor: c.instructor,
-            duration: c.duration,
-            level: c.level,
-            category: c.category,
-            status: c.status.toUpperCase(),
-            progress: c.progress,
-            rating: c.rating,
-            lessons: c.lessons,
-            thumbnail: c.image,
-            image: c.image,
-            students: 0,
-            prerequisites: [],
-            modules: [],
-        }))
-    )
-    const [activeCourseCount, setActiveCourseCount] = React.useState(enrolledCourses.length)
+    const [courseList, setCourseList] = React.useState<DisplayCourse[]>([])
     const [quizList, setQuizList] = React.useState<DisplayQuiz[]>([])
     const [isLoading, setIsLoading] = React.useState(true)
 
@@ -121,7 +98,6 @@ export default function DashboardPage() {
                 if (coursesResult) {
                     const normalized = coursesResult.courses.map(normalizeCourse)
                     setCourseList(normalized)
-                    setActiveCourseCount(normalized.length)
                 }
 
                 if (quizzesResult) {
@@ -150,7 +126,7 @@ export default function DashboardPage() {
         return () => {
             mounted = false
         }
-    }, [user])
+    }, [isSessionLoading, user])
 
     // Derived student-centric stats
     const completedQuizzes = quizList.filter(q => q.isCompleted)
@@ -301,8 +277,9 @@ export default function DashboardPage() {
                                 </Button>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                {courseList.slice(0, 4).map((course) => (
+                            {courseList.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                    {courseList.slice(0, 4).map((course) => (
                                     <div key={course.id} className="group relative flex flex-col overflow-hidden rounded-2xl border bg-card/40 transition-all hover:bg-card hover:shadow-lg hover:shadow-primary/5">
                                         <div className="p-6">
                                             <div className="mb-4 flex items-center justify-between">
@@ -328,8 +305,17 @@ export default function DashboardPage() {
                                             </a>
                                         </Button>
                                     </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="rounded-2xl border border-dashed py-12 text-center">
+                                    <BookOpen className="mx-auto mb-3 size-10 text-muted-foreground/40" />
+                                    <h4 className="font-bold">No courses available yet</h4>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Published courses will appear here.
+                                    </p>
+                                </div>
+                            )}
                         </section>
                     </div>
 

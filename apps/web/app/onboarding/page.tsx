@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -14,7 +13,6 @@ const DASHBOARD_URL = (() => {
 })();
 
 export default function OnboardingPage() {
-  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const [checking, setChecking] = useState(true);
 
@@ -31,9 +29,9 @@ export default function OnboardingPage() {
           if (data.role) {
             // User already has a role set — redirect accordingly
             if (data.role === "org") {
-              window.location.href = DASHBOARD_URL;
+              window.location.replace(DASHBOARD_URL);
             } else {
-              router.push("/");
+              window.location.replace("/");
             }
             return;
           }
@@ -47,7 +45,7 @@ export default function OnboardingPage() {
             });
 
             if (setRoleResponse.ok) {
-              window.location.href = DASHBOARD_URL;
+              window.location.replace(DASHBOARD_URL);
               return;
             }
           }
@@ -61,7 +59,7 @@ export default function OnboardingPage() {
             });
 
             if (setRoleResponse.ok) {
-              router.push("/");
+              window.location.replace("/");
               return;
             }
           }
@@ -76,7 +74,7 @@ export default function OnboardingPage() {
     if (session?.user) {
       checkExistingUser();
     }
-  }, [session?.user, router]);
+  }, [session?.user]);
 
   if (isPending || checking) {
     return (
@@ -87,7 +85,7 @@ export default function OnboardingPage() {
   }
 
   if (!session) {
-    router.push("/login");
+    window.location.replace("/login");
     return null;
   }
 
@@ -104,9 +102,11 @@ export default function OnboardingPage() {
       }
 
       if (role === "student") {
-        router.push("/");
+        window.location.replace("/");
       } else {
-        window.location.href = new URL("/create-org", DASHBOARD_URL).toString();
+        window.location.replace(
+          new URL("/create-org", DASHBOARD_URL).toString(),
+        );
       }
     } catch (error) {
       console.error("Failed to set role:", error);

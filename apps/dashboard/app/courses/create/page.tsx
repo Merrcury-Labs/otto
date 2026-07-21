@@ -29,6 +29,7 @@ import LessonModal, { LessonFormData } from "../components/LessonModal";
 import { CoursePreviewModal } from "../components/CoursePreviewModal";
 import type { CourseFormData, CourseModule as Module, Lesson } from "../types";
 import { saveCourse } from "../persistence";
+import { uploadThumbnail } from "../../../lib/course-thumbnail";
 
 export default function CreateCoursePage() {
   const router = useRouter();
@@ -51,6 +52,8 @@ export default function CreateCoursePage() {
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
   const [isSavingCourse, setIsSavingCourse] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
 
   const availableTags = [
     "React",
@@ -160,21 +163,20 @@ export default function CreateCoursePage() {
     });
   };
 
-  const handleThumbnailUpload = (file: File | null) => {
+  const handleThumbnailUpload = async (file: File | null) => {
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const thumbnail = reader.result;
-
-      if (typeof thumbnail === "string") {
-        setFormData((currentData) => ({
-          ...currentData,
-          thumbnail,
-        }));
-      }
-    };
-    reader.readAsDataURL(file);
+    setIsUploadingThumbnail(true);
+    setThumbnailError(null);
+    try {
+      const thumbnail = await uploadThumbnail(file);
+      setFormData((currentData) => ({ ...currentData, thumbnail }));
+    } catch (error) {
+      setThumbnailError(
+        error instanceof Error ? error.message : "Unable to upload thumbnail.",
+      );
+    } finally {
+      setIsUploadingThumbnail(false);
+    }
   };
 
   const getLessonTypeLabel = (type: Lesson["type"]) => {
@@ -351,11 +353,16 @@ export default function CreateCoursePage() {
                       type="file"
                       accept="image/*"
                       className="hidden"
+                      disabled={isUploadingThumbnail}
                       onChange={(e) =>
                         handleThumbnailUpload(e.target.files?.[0] || null)
                       }
                     />
-                    {formData.thumbnail ? "Replace Thumbnail" : "Upload Thumbnail"}
+                    {isUploadingThumbnail
+                      ? "Uploading..."
+                      : formData.thumbnail
+                        ? "Replace Thumbnail"
+                        : "Upload Thumbnail"}
                   </label>
                   {formData.thumbnail && (
                     <Button
@@ -373,6 +380,14 @@ export default function CreateCoursePage() {
                     </Button>
                   )}
                 </div>
+                {thumbnailError ? (
+                  <p className="text-sm text-destructive" role="alert">
+                    {thumbnailError}
+                  </p>
+                ) : null}
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG, GIF, or WebP. Maximum 5MB.
+                </p>
               </div>
             </div>
 
@@ -871,11 +886,17 @@ export default function CreateCoursePage() {
           </Button>
           <Button
             type="submit"
-            disabled={!isCourseReady || isSavingCourse}
+            disabled={!isCourseReady || isSavingCourse || isUploadingThumbnail}
             className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
             style={{
-              opacity: isCourseReady && !isSavingCourse ? 1 : 0.6,
-              cursor: isCourseReady && !isSavingCourse ? "pointer" : "not-allowed",
+              opacity:
+                isCourseReady && !isSavingCourse && !isUploadingThumbnail
+                  ? 1
+                  : 0.6,
+              cursor:
+                isCourseReady && !isSavingCourse && !isUploadingThumbnail
+                  ? "pointer"
+                  : "not-allowed",
             }}
           >
             {isSavingCourse ? "Creating..." : "Create Course"}

@@ -5,7 +5,9 @@ import {
 } from "../../../lib/graphql/schema";
 import { auth } from "@/lib/auth";
 
-const MAX_GRAPHQL_BODY_BYTES = 1_250_000;
+// Course and lesson editor content is serialized into GraphQL string variables.
+// Keep a bounded limit, but leave enough room for rich-text course content.
+const MAX_GRAPHQL_BODY_BYTES = 4 * 1024 * 1024;
 
 const graphqlErrorResponse = (message: string, status: number) =>
   NextResponse.json(
@@ -59,7 +61,10 @@ export async function POST(request: NextRequest) {
         ? error.message
         : "Request body must be valid JSON.";
 
-    return graphqlErrorResponse(message, 400);
+    return graphqlErrorResponse(
+      message,
+      message.includes("too large") ? 413 : 400,
+    );
   }
 
   try {

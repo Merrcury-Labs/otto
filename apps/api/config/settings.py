@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'flashcards',
     'quizzes',
     'users',
+    'ai',
 ]
 
 MIDDLEWARE = [
@@ -164,3 +165,78 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = Path(os.environ.get('DJANGO_MEDIA_ROOT', BASE_DIR / 'media'))
+SOURCE_DOCUMENT_MAX_BYTES = int(os.environ.get('SOURCE_DOCUMENT_MAX_BYTES', str(25 * 1024 * 1024)))
+
+# Background course-generation jobs. PostgreSQL remains the source of truth for
+# user-visible job state; Celery's result backend is intentionally not used for it.
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = None
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = int(os.environ.get('CELERY_TASK_TIME_LIMIT', '3600'))
+CELERY_TASK_SOFT_TIME_LIMIT = int(os.environ.get('CELERY_TASK_SOFT_TIME_LIMIT', '3300'))
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+CELERY_TASK_DEFAULT_QUEUE = 'generation'
+CELERY_TASK_ROUTES = {
+    'ai.tasks.extract_source_document': {'queue': 'documents'},
+    'ai.tasks.start_generation_job': {'queue': 'generation'},
+    'ai.tasks.resume_generation_job': {'queue': 'generation'},
+    'ai.tasks.recover_stalled_jobs': {'queue': 'maintenance'},
+}
+CELERY_BEAT_SCHEDULE = {
+    'recover-stalled-generation-jobs': {
+        'task': 'ai.tasks.recover_stalled_jobs',
+        'schedule': int(os.environ.get('GENERATION_RECOVERY_INTERVAL_SECONDS', '300')),
+    },
+}
+
+GENERATION_JOB_STALE_AFTER_SECONDS = int(
+    os.environ.get('GENERATION_JOB_STALE_AFTER_SECONDS', '900')
+)
+GENERATION_WORKFLOW_RUNNER = os.environ.get(
+    'GENERATION_WORKFLOW_RUNNER', 'ai.workflow.run_generation_workflow'
+)
+CURRICULUM_BLUEPRINT_GENERATOR = os.environ.get(
+    'CURRICULUM_BLUEPRINT_GENERATOR', 'ai.generators.heuristic_blueprint_generator'
+)
+COURSE_PACKAGE_GENERATOR = os.environ.get(
+    'COURSE_PACKAGE_GENERATOR', 'ai.generators.heuristic_course_package_generator'
+)
+COURSE_RESEARCH_PLANNER = os.environ.get(
+    'COURSE_RESEARCH_PLANNER', 'ai.research.heuristic_research_planner'
+)
+COURSE_RESEARCH_PROVIDER = os.environ.get(
+    'COURSE_RESEARCH_PROVIDER', 'ai.research.document_research_provider'
+)
+RESEARCH_MIN_RELIABILITY = float(os.environ.get('RESEARCH_MIN_RELIABILITY', '0.5'))
+RESEARCH_MIN_CONFIDENCE = float(os.environ.get('RESEARCH_MIN_CONFIDENCE', '0.5'))
+AI_PROVIDER = os.environ.get('AI_PROVIDER', 'zai')
+AI_BASE_URL = os.environ.get('AI_BASE_URL', 'https://api.z.ai/v1')
+AI_API_KEY = os.environ.get('AI_API_KEY', '')
+AI_MODEL = os.environ.get('AI_MODEL', 'glm-5.2')
+AI_STRUCTURED_OUTPUT_MODE = os.environ.get('AI_STRUCTURED_OUTPUT_MODE', 'json_schema')
+AI_REQUEST_TIMEOUT_SECONDS = float(os.environ.get('AI_REQUEST_TIMEOUT_SECONDS', '120'))
+AI_MAX_OUTPUT_TOKENS = int(os.environ.get('AI_MAX_OUTPUT_TOKENS', '16000'))
+AI_MAX_CONTEXT_CHARACTERS = int(os.environ.get('AI_MAX_CONTEXT_CHARACTERS', '120000'))
+# Pricing is deployment/provider specific. Zero means usage is tracked without
+# inventing a price; operators can configure actual per-million-token rates.
+AI_INPUT_COST_PER_MILLION = os.environ.get('AI_INPUT_COST_PER_MILLION', '0')
+AI_OUTPUT_COST_PER_MILLION = os.environ.get('AI_OUTPUT_COST_PER_MILLION', '0')
+AI_REQUESTS_PER_MINUTE = int(os.environ.get('AI_REQUESTS_PER_MINUTE', '30'))
+AI_RATE_LIMIT_CACHE_URL = os.environ.get('AI_RATE_LIMIT_CACHE_URL', '')
+CACHES = {
+    'default': (
+        {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': AI_RATE_LIMIT_CACHE_URL,
+        }
+        if AI_RATE_LIMIT_CACHE_URL
+        else {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'otto-ai-rate-limits',
+        }
+    )
+}
+LANGGRAPH_DATABASE_URL = os.environ.get('LANGGRAPH_DATABASE_URL', '')

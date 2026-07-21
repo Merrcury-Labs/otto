@@ -49,34 +49,20 @@ export async function signInAction(
   const password = String(formData.get("password") ?? "");
 
   try {
-    const result = await auth.api.signInEmail({
+    await auth.api.signInEmail({
       body: {
         email,
         password,
       },
     });
-
-    // Restore the role for the user who actually signed in. Clearing this
-    // cookie and leaving it empty sent every existing user through onboarding,
-    // where organization users were then redirected to the dashboard even
-    // when they had deliberately signed in to the web app.
-    if (result.user.role === "student" || result.user.role === "org") {
-      cookieStore.set("user_role", result.user.role, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 365,
-        path: "/",
-      });
-    }
   } catch {
     // Use one response for unknown accounts and incorrect passwords so the
     // login form does not reveal whether an email address is registered.
     return { error: "Invalid email or password." };
   }
 
-  // Existing users stay in the web app. Users without a role still pass
-  // through onboarding via middleware.
+  // A login made in the web app stays in the web app. Role selection and
+  // cross-app routing are handled explicitly by onboarding after sign-up.
   redirect("/");
 }
 
@@ -89,5 +75,8 @@ export async function signOutAction() {
     headers: await headers(),
   });
 
-  redirect("/");
+  // Send the browser directly to the public auth page after the session and
+  // role cookies have been cleared. This avoids rendering a protected route
+  // with stale client-side session state.
+  redirect("/login");
 }

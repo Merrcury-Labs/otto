@@ -19,6 +19,20 @@ services:
     networks:
       - backend
 
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    networks:
+      - backend
+
   api:
     build:
       context: .
@@ -43,8 +57,14 @@ services:
       POSTGRES_ADMIN_USER: ${POSTGRES_ADMIN_USER:-postgres}
       POSTGRES_ADMIN_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?POSTGRES_ADMIN_PASSWORD must be set}
       POSTGRES_CONNECT_RETRIES: ${POSTGRES_CONNECT_RETRIES:-60}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      DJANGO_MEDIA_ROOT: /app/media
+    volumes:
+      - generation_media:/app/media
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/', timeout=3)\""]
@@ -52,6 +72,75 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    networks:
+      - backend
+
+  generation-worker:
+    image: otto-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    init: true
+    entrypoint: []
+    command: ["celery", "-A", "config", "worker", "-Q", "documents,generation,maintenance", "--loglevel=INFO"]
+    environment:
+      DJANGO_DEBUG: "False"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-otto_lms}
+      POSTGRES_USER: ${POSTGRES_USER:-otto_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      GENERATION_WORKFLOW_RUNNER: ${GENERATION_WORKFLOW_RUNNER:-ai.workflow.run_generation_workflow}
+      CURRICULUM_BLUEPRINT_GENERATOR: ${CURRICULUM_BLUEPRINT_GENERATOR:-ai.generators.heuristic_blueprint_generator}
+      COURSE_PACKAGE_GENERATOR: ${COURSE_PACKAGE_GENERATOR:-ai.generators.heuristic_course_package_generator}
+      COURSE_RESEARCH_PLANNER: ${COURSE_RESEARCH_PLANNER:-ai.research.heuristic_research_planner}
+      COURSE_RESEARCH_PROVIDER: ${COURSE_RESEARCH_PROVIDER:-ai.research.document_research_provider}
+      RESEARCH_MIN_RELIABILITY: ${RESEARCH_MIN_RELIABILITY:-0.5}
+      RESEARCH_MIN_CONFIDENCE: ${RESEARCH_MIN_CONFIDENCE:-0.5}
+      AI_PROVIDER: ${AI_PROVIDER:-zai}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.z.ai/v1}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-glm-5.2}
+      AI_STRUCTURED_OUTPUT_MODE: ${AI_STRUCTURED_OUTPUT_MODE:-json_schema}
+      AI_INPUT_COST_PER_MILLION: ${AI_INPUT_COST_PER_MILLION:-0}
+      AI_OUTPUT_COST_PER_MILLION: ${AI_OUTPUT_COST_PER_MILLION:-0}
+      AI_REQUESTS_PER_MINUTE: ${AI_REQUESTS_PER_MINUTE:-30}
+      AI_RATE_LIMIT_CACHE_URL: redis://redis:6379/1
+      DJANGO_MEDIA_ROOT: /app/media
+    volumes:
+      - generation_media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    networks:
+      - backend
+
+  celery-beat:
+    image: otto-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    init: true
+    entrypoint: []
+    command: ["celery", "-A", "config", "beat", "--loglevel=INFO"]
+    environment:
+      DJANGO_DEBUG: "False"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY must be set}
+      POSTGRES_DB: ${POSTGRES_DB:-otto_lms}
+      POSTGRES_USER: ${POSTGRES_USER:-otto_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      CELERY_BROKER_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_healthy
     networks:
       - backend
 
@@ -77,6 +166,8 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  generation_media:
 
 networks:
   backend:
