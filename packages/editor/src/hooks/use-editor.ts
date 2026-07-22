@@ -14,6 +14,8 @@ import {
   LinkExtension,
   ImageExtension,
   PlaceholderExtension,
+  InlineMath,
+  BlockMath,
 } from "../extensions";
 import type { EditorUser } from "../types";
 import { useYjsProvider } from "../providers/yjs-provider";
@@ -79,6 +81,8 @@ export function useOttoEditor({
       Highlight.configure({ multicolor: false }),
       Typography,
       CharacterCount,
+      InlineMath,
+      BlockMath,
     ];
 
     // Add collaboration extensions when provider is available

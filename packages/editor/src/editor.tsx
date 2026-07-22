@@ -10,6 +10,7 @@ import { YjsProvider, useYjsProvider } from "./providers/yjs-provider";
 import { SlashMenu } from "./components/slash-menu";
 import { AIToolbar } from "./components/ai-toolbar";
 import type { OttoEditorProps } from "./types";
+import "katex/dist/katex.min.css";
 import "./styles/editor.css";
 
 /**
