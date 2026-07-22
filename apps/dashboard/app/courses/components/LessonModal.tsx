@@ -114,7 +114,7 @@ export default function LessonModal({
       onClick={onClose}
     >
       <div
-        className="flex h-[calc(100dvh-2rem)] max-h-[44rem] w-full max-w-lg flex-col overflow-hidden rounded-lg shadow-2xl bg-card"
+        className="flex h-[calc(100dvh-2rem)] max-h-[44rem] w-full max-w-4xl flex-col overflow-hidden rounded-lg shadow-2xl bg-card"
         onClick={(e) => e.stopPropagation()}
       >
         <LessonModalHeader
