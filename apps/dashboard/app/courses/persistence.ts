@@ -4,6 +4,7 @@ import {
   createCourseMutation,
   createLessonMutation,
   createModuleMutation,
+  deleteLessonMutation,
   updateLessonMutation,
   updateModuleMutation,
   updateCourseMutation,
@@ -13,6 +14,7 @@ import { tutorsQuery } from "../../lib/graphql/orgs";
 type SaveCourseOptions = {
   id?: string;
   status?: string;
+  deletedLessonIds?: string[];
 };
 
 const getLessonCount = (course: CourseFormData) =>
@@ -262,6 +264,18 @@ export async function saveCourse(
     if (getLessonCount(course) > 0) {
       await saveLessons(course, courseId, savedModules);
     }
+  }
+
+  if (options.deletedLessonIds?.length) {
+    await Promise.all(
+      [...new Set(options.deletedLessonIds)].map((id) =>
+        graphqlFetch<{ deleteLesson: boolean }>({
+          query: deleteLessonMutation,
+          variables: { id },
+          operationName: "DeleteLesson",
+        }),
+      ),
+    );
   }
 
   return result;

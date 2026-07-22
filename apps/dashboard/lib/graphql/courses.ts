@@ -203,6 +203,12 @@ export const updateLessonMutation = /* GraphQL */ `
   }
 `;
 
+export const deleteLessonMutation = /* GraphQL */ `
+  mutation DeleteLesson($id: ID!) {
+    deleteLesson(id: $id)
+  }
+`;
+
 export const lessonsQuery = /* GraphQL */ `
   query Lessons {
     lessons {

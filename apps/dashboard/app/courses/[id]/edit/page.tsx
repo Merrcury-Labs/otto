@@ -65,6 +65,7 @@ export default function EditCoursePage() {
   >(null);
   const [lessonType, setLessonType] = useState<Lesson["type"]>("video");
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [deletedLessonIds, setDeletedLessonIds] = useState<string[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -86,6 +87,7 @@ export default function EditCoursePage() {
       }
 
       setFormData(getCourseFormData(course));
+      setDeletedLessonIds([]);
       setStatus("published");
       setCourseError(null);
     }
@@ -268,17 +270,29 @@ export default function EditCoursePage() {
   };
 
   const removeLesson = (moduleId: Lesson["id"], lessonId: Lesson["id"]) => {
-    setFormData({
-      ...formData,
-      modules: formData.modules.map((module) =>
-        module.id === moduleId
-          ? {
-              ...module,
-              lessons: module.lessons.filter((lesson) => lesson.id !== lessonId),
-            }
-          : module
-      ),
-    });
+    if (typeof lessonId === "string") {
+      setDeletedLessonIds((currentIds) =>
+        currentIds.includes(lessonId) ? currentIds : [...currentIds, lessonId],
+      );
+    }
+
+    setFormData((currentData) =>
+      currentData
+        ? {
+            ...currentData,
+            modules: currentData.modules.map((module) =>
+              module.id === moduleId
+                ? {
+                    ...module,
+                    lessons: module.lessons.filter(
+                      (lesson) => lesson.id !== lessonId,
+                    ),
+                  }
+                : module,
+            ),
+          }
+        : null,
+    );
   };
 
   const updateLessonTitle = (
@@ -351,6 +365,7 @@ export default function EditCoursePage() {
       await saveCourse(formData, {
         id: params.id,
         status,
+        deletedLessonIds,
       });
       router.push("/courses");
       router.refresh();
