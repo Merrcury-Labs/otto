@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import { OttoEditor } from "@repo/editor";
 import { graphqlFetch } from "../../../lib/graphql/client";
+import { updateLessonMutation } from "../../../lib/graphql/courses";
 
 interface LessonData {
   id: string;
@@ -76,16 +77,6 @@ export default function EditorPage() {
     loadDocument();
   }, [id, isNew]);
 
-  const scheduleAutoSave = useCallback(
-    (newTitle: string, newContent: string) => {
-      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
-      autoSaveTimerRef.current = setTimeout(() => {
-        saveDocument(newTitle, newContent);
-      }, 3000);
-    },
-    [id, isNew]
-  );
-
   const saveDocument = useCallback(
     async (saveTitle: string, saveContent: string) => {
       if (!saveTitle.trim() && !saveContent.trim()) return;
@@ -109,11 +100,7 @@ export default function EditorPage() {
           await graphqlFetch<{
             updateLesson: { id: string; title: string };
           }>({
-            query: /* GraphQL */ `
-              mutation UpdateLesson($id: ID!, $title: String, $content: String) {
-                updateLesson(id: $id, title: $title, content: $content) { id title }
-              }
-            `,
+            query: updateLessonMutation,
             variables: { id, title: saveTitle || "Untitled", content: saveContent },
             operationName: "UpdateLesson",
           });
@@ -126,6 +113,16 @@ export default function EditorPage() {
       }
     },
     [id, isNew, router]
+  );
+
+  const scheduleAutoSave = useCallback(
+    (newTitle: string, newContent: string) => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = setTimeout(() => {
+        void saveDocument(newTitle, newContent);
+      }, 3000);
+    },
+    [saveDocument]
   );
 
   const handleContentChange = useCallback(
@@ -240,8 +237,7 @@ export default function EditorPage() {
         placeholder="Start writing your content…"
         minHeight="600px"
         aiEnabled
-        collaborative={!!id && id !== "new"}
-        documentId={id !== "new" ? `lesson-${id}` : undefined}
+        collaborative={false}
         format="auto"
         variant="gdocs"
         showToolbar
