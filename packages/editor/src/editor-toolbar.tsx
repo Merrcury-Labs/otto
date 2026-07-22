@@ -12,6 +12,8 @@ import {
   Link,
   Image,
   ArrowLineLeft,
+  Function as FunctionIcon,
+  MathOperations,
 } from "@phosphor-icons/react";
 import { cn } from "./lib/utils";
 
@@ -36,6 +38,35 @@ type ToolbarItem = ToolbarButton | ToolbarDivider;
 
 export function EditorToolbar({ editor, className }: EditorToolbarProps) {
   if (!editor) return null;
+
+  const insertMath = (type: "inlineMath" | "blockMath") => {
+    const latex = window.prompt(
+      type === "inlineMath" ? "Enter inline LaTeX:" : "Enter display LaTeX:",
+      type === "inlineMath" ? "x^2" : "E = mc^2",
+    );
+    if (!latex?.trim()) return;
+
+    if (type === "inlineMath") {
+      editor
+        .chain()
+        .focus()
+        .insertContent([
+          { type: "inlineMath", attrs: { latex: latex.trim() } },
+          { type: "text", text: " " },
+        ])
+        .run();
+      return;
+    }
+
+    editor
+      .chain()
+      .focus()
+      .insertContent([
+        { type: "blockMath", attrs: { latex: latex.trim() } },
+        { type: "paragraph" },
+      ])
+      .run();
+  };
 
   const items: ToolbarItem[] = [
     {
@@ -68,6 +99,18 @@ export function EditorToolbar({ editor, className }: EditorToolbarProps) {
       label: "Code Block",
       action: () => editor.chain().focus().toggleCodeBlock().run(),
       isActive: editor.isActive("codeBlock"),
+    },
+    {
+      icon: <FunctionIcon className="h-4 w-4" />,
+      label: "Inline Equation",
+      action: () => insertMath("inlineMath"),
+      isActive: editor.isActive("inlineMath"),
+    },
+    {
+      icon: <MathOperations className="h-4 w-4" />,
+      label: "Display Equation",
+      action: () => insertMath("blockMath"),
+      isActive: editor.isActive("blockMath"),
     },
     { type: "divider" },
     {

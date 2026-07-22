@@ -204,6 +204,43 @@
 }
 
 /* ============================================
+   Equations (KaTeX)
+   ============================================ */
+.otto-editor-body .otto-math {
+  cursor: default;
+  color: hsl(var(--foreground));
+}
+
+.otto-editor-body[contenteditable="true"] .otto-math {
+  cursor: pointer;
+}
+
+.otto-editor-body .otto-math-inline {
+  display: inline-block;
+  margin: 0 0.125rem;
+  vertical-align: middle;
+}
+
+.otto-editor-body .otto-math-block {
+  display: block;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.otto-editor-body .otto-math.ProseMirror-selectednode {
+  border-radius: 0.25rem;
+  outline: 2px solid hsl(var(--color-accent));
+  outline-offset: 3px;
+}
+
+.otto-editor-body .otto-math-error {
+  color: hsl(var(--destructive));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* ============================================
    Highlight (used for AI suggestions)
    ============================================ */
 .otto-editor-body mark {
