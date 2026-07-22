@@ -6,6 +6,64 @@ interface MarkdownPreviewProps {
   content: string;
 }
 
+type ProseMirrorMark = {
+  type?: string;
+  attrs?: { href?: string };
+};
+
+type ProseMirrorNode = {
+  type?: string;
+  text?: string;
+  attrs?: { level?: number };
+  marks?: ProseMirrorMark[];
+  content?: ProseMirrorNode[];
+};
+
+function nodeToMarkdown(node: ProseMirrorNode): string {
+  if (node.type === "text") {
+    return (node.marks ?? []).reduce((text, mark) => {
+      if (mark.type === "bold") return `**${text}**`;
+      if (mark.type === "italic") return `*${text}*`;
+      if (mark.type === "code") return `\`${text}\``;
+      if (mark.type === "link" && mark.attrs?.href) {
+        return `[${text}](${mark.attrs.href})`;
+      }
+      return text;
+    }, node.text ?? "");
+  }
+
+  if (node.type === "hardBreak") return "\n";
+  const content = node.content?.map(nodeToMarkdown).join("") ?? "";
+
+  if (node.type === "heading") {
+    const level = Math.min(Math.max(node.attrs?.level ?? 1, 1), 6);
+    return `${"#".repeat(level)} ${content}\n\n`;
+  }
+  if (node.type === "paragraph") return `${content}\n\n`;
+  if (node.type === "blockquote") {
+    return `${content.trim().split("\n").map((line) => `> ${line}`).join("\n")}\n\n`;
+  }
+  if (node.type === "codeBlock") return `\`\`\`\n${content}\n\`\`\`\n\n`;
+  if (node.type === "bulletList") {
+    return `${(node.content ?? []).map((item) => `- ${nodeToMarkdown(item).trim()}\n`).join("")}\n`;
+  }
+  if (node.type === "orderedList") {
+    return `${(node.content ?? []).map((item, index) => `${index + 1}. ${nodeToMarkdown(item).trim()}\n`).join("")}\n`;
+  }
+  return content;
+}
+
+function normalizeEditorContent(content: string): string {
+  try {
+    const document = JSON.parse(content) as ProseMirrorNode;
+    return document.type === "doc"
+      ? nodeToMarkdown(document).trim()
+      : content;
+  } catch {
+    return content;
+  }
+}
+
 function renderInlineMarkdown(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
   const pattern = /(\[([^\]]+)\]\(([^)]+)\)|`([^`]+)`|\*\*([^*]+)\*\*|\*([^*]+)\*)/g;
@@ -79,7 +137,7 @@ export function MarkdownPreview({ content }: MarkdownPreviewProps) {
     );
   }
 
-  const lines = content.split("\n");
+  const lines = normalizeEditorContent(content).split("\n");
   const blocks: ReactNode[] = [];
   let index = 0;
 
