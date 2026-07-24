@@ -3,6 +3,7 @@
 import { Button } from "@repo/ui/button";
 import { X, Cards, ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import type { FlashcardDeck } from "../types";
+import { MarkdownPreview } from "../../courses/components/lesson-modal/MarkdownPreview";
 
 type DeckPreviewModalProps = {
   deck: FlashcardDeck;
@@ -66,13 +67,17 @@ export function DeckPreviewModal({ deck, onClose }: DeckPreviewModalProps) {
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                         Front
                       </p>
-                      <p className="text-sm leading-relaxed">{card.front}</p>
+                      <div className="text-sm leading-relaxed">
+                        <MarkdownPreview content={card.front} />
+                      </div>
                     </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                         Back
                       </p>
-                      <p className="text-sm leading-relaxed">{card.back}</p>
+                      <div className="text-sm leading-relaxed">
+                        <MarkdownPreview content={card.back} />
+                      </div>
                     </div>
                   </div>
                   {card.hint && (

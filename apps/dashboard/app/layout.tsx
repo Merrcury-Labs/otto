@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import { DashboardLayout } from "./dashboard-layout";
 import { ThemeProvider } from "../components/theme-provider";
 

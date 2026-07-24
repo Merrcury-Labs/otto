@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@repo/ui/button";
 import {
   Cards,
@@ -10,12 +10,14 @@ import {
   Sparkle,
   CaretDown,
   Warning,
+  UploadSimple,
 } from "@phosphor-icons/react";
 import type { Flashcard, FlashcardDeckFormData } from "../types";
 import { saveDeck } from "../persistence";
 import { graphqlFetch } from "../../../lib/graphql/client";
 import { adminCoursesQuery } from "../../../lib/graphql/courses";
 import { lessonsQuery } from "../../../lib/graphql/courses";
+import { parseFlashcardsCsv } from "../csv";
 
 type Course = {
   id: string;
@@ -44,6 +46,8 @@ export default function CreateFlashcardDeckPage() {
   const [generating, setGenerating] = useState(false);
   const [selectedLessonId, setSelectedLessonId] = useState("");
   const [showLessonPicker, setShowLessonPicker] = useState(false);
+  const [csvMessage, setCsvMessage] = useState("");
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FlashcardDeckFormData>({
     title: "",
     description: "",
@@ -152,6 +156,36 @@ export default function CreateFlashcardDeckPage() {
         },
       ],
     }));
+  };
+
+  const handleCsvImport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const importedCards = parseFlashcardsCsv(await file.text());
+      setFormData((previous) => {
+        const hasOnlyBlankCard =
+          previous.cards.length === 1 &&
+          !previous.cards[0]?.front.trim() &&
+          !previous.cards[0]?.back.trim();
+        const cards = hasOnlyBlankCard
+          ? importedCards
+          : [...previous.cards, ...importedCards];
+        return {
+          ...previous,
+          cards: cards.map((card, position) => ({ ...card, position })),
+        };
+      });
+      setCsvMessage(
+        `Imported ${importedCards.length} card${importedCards.length === 1 ? "" : "s"} from ${file.name}.`
+      );
+    } catch (error) {
+      setCsvMessage(
+        error instanceof Error ? error.message : "Could not import the CSV file."
+      );
+    }
   };
 
   const removeCard = (index: number) => {
@@ -286,6 +320,22 @@ export default function CreateFlashcardDeckPage() {
             Cards ({formData.cards.length})
           </h2>
           <div className="flex items-center gap-2">
+            <input
+              ref={csvInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={handleCsvImport}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs h-8"
+              onClick={() => csvInputRef.current?.click()}
+            >
+              <UploadSimple className="h-3 w-3" />
+              Import CSV
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -302,6 +352,18 @@ export default function CreateFlashcardDeckPage() {
             </Button>
           </div>
         </div>
+        {csvMessage && (
+          <div
+            role="status"
+            className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground"
+          >
+            {csvMessage}
+          </div>
+        )}
+        <p className="text-[11px] text-muted-foreground">
+          CSV columns: front, back, hint, tags. Question and answer are also accepted.
+          Wrap fields containing commas in double quotes.
+        </p>
 
         {formData.cards.map((card, index) => (
           <div key={card.id || index} className="rounded-xl border p-4 space-y-3">

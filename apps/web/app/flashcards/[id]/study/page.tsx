@@ -15,6 +15,7 @@ import {
   flashcardDeckDetailQuery,
   reviewFlashcardMutation,
 } from "@/lib/graphql/flashcards";
+import { MarkdownPreview } from "@/components/MarkdownPreview";
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
@@ -355,9 +356,12 @@ export default function StudyPage() {
                     ))}
                   </div>
                 )}
-                <p className="text-lg font-semibold leading-relaxed" style={{ fontFamily: "var(--font-display)" }}>
-                  {currentCard.front}
-                </p>
+                <div
+                  className="text-lg font-semibold leading-relaxed"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  <MarkdownPreview content={currentCard.front} compact />
+                </div>
               </div>
               {currentCard.hint && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-4">
@@ -376,7 +380,9 @@ export default function StudyPage() {
               style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
             >
               <p className="text-sm text-muted-foreground/60 mb-3">Answer</p>
-              <p className="text-lg leading-relaxed">{currentCard.back}</p>
+              <div className="text-lg leading-relaxed">
+                <MarkdownPreview content={currentCard.back} compact />
+              </div>
 
               {/* Explain button */}
               {!showExplain && (
@@ -424,8 +430,10 @@ export default function StudyPage() {
                 <X className="size-3.5" />
               </button>
             </div>
-            <div className="text-sm leading-relaxed whitespace-pre-wrap min-h-[40px]">
-              {explanationText || (
+            <div className="min-h-[40px] text-sm leading-relaxed">
+              {explanationText ? (
+                <MarkdownPreview content={explanationText} compact />
+              ) : (
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <div className="size-1.5 animate-pulse rounded-full bg-violet-500/60" />
                   <div className="size-1.5 animate-pulse rounded-full bg-violet-500/60" style={{ animationDelay: "300ms" }} />
