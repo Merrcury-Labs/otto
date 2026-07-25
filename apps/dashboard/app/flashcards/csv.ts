@@ -75,7 +75,7 @@ export function parseFlashcardsCsv(source: string): Flashcard[] {
     }
 
     return {
-      id: `csv-${Date.now()}-${index}`,
+      id: `new-csv-${Date.now()}-${index}`,
       front,
       back,
       position: index,
