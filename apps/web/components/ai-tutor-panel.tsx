@@ -19,6 +19,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
+import { MarkdownPreview } from "@/components/MarkdownPreview";
 import { Button } from "@/components/ui/button";
 
 // ─── Types ────────────────────────────────────────────────────────────
@@ -323,7 +324,11 @@ export function AITutorPanel({
                       : "bg-card border rounded-bl-md"
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  {message.role === "assistant" ? (
+                    <MarkdownPreview content={message.content} compact />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  )}
                 </div>
                 {message.role === "assistant" && (
                   <div className="flex items-center gap-0.5 ml-7 opacity-0 group-hover:opacity-100 transition-opacity"

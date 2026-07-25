@@ -21,6 +21,7 @@ import {
   updateFlashcardDeckMutation,
   deleteFlashcardDeckMutation,
 } from "@/lib/graphql/flashcards";
+import { MarkdownPreview } from "@/components/MarkdownPreview";
 
 type Flashcard = {
   id: string;
@@ -636,13 +637,17 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
                           Front
                         </span>
-                        <p className="text-sm leading-relaxed">{card.front}</p>
+                        <div className="text-sm leading-relaxed">
+                          <MarkdownPreview content={card.front} compact />
+                        </div>
                       </div>
                       <div>
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1">
                           Back
                         </span>
-                        <p className="text-sm leading-relaxed">{card.back}</p>
+                        <div className="text-sm leading-relaxed">
+                          <MarkdownPreview content={card.back} compact />
+                        </div>
                       </div>
                     </div>
                     {(card.hint || (card.tags && card.tags.length > 0)) && (
