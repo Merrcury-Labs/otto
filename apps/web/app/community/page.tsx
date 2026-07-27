@@ -33,14 +33,14 @@ export default function CommunityPage() {
 
     return (
         <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
-            <div className="flex flex-col gap-10 pb-20">
+            <div className="flex min-w-0 flex-col gap-7 pb-12 sm:gap-10 sm:pb-20">
                 {/* Header Section */}
-                <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-col gap-2">
-                        <h1 className="text-4xl font-extrabold tracking-tight">Community</h1>
-                        <p className="text-muted-foreground">Share knowledge and connect with other learners.</p>
+                        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl">Community</h1>
+                        <p className="text-sm text-muted-foreground sm:text-base">Share knowledge and connect with other learners.</p>
                     </div>
-                    <Button className="h-11 rounded-full px-6 font-bold shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+                    <Button className="h-10 w-full rounded-full px-5 font-bold shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 sm:h-11 sm:w-auto sm:px-6">
                         <Plus className="mr-2 size-4" />
                         Create Post
                     </Button>
@@ -48,7 +48,7 @@ export default function CommunityPage() {
 
                 {/* Search and Filters */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between bg-card/30 p-4 rounded-2xl border border-border/50">
-                    <div className="relative flex-1 max-w-md">
+                    <div className="relative w-full flex-1 sm:max-w-md">
                         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground/60" />
                         <Input
                             placeholder="Search discussions..."
@@ -85,7 +85,7 @@ export default function CommunityPage() {
                     <div className="lg:col-span-8 flex flex-col gap-6">
                         {filteredPosts.length > 0 ? (
                             filteredPosts.map((post) => (
-                                <div key={post.id} className="group relative flex flex-col gap-6 rounded-3xl border bg-card/40 p-6 transition-all hover:bg-card hover:shadow-xl hover:shadow-primary/5">
+                                <div key={post.id} className="group relative flex flex-col gap-4 rounded-2xl border bg-card/40 p-4 transition-all hover:bg-card hover:shadow-xl hover:shadow-primary/5 sm:gap-6 sm:rounded-3xl sm:p-6">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
                                             <Avatar className="size-10 ring-2 ring-primary/10">

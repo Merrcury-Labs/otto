@@ -69,9 +69,9 @@ export default function FlashcardsPage() {
 
   return (
     <div className="mx-auto max-w-7xl animate-in fade-in duration-500">
-      <div className="flex flex-col gap-8 pb-20">
+      <div className="flex min-w-0 flex-col gap-6 pb-12 sm:gap-8 sm:pb-20">
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
               <Layers className="size-3" />
@@ -83,14 +83,14 @@ export default function FlashcardsPage() {
             >
               Flash Cards
             </h1>
-            <p className="max-w-lg text-[15px] text-muted-foreground leading-relaxed">
+            <p className="max-w-lg text-sm text-muted-foreground leading-relaxed sm:text-[15px]">
               Master concepts with spaced repetition. Flip, rate your confidence,
               and let the algorithm optimize your review schedule.
             </p>
           </div>
           <a
             href="/flashcards/create"
-            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90 sm:w-auto"
           >
             <Plus className="size-3.5" />
             Create Deck
@@ -98,7 +98,7 @@ export default function FlashcardsPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           {[
             { label: "Total Cards", value: totalCards, icon: Layers, color: "text-blue-500" },
             { label: "Avg. Mastery", value: `${avgMastery}%`, icon: Brain, color: "text-violet-500" },
@@ -106,15 +106,15 @@ export default function FlashcardsPage() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="group relative flex flex-col overflow-hidden rounded-xl border bg-card p-5 transition-all hover:shadow-elevation-2"
+              className="group relative flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card p-3 transition-all hover:shadow-elevation-2 sm:p-5"
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="truncate text-[9px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[11px] sm:tracking-wider">
                   {stat.label}
                 </span>
                 <stat.icon className={`size-4 ${stat.color}`} />
               </div>
-              <span className="text-2xl font-bold tracking-tight">{stat.value}</span>
+              <span className="text-xl font-bold tracking-tight sm:text-2xl">{stat.value}</span>
             </div>
           ))}
         </div>

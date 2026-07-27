@@ -30,18 +30,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider className="h-svh overflow-hidden">
       <AppSidebar />
       <SidebarInset className="h-svh min-w-0 overflow-y-auto">
-        <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-2 border-b border-border bg-secondary px-4">
-          <SidebarTrigger className="-ml-1" />
+        <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-1 border-b border-border bg-secondary/95 px-3 backdrop-blur sm:h-16 sm:gap-2 sm:px-4">
+          <SidebarTrigger className="-ml-1 size-10" />
           <Separator
             orientation="vertical"
-            className="mr-2 h-4"
+            className="mr-1 h-4 sm:mr-2"
           />
           <PageHeaderTitle />
           <HeaderActions />
         </header>
-        <div className="flex-1 bg-background p-4">
+        <main className="min-w-0 flex-1 bg-background px-3 py-4 sm:p-5 lg:p-6">
           {children}
-        </div>
+        </main>
       </SidebarInset>
     </SidebarProvider>
   )

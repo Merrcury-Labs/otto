@@ -80,10 +80,10 @@ export default function CoursesPage() {
     }
 
     return (
-        <div className="flex flex-col gap-8 pb-10">
+        <div className="flex min-w-0 flex-col gap-6 pb-10 sm:gap-8">
             <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Your Courses</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Your Courses</h1>
+                <p className="text-sm text-muted-foreground sm:text-base">
                     Continue where you left off or start a new learning journey.
                 </p>
             </div>
@@ -108,8 +108,8 @@ export default function CoursesPage() {
                     )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                <div className="min-w-0 space-y-2 md:flex md:items-center md:gap-2 md:space-y-0">
+                    <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 no-scrollbar md:w-auto md:pb-0">
                         {categories.map((category) => (
                             <Button
                                 key={category}
@@ -123,7 +123,7 @@ export default function CoursesPage() {
                         ))}
                     </div>
                     <div className="h-6 w-px bg-border hidden md:block" />
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                    <div className="flex w-full items-center gap-2 overflow-x-auto pb-1 no-scrollbar md:w-auto md:pb-0">
                         {levels.map((level) => (
                             <Button
                                 key={level}
@@ -144,7 +144,7 @@ export default function CoursesPage() {
                     Loading courses...
                 </div>
             ) : filteredCourses.length > 0 ? (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
                     {filteredCourses.map((course) => (
                         <div
                             key={course.id}

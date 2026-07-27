@@ -198,26 +198,26 @@ export default function QuizzesPage() {
 
     return (
         <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
-            <div className="flex flex-col gap-10 pb-20">
+            <div className="flex min-w-0 flex-col gap-7 pb-12 sm:gap-10 sm:pb-20">
                 {/* Header Section */}
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="flex flex-col gap-3">
                         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">
                             Assessment Hub
                         </div>
-                        <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">Quizzes & Challenges</h1>
-                        <p className="max-w-[600px] text-lg text-muted-foreground leading-relaxed">
+                        <h1 className="text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">Quizzes & Challenges</h1>
+                        <p className="max-w-[600px] text-sm text-muted-foreground leading-relaxed sm:text-base lg:text-lg">
                             Test your knowledge, earn points, and unlock exclusive certifications.
                         </p>
                     </div>
 
                     {/* Quick Analytics Strip */}
-                    <div className="flex gap-4 rounded-3xl border bg-card/30 p-6 shadow-sm backdrop-blur-sm">
-                        <div className="flex flex-col gap-1 pr-6 border-r border-border/50">
+                    <div className="grid grid-cols-3 gap-3 rounded-2xl border bg-card/30 p-4 shadow-sm backdrop-blur-sm sm:flex sm:gap-4 sm:rounded-3xl sm:p-6">
+                        <div className="flex min-w-0 flex-col gap-1 border-r border-border/50 pr-3 sm:pr-6">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Avg. Score</span>
                             <span className="text-2xl font-black text-primary">{avgScore}%</span>
                         </div>
-                        <div className="flex flex-col gap-1 pr-6 border-r border-border/50">
+                        <div className="flex min-w-0 flex-col gap-1 border-r border-border/50 pr-3 sm:pr-6">
                             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Completed</span>
                             <span className="text-2xl font-black">{completedCount}</span>
                         </div>

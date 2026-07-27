@@ -139,44 +139,44 @@ export default function DashboardPage() {
 
     return (
         <div className="mx-auto max-w-7xl animate-in fade-in duration-700">
-            <div className="flex flex-col gap-12 pb-20">
+            <div className="flex flex-col gap-7 pb-12 sm:gap-10 sm:pb-16 lg:gap-12 lg:pb-20">
                 {/* Hero / Greeting Section */}
                 <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-muted-foreground/80">
                         <span className="h-px w-8 bg-muted-foreground/30" />
                         {getGreetingTime()}, {user?.name?.split(' ')[0] || 'Learner'}
                     </div>
-                    <h1 className="text-4xl text-muted-foreground dark:text-white font-extrabold tracking-tight lg:text-5xl">
+                    <h1 className="text-2xl text-muted-foreground dark:text-white font-extrabold tracking-tight sm:text-3xl lg:text-5xl">
                         Your <span className="text-primary">Learning Hub</span>
                     </h1>
-                    <p className="max-w-[600px] text-lg text-muted-foreground/90 dark:text-muted-foreground/50 leading-relaxed">
+                    <p className="max-w-[600px] text-sm text-muted-foreground/90 dark:text-muted-foreground/50 leading-relaxed sm:text-base lg:text-lg">
                         Track your progress, take quizzes, and explore courses.
                     </p>
                 </div>
 
                 {/* Student Stats Row */}
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
                     {[
                         { label: "Quizzes Completed", value: completedQuizzesCount, icon: CheckCircle2, color: "text-green-500" },
                         { label: "Avg. Score", value: `${studentAvgScore}%`, icon: TrendingUp, color: "text-blue-500" },
                         { label: "Courses Available", value: courseList.length, icon: BookOpen, color: "text-primary" },
                         { label: "Total Points", value: totalPoints, icon: Trophy, color: "text-amber-500" },
                     ].map((stat, i) => (
-                        <div key={i} className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border bg-card/40 p-6 transition-all hover:bg-card hover:shadow-xl hover:shadow-primary/5">
+                        <div key={i} className="group relative flex min-w-0 flex-col justify-between overflow-hidden rounded-xl border bg-card/40 p-4 transition-all hover:bg-card hover:shadow-xl hover:shadow-primary/5 sm:rounded-2xl sm:p-6">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-semibold text-muted-foreground/80 dark:text-muted-foreground/50">{stat.label}</span>
+                                <span className="text-xs font-semibold leading-tight text-muted-foreground/80 dark:text-muted-foreground/50 sm:text-sm">{stat.label}</span>
                                 <stat.icon className={`size-5 ${stat.color} opacity-80`} />
                             </div>
                             <div className="mt-4 flex items-baseline gap-2">
-                                <h2 className="text-4xl font-bold tracking-tight">{stat.value}</h2>
+                                <h2 className="text-2xl font-bold tracking-tight sm:text-4xl">{stat.value}</h2>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
                     {/* Left Column */}
-                    <div className="flex flex-col gap-8 lg:col-span-8">
+                    <div className="flex min-w-0 flex-col gap-8 lg:col-span-8">
                         {/* Quizzes to Try */}
                         <section className="flex flex-col gap-6">
                             <div className="flex items-center justify-between px-1">
