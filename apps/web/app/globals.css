@@ -506,3 +506,14 @@ a {
     background: rgba(255, 255, 255, 0.2);
   }
 }
+
+@media (max-width: 640px) {
+  :root {
+    --text-hero: 2.25rem;
+    --text-hero-tracking: -1.25px;
+    --text-section: 1.75rem;
+    --text-section-tracking: -0.5px;
+    --text-subheading: 1.375rem;
+    --text-title-small: 1.25rem;
+  }
+}

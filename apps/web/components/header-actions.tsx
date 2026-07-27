@@ -48,11 +48,12 @@ export function HeaderActions() {
     const initials = getInitials(user?.name, user?.email)
 
     return (
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             {/* Theme toggle */}
             <Button
                 variant="ghost"
                 size="icon"
+                className="hidden sm:inline-flex"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
                 <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -63,13 +64,13 @@ export function HeaderActions() {
             {/* Notifications */}
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative">
+                    <Button variant="ghost" size="icon" className="relative hidden sm:inline-flex">
                         <Bell className="h-5 w-5" />
                         <span className="absolute right-2 top-2 flex h-2 w-2 rounded-full bg-primary" />
                         <span className="sr-only">Notifications</span>
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-80">
+                <PopoverContent align="end" className="w-[calc(100vw-1.5rem)] sm:w-80">
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between">
                             <h4 className="font-semibold tracking-tight">Notifications</h4>
@@ -109,8 +110,8 @@ export function HeaderActions() {
             {/* User Profile */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                        <Avatar className="h-10 w-10">
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 sm:h-10 sm:w-10">
+                        <Avatar className="h-9 w-9 sm:h-10 sm:w-10">
                             <AvatarImage src={image} alt={name} />
                             <AvatarFallback>{isPending ? "..." : initials}</AvatarFallback>
                         </Avatar>
