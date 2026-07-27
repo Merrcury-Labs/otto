@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -24,6 +29,9 @@ import {
   ListChecks,
   Circle,
   CircleHalf,
+  DownloadSimple,
+  UploadSimple,
+  Warning,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import type { QuizFormData, QuizQuestion, QuestionType } from "../types";
@@ -31,6 +39,7 @@ import { questionTypeLabels } from "../types";
 import { saveQuiz } from "../persistence";
 import { graphqlFetch } from "../../../lib/graphql/client";
 import { courseListQuery } from "../../../lib/graphql/courses";
+import { parseQuizCsv, QUIZ_CSV_TEMPLATE } from "../csv";
 
 type CourseOption = {
   id: string;
@@ -360,9 +369,15 @@ export default function CreateQuizPage() {
   const [newQuestionType, setNewQuestionType] = useState<QuestionType>("multiple-choice");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSavingQuiz, setIsSavingQuiz] = useState(false);
+  const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(
+    null,
+  );
   const [saveError, setSaveError] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [csvMessage, setCsvMessage] = useState("");
+  const [csvHasError, setCsvHasError] = useState(false);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
 
@@ -424,6 +439,45 @@ export default function CreateQuizPage() {
       ...formData,
       questions: [...formData.questions, newQuestion],
     });
+  };
+
+  const handleCsvImport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const importedQuestions = parseQuizCsv(await file.text());
+      setFormData((previous) => ({
+        ...previous,
+        questions: [...previous.questions, ...importedQuestions],
+      }));
+      setCsvHasError(false);
+      setCsvMessage(
+        `Imported ${importedQuestions.length} question${
+          importedQuestions.length === 1 ? "" : "s"
+        } from ${file.name}.`,
+      );
+    } catch (error) {
+      setCsvHasError(true);
+      setCsvMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not import the CSV file.",
+      );
+    }
+  };
+
+  const downloadCsvTemplate = () => {
+    const blob = new Blob([QUIZ_CSV_TEMPLATE], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "quiz-questions-template.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const removeQuestion = (questionId: number | string) => {
@@ -581,12 +635,19 @@ export default function CreateQuizPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const submitter = (e.nativeEvent as SubmitEvent)
+      .submitter as HTMLButtonElement | null;
+    const action = submitter?.value === "publish" ? "publish" : "draft";
     setIsSavingQuiz(true);
+    setSavingAction(action);
     setSaveError(null);
 
     try {
       console.log("Creating quiz — formData:", formData);
-      await saveQuiz(formData);
+      await saveQuiz(
+        formData,
+        action === "publish" ? "PUBLISHED" : "DRAFT",
+      );
       router.push("/quizzes");
       router.refresh();
     } catch (error) {
@@ -595,6 +656,7 @@ export default function CreateQuizPage() {
       );
     } finally {
       setIsSavingQuiz(false);
+      setSavingAction(null);
     }
   };
 
@@ -734,7 +796,7 @@ export default function CreateQuizPage() {
           className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100"
@@ -753,18 +815,67 @@ export default function CreateQuizPage() {
                   </CardDescription>
                 </div>
               </div>
-              {formData.questions.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <input
+                  ref={csvInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={handleCsvImport}
+                />
                 <Button
                   type="button"
-                  onClick={() => setIsPreviewOpen(true)}
-                  className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
+                  variant="outline"
+                  onClick={() => csvInputRef.current?.click()}
+                  className="gap-2"
                 >
-                  Preview Quiz
+                  <UploadSimple className="h-4 w-4" />
+                  Import CSV
                 </Button>
-              )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={downloadCsvTemplate}
+                  className="gap-2"
+                >
+                  <DownloadSimple className="h-4 w-4" />
+                  Template
+                </Button>
+                {formData.questions.length > 0 && (
+                  <Button
+                    type="button"
+                    onClick={() => setIsPreviewOpen(true)}
+                    className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
+                  >
+                    Preview Quiz
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-lg border border-border/10 bg-surface-100 p-3">
+              <p className="text-xs text-muted-foreground">
+                CSV columns: question, type, option1–option8, correct_answer,
+                points, hint, categories, category_mapping. Multiple-choice is
+                used when type is blank. Separate multiple answers, categories,
+                and mappings with <code>|</code>.
+              </p>
+              {csvMessage && (
+                <div
+                  role={csvHasError ? "alert" : "status"}
+                  className={`mt-3 flex items-start gap-2 rounded-md px-3 py-2 text-xs ${
+                    csvHasError
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-surface-300 text-foreground"
+                  }`}
+                >
+                  {csvHasError && <Warning className="mt-0.5 h-4 w-4 shrink-0" />}
+                  <span>{csvMessage}</span>
+                </div>
+              )}
+            </div>
+
             {/* Add Question Type Selector */}
             <div className="space-y-3">
               <div
@@ -1390,7 +1501,7 @@ export default function CreateQuizPage() {
           </div>
         )}
 
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
             type="button"
             onClick={() => window.history.back()}
@@ -1401,22 +1512,22 @@ export default function CreateQuizPage() {
           </Button>
           <Button
             type="submit"
+            name="saveAction"
+            value="draft"
             disabled={!isQuizReady || formData.questions.length === 0 || isSavingQuiz}
-            className={`cursor-btn-hover focus-warm transition-all duration-150 ${
-              isQuizReady && formData.questions.length > 0 && !isSavingQuiz
-                ? "bg-surface-300 text-foreground"
-                : "bg-card text-foreground"
-            }`}
-            style={{
-              opacity:
-                isQuizReady && formData.questions.length > 0 && !isSavingQuiz ? 1 : 0.6,
-              cursor:
-                isQuizReady && formData.questions.length > 0 && !isSavingQuiz
-                  ? "pointer"
-                  : "not-allowed",
-            }}
+            variant="outline"
+            className="cursor-btn-hover focus-warm transition-all duration-150"
           >
-            {isSavingQuiz ? "Creating..." : "Create Quiz"}
+            {savingAction === "draft" ? "Saving Draft..." : "Save Draft"}
+          </Button>
+          <Button
+            type="submit"
+            name="saveAction"
+            value="publish"
+            disabled={!isQuizReady || formData.questions.length === 0 || isSavingQuiz}
+            className="cursor-btn-hover focus-warm bg-primary text-primary-foreground transition-all duration-150"
+          >
+            {savingAction === "publish" ? "Publishing..." : "Publish Quiz"}
           </Button>
         </div>
       </form>
