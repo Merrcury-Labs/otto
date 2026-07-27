@@ -52,9 +52,16 @@ export default function DashboardLoginPage() {
         }
       }
 
-      // Org users stay on dashboard
-      window.location.replace("/");
-    } catch (err) {
+      // Org users stay on dashboard and continue to their original page.
+      const requestedPath = new URL(window.location.href).searchParams.get(
+        "redirectTo",
+      );
+      const destination =
+        requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
+          ? requestedPath
+          : "/";
+      window.location.replace(destination);
+    } catch {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);

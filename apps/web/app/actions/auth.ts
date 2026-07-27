@@ -9,6 +9,11 @@ export type AuthActionState = {
   error: string | null;
 };
 
+function safeInternalDestination(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") return "/";
+  return value.startsWith("/") && !value.startsWith("//") ? value : "/";
+}
+
 export async function signUpAction(
   _previousState: AuthActionState,
   formData: FormData,
@@ -47,6 +52,7 @@ export async function signInAction(
 
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const redirectTo = safeInternalDestination(formData.get("redirectTo"));
 
   try {
     await auth.api.signInEmail({
@@ -63,7 +69,7 @@ export async function signInAction(
 
   // A login made in the web app stays in the web app. Role selection and
   // cross-app routing are handled explicitly by onboarding after sign-up.
-  redirect("/");
+  redirect(redirectTo);
 }
 
 export async function signOutAction() {

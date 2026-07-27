@@ -132,6 +132,7 @@
   body {
     @apply bg-background text-foreground;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
   }
 
   /* CursorGothic-style headings with negative letter-spacing */
@@ -167,5 +168,11 @@
   .focus-warm:focus-visible {
     box-shadow: rgba(0,0,0,0.1) 0px 4px 12px;
     outline: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .cursor-card {
+    box-shadow: rgba(0,0,0,0.1) 0px 10px 28px, rgba(0,0,0,0.06) 0px 4px 12px;
   }
 }

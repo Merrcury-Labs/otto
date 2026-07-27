@@ -24,6 +24,7 @@ type AuthMode = "login" | "signup";
 
 type AuthPageProps = {
 	mode?: AuthMode;
+	redirectTo?: string;
 };
 
 const initialAuthActionState: AuthActionState = { error: null };
@@ -49,9 +50,12 @@ const authCopy = {
 	},
 } satisfies Record<AuthMode, Record<string, string>>;
 
-export function AuthPage({ mode = "login" }: AuthPageProps) {
+export function AuthPage({ mode = "login", redirectTo }: AuthPageProps) {
 	const copy = authCopy[mode];
 	const isSignup = mode === "signup";
+	const switchHref = redirectTo
+		? `${copy.switchHref}?redirectTo=${encodeURIComponent(redirectTo)}`
+		: copy.switchHref;
 	const action = isSignup ? signUpAction : signInAction;
 	const [state, formAction, isPending] = useActionState(
 		action,
@@ -79,6 +83,9 @@ export function AuthPage({ mode = "login" }: AuthPageProps) {
 						</p>
 					</div>
 					<form action={formAction} className="space-y-2">
+						{redirectTo ? (
+							<input name="redirectTo" type="hidden" value={redirectTo} />
+						) : null}
 						{isSignup ? (
 							<InputGroup>
 								<InputGroupInput
@@ -143,7 +150,7 @@ export function AuthPage({ mode = "login" }: AuthPageProps) {
 						{copy.switchText}{" "}
 						<Link
 							className="font-medium text-primary underline underline-offset-4"
-							href={copy.switchHref}
+							href={switchHref}
 						>
 							{copy.switchLabel}
 						</Link>
