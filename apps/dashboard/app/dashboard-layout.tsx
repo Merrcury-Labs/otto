@@ -286,9 +286,10 @@ export function DashboardLayout({
       </Sidebar>
       <SidebarInset className="bg-background">
         <header
-          className="flex h-16 shrink-0 items-center gap-2 px-4 border-b border-border/10 bg-background"
+          className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b border-border/10 bg-background/95 px-3 backdrop-blur sm:h-16 sm:px-4"
         >
-          <SidebarTrigger className="-ml-1 cursor-btn-hover focus-warm transition-all duration-150" />
+          <SidebarTrigger className="cursor-btn-hover focus-warm -ml-1 h-10 w-10 transition-all duration-150" />
+          <span className="text-sm font-semibold sm:hidden">Otto</span>
           <div className="flex-1" />
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -346,7 +347,9 @@ export function DashboardLayout({
             </DropdownMenu>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4">{children}</div>
+        <main className="flex min-w-0 flex-1 flex-col gap-4 px-3 py-5 sm:p-6 lg:p-8">
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

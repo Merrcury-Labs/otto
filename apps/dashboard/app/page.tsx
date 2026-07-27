@@ -141,35 +141,35 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 px-4">
+    <div className="mx-auto w-full max-w-[1600px] space-y-5 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-normal tracking-tight text-foreground" style={{ letterSpacing: '-0.11px' }}>
+        <h1 className="text-2xl font-normal tracking-tight text-foreground sm:text-3xl" style={{ letterSpacing: '-0.11px' }}>
           Dashboard
         </h1>
-        <p className="text-base text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground sm:text-base">
           Manage your courses and track your teaching progress.
         </p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6 lg:gap-4">
         {stats.map((stat) => (
           <Card
             key={stat.title}
             className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
           >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="flex flex-row items-start justify-between gap-2 p-4 pb-2 sm:p-6 sm:pb-2">
               <CardTitle
-                className="text-sm font-medium text-foreground"
+                className="text-xs font-medium leading-snug text-foreground sm:text-sm"
                 style={{ letterSpacing: '-0.11px' }}
               >
                 {stat.title}
               </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
+              <stat.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
               <div
-                className="text-2xl font-normal text-foreground"
+                className="text-xl font-normal text-foreground sm:text-2xl"
                 style={{ letterSpacing: '-0.11px' }}
               >
                 {stat.value}
@@ -186,7 +186,7 @@ export default function Dashboard() {
       <Card
         className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
       >
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div>
             <CardTitle
               className="text-xl font-normal text-foreground"
@@ -199,14 +199,14 @@ export default function Dashboard() {
             </CardDescription>
           </div>
           <button
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground rounded-lg"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-surface-300 px-4 py-2.5 text-sm font-medium text-foreground transition-all duration-150 cursor-btn-hover focus-warm sm:w-auto"
             style={{ letterSpacing: 'normal' }}
           >
             <Plus className="h-4 w-4" />
             Create Course
           </button>
         </CardHeader>
-        <CardContent>
+        <CardContent className="hidden md:block">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border/10">
@@ -296,10 +296,47 @@ export default function Dashboard() {
             </TableBody>
           </Table>
         </CardContent>
+        <CardContent className="space-y-3 p-4 pt-0 md:hidden">
+          {recentCourses.map((course) => (
+            <article
+              key={course.id}
+              className="rounded-lg border border-border/20 bg-background/35 p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="truncate text-sm font-medium text-foreground">
+                    {course.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Updated {course.lastUpdated}
+                  </p>
+                </div>
+                {getStatusBadge(course.status)}
+              </div>
+              <div className="mt-4 flex items-center justify-between border-t border-border/10 pt-3">
+                <div className="flex gap-5 text-xs text-muted-foreground">
+                  <span><strong className="font-medium text-foreground">{course.quizzes}</strong> quizzes</span>
+                  <span><strong className="font-medium text-foreground">{course.students.toLocaleString()}</strong> students</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button className="rounded-md p-2 text-muted-foreground cursor-btn-hover focus-warm" aria-label={`View ${course.title}`}>
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button className="rounded-md p-2 text-muted-foreground cursor-btn-hover focus-warm" aria-label={`Edit ${course.title}`}>
+                    <PencilSimple className="h-4 w-4" />
+                  </button>
+                  <button className="rounded-md p-2 text-muted-foreground cursor-btn-hover focus-warm" aria-label={`Delete ${course.title}`}>
+                    <Trash className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </CardContent>
       </Card>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card
           className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg"
         >
@@ -312,7 +349,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-accent">
+            <button className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-all duration-150 cursor-btn-hover focus-warm hover:bg-accent sm:p-4">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100 text-foreground"
               >
@@ -329,7 +366,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </button>
-            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-accent">
+            <button className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-all duration-150 cursor-btn-hover focus-warm hover:bg-accent sm:p-4">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100 text-foreground"
               >
@@ -346,7 +383,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </button>
-            <button className="flex items-center gap-3 w-full rounded-lg p-4 cursor-btn-hover focus-warm transition-all duration-150 text-left hover:bg-accent">
+            <button className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-all duration-150 cursor-btn-hover focus-warm hover:bg-accent sm:p-4">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100 text-foreground"
               >
@@ -384,14 +421,14 @@ export default function Dashboard() {
           <CardContent className="space-y-4">
             {recentCourses.slice(0, 4).map((course) => (
               <div key={course.id} className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-start justify-between gap-3">
                   <div
-                    className="text-sm font-medium text-foreground"
+                    className="min-w-0 flex-1 truncate text-sm font-medium text-foreground"
                   >
                     {course.title}
                   </div>
                   <div
-                    className="text-sm text-muted-foreground"
+                    className="shrink-0 text-xs text-muted-foreground sm:text-sm"
                   >
                     {Math.floor(Math.random() * 30 + 70)}% complete
                   </div>
