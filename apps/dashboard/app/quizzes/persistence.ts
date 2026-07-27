@@ -114,7 +114,10 @@ const saveQuestions = async (questions: QuizQuestion[], quizId: string) => {
   );
 };
 
-export async function saveQuiz(formData: QuizFormData) {
+export async function saveQuiz(
+  formData: QuizFormData,
+  status: "DRAFT" | "PUBLISHED" = "DRAFT",
+) {
   if (!formData.courseId) {
     throw new Error("A course must be selected to create a quiz.");
   }
@@ -127,6 +130,7 @@ export async function saveQuiz(formData: QuizFormData) {
     numQuestions: formData.questions.length,
     author: "admin",
     passingScore: 50.0,
+    status,
   };
 
   console.log("saveQuiz — createQuiz variables:", quizVariables);

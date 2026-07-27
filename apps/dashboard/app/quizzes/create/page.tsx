@@ -369,6 +369,9 @@ export default function CreateQuizPage() {
   const [newQuestionType, setNewQuestionType] = useState<QuestionType>("multiple-choice");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSavingQuiz, setIsSavingQuiz] = useState(false);
+  const [savingAction, setSavingAction] = useState<"draft" | "publish" | null>(
+    null,
+  );
   const [saveError, setSaveError] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
@@ -632,12 +635,19 @@ export default function CreateQuizPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const submitter = (e.nativeEvent as SubmitEvent)
+      .submitter as HTMLButtonElement | null;
+    const action = submitter?.value === "publish" ? "publish" : "draft";
     setIsSavingQuiz(true);
+    setSavingAction(action);
     setSaveError(null);
 
     try {
       console.log("Creating quiz — formData:", formData);
-      await saveQuiz(formData);
+      await saveQuiz(
+        formData,
+        action === "publish" ? "PUBLISHED" : "DRAFT",
+      );
       router.push("/quizzes");
       router.refresh();
     } catch (error) {
@@ -646,6 +656,7 @@ export default function CreateQuizPage() {
       );
     } finally {
       setIsSavingQuiz(false);
+      setSavingAction(null);
     }
   };
 
@@ -1490,7 +1501,7 @@ export default function CreateQuizPage() {
           </div>
         )}
 
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
             type="button"
             onClick={() => window.history.back()}
@@ -1501,22 +1512,22 @@ export default function CreateQuizPage() {
           </Button>
           <Button
             type="submit"
+            name="saveAction"
+            value="draft"
             disabled={!isQuizReady || formData.questions.length === 0 || isSavingQuiz}
-            className={`cursor-btn-hover focus-warm transition-all duration-150 ${
-              isQuizReady && formData.questions.length > 0 && !isSavingQuiz
-                ? "bg-surface-300 text-foreground"
-                : "bg-card text-foreground"
-            }`}
-            style={{
-              opacity:
-                isQuizReady && formData.questions.length > 0 && !isSavingQuiz ? 1 : 0.6,
-              cursor:
-                isQuizReady && formData.questions.length > 0 && !isSavingQuiz
-                  ? "pointer"
-                  : "not-allowed",
-            }}
+            variant="outline"
+            className="cursor-btn-hover focus-warm transition-all duration-150"
           >
-            {isSavingQuiz ? "Creating..." : "Create Quiz"}
+            {savingAction === "draft" ? "Saving Draft..." : "Save Draft"}
+          </Button>
+          <Button
+            type="submit"
+            name="saveAction"
+            value="publish"
+            disabled={!isQuizReady || formData.questions.length === 0 || isSavingQuiz}
+            className="cursor-btn-hover focus-warm bg-primary text-primary-foreground transition-all duration-150"
+          >
+            {savingAction === "publish" ? "Publishing..." : "Publish Quiz"}
           </Button>
         </div>
       </form>

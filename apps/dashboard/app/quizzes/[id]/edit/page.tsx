@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Card,
@@ -24,7 +29,10 @@ import {
   ListChecks,
   Circle,
   CircleHalf,
+  DownloadSimple,
   Spinner,
+  UploadSimple,
+  Warning,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";
 import type { QuizFormData, QuizQuestion, QuestionType } from "../../types";
@@ -38,6 +46,7 @@ import {
   deleteQuestionMutation,
 } from "../../../../lib/graphql/quizzes";
 import { courseListQuery } from "../../../../lib/graphql/courses";
+import { parseQuizCsv, QUIZ_CSV_TEMPLATE } from "../../csv";
 
 // ─── Backend → Dashboard normalization ──────────────────────────────────────
 
@@ -638,9 +647,16 @@ export default function EditQuizPage() {
     useState<QuestionType>("multiple-choice");
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [quizStatus, setQuizStatus] = useState<"draft" | "published">("draft");
+  const [savingAction, setSavingAction] = useState<"save" | "publish" | null>(
+    null,
+  );
   const [saveError, setSaveError] = useState<string | null>(null);
   const [courses, setCourses] = useState<CourseOption[]>([]);
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
+  const [csvMessage, setCsvMessage] = useState("");
+  const [csvHasError, setCsvHasError] = useState(false);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   // Load quiz from backend
   useEffect(() => {
@@ -684,6 +700,9 @@ export default function EditQuizPage() {
 
         const quiz = result.quiz;
         const normalizedQuestions = quiz.questions.map(normalizeBackendQuestion);
+        setQuizStatus(
+          quiz.status.toLowerCase() === "published" ? "published" : "draft",
+        );
 
         setFormData({
           title: quiz.title,
@@ -768,6 +787,49 @@ export default function EditQuizPage() {
       ...formData,
       questions: [...formData.questions, newQuestion],
     });
+  };
+
+  const handleCsvImport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !formData) return;
+
+    try {
+      const importedQuestions = parseQuizCsv(await file.text());
+      setFormData((previous) =>
+        previous
+          ? {
+              ...previous,
+              questions: [...previous.questions, ...importedQuestions],
+            }
+          : previous,
+      );
+      setCsvHasError(false);
+      setCsvMessage(
+        `Imported ${importedQuestions.length} question${
+          importedQuestions.length === 1 ? "" : "s"
+        } from ${file.name}.`,
+      );
+    } catch (error) {
+      setCsvHasError(true);
+      setCsvMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not import the CSV file.",
+      );
+    }
+  };
+
+  const downloadCsvTemplate = () => {
+    const blob = new Blob([QUIZ_CSV_TEMPLATE], {
+      type: "text/csv;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "quiz-questions-template.csv";
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const removeQuestion = (questionId: number | string) => {
@@ -901,16 +963,8 @@ export default function EditQuizPage() {
     const newCategories = [...question.categories];
     newCategories[categoryIndex] = name;
 
-    const newMapping = { ...(question.categoryMapping || {}) };
-    Object.keys(newMapping).forEach((key) => {
-      if (newMapping[Number(key)] === categoryIndex) {
-        delete newMapping[Number(key)];
-      }
-    });
-
     updateQuestion(questionId, {
       categories: newCategories,
-      categoryMapping: newMapping,
     });
   };
 
@@ -952,33 +1006,75 @@ export default function EditQuizPage() {
     e.preventDefault();
     if (!formData) return;
 
+    const incompleteCategoryQuestion = formData.questions.find(
+      (question) =>
+        question.type === "drag-drop-category" &&
+        ((question.categories?.length ?? 0) < MIN_CATEGORY_COUNT ||
+          question.options.some(
+            (_, optionIndex) =>
+              question.categoryMapping?.[optionIndex] === undefined,
+          )),
+    );
+    if (incompleteCategoryQuestion) {
+      setSaveError(
+        `Assign every answer to a category before saving "${incompleteCategoryQuestion.question || "the category question"}".`,
+      );
+      return;
+    }
+
+    const submitter = (e.nativeEvent as SubmitEvent)
+      .submitter as HTMLButtonElement | null;
+    const action = submitter?.value === "publish" ? "publish" : "save";
+    const nextStatus = action === "publish" ? "published" : quizStatus;
     setIsSaving(true);
+    setSavingAction(action);
     setSaveError(null);
 
     try {
-      // 1. Update quiz metadata
-      await graphqlFetch({
-        query: updateQuizMutation,
-        operationName: "UpdateQuiz",
-        variables: {
-          id: quizId,
-          title: formData.title,
-          description: formData.description,
-          length: getDurationValue(formData.duration || ""),
-          numQuestions: formData.questions.length,
-          passingScore: 50.0,
-        },
-      });
-
-      // 2. Delete questions that were removed
+      // UUID-backed questions use string IDs. Only IDs that were loaded from
+      // the backend are existing records; timestamp/CSV IDs are new records.
       const currentQuestionIds = new Set(
         formData.questions
-          .filter((q) => typeof q.id === "number" && !Number.isNaN(q.id))
           .map((q) => String(q.id)),
       );
       const removedIds = originalQuestionIds.filter(
         (id) => !currentQuestionIds.has(id),
       );
+
+      // Save questions before changing publication status. If a previous save
+      // hit the old UUID deletion bug, recreate the missing question so the
+      // user's still-open editor can recover without losing its content.
+      await Promise.all(
+        formData.questions.map(async (question) => {
+          const payload = getQuestionPayload(question);
+          const stringId = String(question.id);
+          const isExisting = originalQuestionIds.includes(stringId);
+
+          if (isExisting) {
+            try {
+              return await graphqlFetch({
+                query: updateQuestionMutation,
+                operationName: "UpdateQuestion",
+                variables: { id: stringId, ...payload },
+              });
+            } catch (error) {
+              if (
+                !(error instanceof Error) ||
+                !error.message.includes("does not exist")
+              ) {
+                throw error;
+              }
+            }
+          }
+
+          return graphqlFetch({
+            query: createQuestionMutation,
+            operationName: "CreateQuestion",
+            variables: { quizId, ...payload },
+          });
+        }),
+      );
+
       await Promise.all(
         removedIds.map((id) =>
           graphqlFetch({
@@ -989,27 +1085,20 @@ export default function EditQuizPage() {
         ),
       );
 
-      // 3. Update existing questions + create new ones
-      await Promise.all(
-        formData.questions.map((question) => {
-          const payload = getQuestionPayload(question);
-          const stringId = String(question.id);
-          const isExisting = originalQuestionIds.includes(stringId);
-
-          if (isExisting) {
-            return graphqlFetch({
-              query: updateQuestionMutation,
-              operationName: "UpdateQuestion",
-              variables: { id: stringId, ...payload },
-            });
-          }
-          return graphqlFetch({
-            query: createQuestionMutation,
-            operationName: "CreateQuestion",
-            variables: { quizId, ...payload },
-          });
-        }),
-      );
+      // Publish only after all question writes succeed.
+      await graphqlFetch({
+        query: updateQuizMutation,
+        operationName: "UpdateQuiz",
+        variables: {
+          id: quizId,
+          title: formData.title,
+          description: formData.description,
+          length: getDurationValue(formData.duration || ""),
+          numQuestions: formData.questions.length,
+          passingScore: 50.0,
+          status: nextStatus.toUpperCase(),
+        },
+      });
 
       router.push("/quizzes");
       router.refresh();
@@ -1019,6 +1108,7 @@ export default function EditQuizPage() {
       );
     } finally {
       setIsSaving(false);
+      setSavingAction(null);
     }
   };
 
@@ -1202,7 +1292,7 @@ export default function EditQuizPage() {
         {/* Questions Section */}
         <Card className="cursor-card hover:cursor-card-hover transition-all duration-200 bg-card rounded-lg">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-surface-100">
                   <ListChecks className="h-5 w-5 text-foreground" />
@@ -1219,18 +1309,68 @@ export default function EditQuizPage() {
                   </CardDescription>
                 </div>
               </div>
-              {formData.questions.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <input
+                  ref={csvInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={handleCsvImport}
+                />
                 <Button
                   type="button"
-                  onClick={() => setIsPreviewOpen(true)}
-                  className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
+                  variant="outline"
+                  onClick={() => csvInputRef.current?.click()}
+                  className="gap-2"
                 >
-                  Preview Quiz
+                  <UploadSimple className="h-4 w-4" />
+                  Import CSV
                 </Button>
-              )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={downloadCsvTemplate}
+                  className="gap-2"
+                >
+                  <DownloadSimple className="h-4 w-4" />
+                  Template
+                </Button>
+                {formData.questions.length > 0 && (
+                  <Button
+                    type="button"
+                    onClick={() => setIsPreviewOpen(true)}
+                    className="cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
+                  >
+                    Preview Quiz
+                  </Button>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="rounded-lg border border-border/10 bg-surface-100 p-3">
+              <p className="text-xs text-muted-foreground">
+                Import multiple-choice, checkbox, true/false, ordering, or
+                categorization questions. Imported questions are added to the
+                current quiz and remain editable before saving.
+              </p>
+              {csvMessage && (
+                <div
+                  role={csvHasError ? "alert" : "status"}
+                  className={`mt-3 flex items-start gap-2 rounded-md px-3 py-2 text-xs ${
+                    csvHasError
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-surface-300 text-foreground"
+                  }`}
+                >
+                  {csvHasError && (
+                    <Warning className="mt-0.5 h-4 w-4 shrink-0" />
+                  )}
+                  <span>{csvMessage}</span>
+                </div>
+              )}
+            </div>
+
             {/* Add Question Type Selector */}
             <div className="space-y-3">
               <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -1871,7 +2011,7 @@ export default function EditQuizPage() {
           </div>
         )}
 
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <Button
             type="button"
             onClick={() => window.history.back()}
@@ -1882,25 +2022,25 @@ export default function EditQuizPage() {
           </Button>
           <Button
             type="submit"
+            name="saveAction"
+            value="save"
             disabled={!isQuizReady || formData.questions.length === 0 || isSaving}
-            className={`cursor-btn-hover focus-warm transition-all duration-150 ${
-              isQuizReady && formData.questions.length > 0 && !isSaving
-                ? "bg-surface-300 text-foreground"
-                : "bg-card text-foreground"
-            }`}
-            style={{
-              opacity:
-                isQuizReady && formData.questions.length > 0 && !isSaving
-                  ? 1
-                  : 0.6,
-              cursor:
-                isQuizReady && formData.questions.length > 0 && !isSaving
-                  ? "pointer"
-                  : "not-allowed",
-            }}
+            variant="outline"
+            className="cursor-btn-hover focus-warm transition-all duration-150"
           >
-            {isSaving ? "Saving..." : "Save Changes"}
+            {savingAction === "save" ? "Saving..." : "Save Changes"}
           </Button>
+          {quizStatus === "draft" && (
+            <Button
+              type="submit"
+              name="saveAction"
+              value="publish"
+              disabled={!isQuizReady || formData.questions.length === 0 || isSaving}
+              className="cursor-btn-hover focus-warm bg-primary text-primary-foreground transition-all duration-150"
+            >
+              {savingAction === "publish" ? "Publishing..." : "Publish Quiz"}
+            </Button>
+          )}
         </div>
       </form>
 

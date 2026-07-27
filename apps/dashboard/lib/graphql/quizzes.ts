@@ -41,6 +41,7 @@ export const createQuizMutation = /* GraphQL */ `
     $author: String!
     $description: String
     $passingScore: Float
+    $status: String
   ) {
     createQuiz(
       courseId: $courseId
@@ -50,6 +51,7 @@ export const createQuizMutation = /* GraphQL */ `
       author: $author
       description: $description
       passingScore: $passingScore
+      status: $status
     ) {
       id
     }
