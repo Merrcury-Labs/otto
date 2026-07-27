@@ -7,7 +7,6 @@ import {
   X,
   BookOpen,
   Lightbulb,
-  MessageSquare,
   RotateCcw,
   Copy,
   ThumbsUp,
@@ -15,7 +14,6 @@ import {
   Brain,
   GraduationCap,
   ChevronDown,
-  Paperclip,
   Maximize2,
   Minimize2,
 } from "lucide-react";
@@ -173,8 +171,8 @@ export function AITutorPanel({
 
   return (
     <div
-      className={`flex h-full shrink-0 flex-col border-l bg-background ${
-        isExpanded ? "w-[480px]" : "w-[380px]"
+      className={`absolute inset-0 z-50 flex h-full w-full flex-col bg-background lg:relative lg:inset-auto lg:z-auto lg:shrink-0 lg:border-l ${
+        isExpanded ? "lg:w-[480px]" : "lg:w-[380px]"
       } transition-all duration-300`}
     >
       {/* Header */}
@@ -199,7 +197,7 @@ export function AITutorPanel({
           <Button
             variant="ghost"
             size="icon"
-            className="size-7 text-muted-foreground hover:text-foreground"
+            className="hidden size-7 text-muted-foreground hover:text-foreground lg:inline-flex"
             onClick={() => setIsExpanded(!isExpanded)}
             title={isExpanded ? "Minimize" : "Expand"}
           >

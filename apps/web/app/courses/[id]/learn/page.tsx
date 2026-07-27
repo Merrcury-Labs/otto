@@ -9,23 +9,16 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Circle,
   Clock,
   FileText,
-  Lock,
-  MessageSquare,
   Play,
   Sparkles,
   X,
   Download,
   ExternalLink,
   StickyNote,
-  Bookmark,
-  Share2,
-  MoreHorizontal,
   PanelRightOpen,
   PanelRightClose,
-  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { graphqlFetch } from "@/lib/graphql/client";
@@ -43,7 +36,7 @@ import {
 } from "@/lib/graphql/normalize";
 import { MarkdownPreview } from "@/components/MarkdownPreview";
 import { AITutorPanel } from "@/components/ai-tutor-panel";
-import { ProgressRing, ProgressBar } from "@/components/learning-progress";
+import { ProgressBar } from "@/components/learning-progress";
 
 // ─── Lesson type icon ──────────────────────────────────────────────────
 
@@ -219,7 +212,7 @@ function VideoLesson({ lesson }: { lesson: DisplayLesson }) {
       )}
 
       {lesson.content && lesson.content !== lesson.url && (
-        <div className="prose-container rounded-xl border bg-card p-6 shadow-elevation-1 md:p-8 lg:p-10">
+        <div className="prose-container rounded-xl border bg-card p-4 shadow-elevation-1 sm:p-6 md:p-8 lg:p-10">
           <MarkdownPreview content={lesson.content} />
         </div>
       )}
@@ -249,7 +242,7 @@ function TextLesson({ lesson }: { lesson: DisplayLesson }) {
 
   return (
     <div className="space-y-6">
-      <div className="prose-container rounded-xl border bg-card p-6 shadow-elevation-1 md:p-8 lg:p-10">
+      <div className="prose-container rounded-xl border bg-card p-4 shadow-elevation-1 sm:p-6 md:p-8 lg:p-10">
         <MarkdownPreview content={lesson.content} />
       </div>
       <LessonTools lessonId={lesson.id} />
@@ -506,7 +499,7 @@ function LessonContent({ lesson }: { lesson: DisplayLesson }) {
   return (
     <div className="min-h-full animate-in fade-in duration-300">
       {/* Lesson header */}
-      <div className="mb-6">
+      <div className="mb-5 sm:mb-6">
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <LessonTypeBadge type={lesson.type} />
           {lesson.duration && (
@@ -516,7 +509,7 @@ function LessonContent({ lesson }: { lesson: DisplayLesson }) {
             </span>
           )}
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight leading-snug md:text-3xl">
+        <h1 className="text-xl font-semibold tracking-tight leading-snug sm:text-2xl md:text-3xl">
           {lesson.title}
         </h1>
       </div>
@@ -572,12 +565,14 @@ function CurriculumSidebar({
 
   // Find which module contains the active lesson and ensure it's expanded
   React.useEffect(() => {
-    for (const module of modules) {
-      const hasActiveLesson = module.lessons.some(
+    for (const courseModule of modules) {
+      const hasActiveLesson = courseModule.lessons.some(
         (l) => String(l.id) === String(activeLessonId)
       );
       if (hasActiveLesson) {
-        setExpandedModules((prev) => new Set([...prev, String(module.id)]));
+        setExpandedModules(
+          (prev) => new Set([...prev, String(courseModule.id)])
+        );
       }
     }
   }, [activeLessonId, modules]);
@@ -607,7 +602,7 @@ function CurriculumSidebar({
   }
 
   return (
-    <aside className="flex min-h-0 w-[280px] shrink-0 flex-col border-r bg-card">
+    <aside className="flex min-h-0 w-[min(280px,88vw)] shrink-0 flex-col border-r bg-card">
       {/* Sidebar header */}
       <div className="shrink-0 border-b px-4 py-3">
         <div className="flex items-center justify-between">
@@ -618,7 +613,7 @@ function CurriculumSidebar({
             </h3>
           </div>
           <button
-            onClick={onToggleCollapse}
+            onClick={onClose ?? onToggleCollapse}
             className="flex size-6 items-center justify-center rounded-md hover:bg-secondary transition-colors shrink-0"
             title="Collapse sidebar"
           >
@@ -745,6 +740,8 @@ export default function LearnCoursePage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isAITutorOpen, setIsAITutorOpen] = React.useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(false);
+  const [isMobileCurriculumOpen, setIsMobileCurriculumOpen] =
+    React.useState(false);
 
   React.useEffect(() => {
     let mounted = true;
@@ -849,9 +846,9 @@ export default function LearnCoursePage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden bg-background">
+    <div className="flex h-svh flex-col overflow-hidden bg-background">
       {/* Top bar — Minimal Linear-style */}
-      <div className="flex h-12 shrink-0 items-center gap-3 border-b px-3 bg-background">
+      <div className="flex h-12 shrink-0 items-center gap-1.5 border-b bg-background px-2 sm:gap-3 sm:px-3">
         <Button
           variant="ghost"
           onClick={() => router.push(`/courses/${params.id}`)}
@@ -863,6 +860,16 @@ export default function LearnCoursePage() {
         </Button>
 
         <div className="h-4 w-px bg-border" />
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsMobileCurriculumOpen(true)}
+          className="gap-1.5 px-2 text-[12px] text-muted-foreground hover:text-foreground lg:hidden"
+        >
+          <BookOpen className="size-3.5" />
+          <span className="hidden min-[420px]:inline">Lessons</span>
+        </Button>
 
         <div className="flex-1 min-w-0 flex items-center gap-2">
           <BookOpen className="size-3.5 text-primary shrink-0" />
@@ -884,7 +891,7 @@ export default function LearnCoursePage() {
           </div>
         )}
 
-        <div className="h-4 w-px bg-border" />
+        <div className="hidden h-4 w-px bg-border sm:block" />
 
         {/* AI Tutor toggle */}
         <Button
@@ -913,34 +920,58 @@ export default function LearnCoursePage() {
       </div>
 
       {/* Main content area — 3-panel layout */}
-      <main className="min-h-0 flex-1 overflow-hidden flex">
+      <main className="relative flex min-h-0 flex-1 overflow-hidden">
         {activeLesson ? (
           <>
             {/* Left: Curriculum sidebar */}
-            <CurriculumSidebar
-              modules={course.modules}
-              activeLessonId={activeLessonId}
-              onLessonSelect={handleLessonSelect}
-              courseTitle={course.title}
-              isCollapsed={isSidebarCollapsed}
-              onToggleCollapse={() =>
-                setIsSidebarCollapsed(!isSidebarCollapsed)
-              }
-            />
+            <div className="hidden lg:contents">
+              <CurriculumSidebar
+                modules={course.modules}
+                activeLessonId={activeLessonId}
+                onLessonSelect={handleLessonSelect}
+                courseTitle={course.title}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() =>
+                  setIsSidebarCollapsed(!isSidebarCollapsed)
+                }
+              />
+            </div>
+
+            {isMobileCurriculumOpen && (
+              <div className="absolute inset-0 z-40 flex lg:hidden">
+                <CurriculumSidebar
+                  modules={course.modules}
+                  activeLessonId={activeLessonId}
+                  onLessonSelect={(lessonId) => {
+                    handleLessonSelect(lessonId);
+                    setIsMobileCurriculumOpen(false);
+                  }}
+                  courseTitle={course.title}
+                  onClose={() => setIsMobileCurriculumOpen(false)}
+                  isCollapsed={false}
+                />
+                <button
+                  type="button"
+                  aria-label="Close lesson navigation"
+                  className="min-w-0 flex-1 bg-black/35 backdrop-blur-[1px]"
+                  onClick={() => setIsMobileCurriculumOpen(false)}
+                />
+              </div>
+            )}
 
             {/* Center: Lesson content */}
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-warm">
-              <div className="mx-auto w-full max-w-5xl px-6 py-8 md:px-10 lg:px-14 lg:py-10">
+              <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-5 sm:py-7 md:px-8 lg:px-12 lg:py-10 xl:px-14">
                 <LessonContent lesson={activeLesson} />
 
                 {/* Previous / Next navigation */}
-                <div className="mt-12 flex items-stretch gap-3 border-t pt-8">
+                <div className="mt-8 flex items-stretch gap-2 border-t pt-5 sm:mt-12 sm:gap-3 sm:pt-8">
                   {prevLesson ? (
                     <button
                       onClick={() => handleLessonSelect(prevLesson.id)}
-                      className="group flex flex-1 items-center gap-3 rounded-xl border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-elevation-1"
+                      className="group flex min-w-0 flex-1 items-center gap-2 rounded-xl border bg-card p-2.5 transition-all hover:border-primary/20 hover:shadow-elevation-1 sm:gap-3 sm:p-4"
                     >
-                      <div className="flex size-8 items-center justify-center rounded-lg bg-secondary group-hover:bg-primary/10 transition-colors">
+                      <div className="hidden size-8 shrink-0 items-center justify-center rounded-lg bg-secondary transition-colors group-hover:bg-primary/10 sm:flex">
                         <ChevronLeft className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
                       <div className="min-w-0 text-left">
@@ -958,7 +989,7 @@ export default function LearnCoursePage() {
                   {nextLesson ? (
                     <button
                       onClick={() => handleLessonSelect(nextLesson.id)}
-                      className="group flex flex-1 items-center justify-end gap-3 rounded-xl border bg-card p-4 transition-all hover:border-primary/20 hover:shadow-elevation-1"
+                      className="group flex min-w-0 flex-1 items-center justify-end gap-2 rounded-xl border bg-card p-2.5 transition-all hover:border-primary/20 hover:shadow-elevation-1 sm:gap-3 sm:p-4"
                     >
                       <div className="min-w-0 text-right">
                         <span className="block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -968,7 +999,7 @@ export default function LearnCoursePage() {
                           {nextLesson.title}
                         </span>
                       </div>
-                      <div className="flex size-8 items-center justify-center rounded-lg bg-secondary group-hover:bg-primary/10 transition-colors">
+                      <div className="hidden size-8 shrink-0 items-center justify-center rounded-lg bg-secondary transition-colors group-hover:bg-primary/10 sm:flex">
                         <ChevronRight className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                       </div>
                     </button>
