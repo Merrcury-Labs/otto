@@ -18,12 +18,54 @@ type ProseMirrorMark = {
 type ProseMirrorNode = {
   type?: string;
   text?: string;
-  attrs?: { level?: number };
+  attrs?: {
+    level?: number;
+    latex?: string;
+  };
   marks?: ProseMirrorMark[];
   content?: ProseMirrorNode[];
 };
 
+function normalizeLatex(latex: string): string {
+  return latex
+    .replace(/(\p{L})\s*\^\s*[-−](?=\s*(?:=|$))/gu, "\\bar{$1}")
+    .replace(/(\p{L})\u0304/gu, "\\bar{$1}")
+    .replace(/(\p{L})\u0305/gu, "\\overline{$1}")
+    .replace(/(\p{L})[\u00AF\u02C9]/gu, "\\bar{$1}")
+    .replace(/(\p{L})\u203E/gu, "\\overline{$1}");
+}
+
+function normalizeMathDelimiters(content: string): string {
+  // remark-math understands $...$ and $$...$$, while generated/imported
+  // lessons frequently use the equivalent LaTeX \( ... \) and \[ ... \].
+  // Leave code spans and fenced code blocks untouched.
+  return content
+    .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g)
+    .map((part, index) => {
+      if (index % 2 === 1) return part;
+
+      return part
+        .replace(/\\\[([\s\S]*?)\\\]/g, (_match, latex: string) => {
+          return `\n\n$$\n${normalizeLatex(latex.trim())}\n$$\n\n`;
+        })
+        .replace(/\\\(([\s\S]*?)\\\)/g, (_match, latex: string) => {
+          return `$${normalizeLatex(latex.trim())}$`;
+        });
+    })
+    .join("");
+}
+
 function nodeToMarkdown(node: ProseMirrorNode): string {
+  if (node.type === "inlineMath") {
+    const latex = node.attrs?.latex?.trim();
+    return latex ? `$${normalizeLatex(latex)}$` : "";
+  }
+
+  if (node.type === "blockMath") {
+    const latex = node.attrs?.latex?.trim();
+    return latex ? `\n\n$$\n${normalizeLatex(latex)}\n$$\n\n` : "";
+  }
+
   if (node.type === "text") {
     return (node.marks ?? []).reduce((text, mark) => {
       if (mark.type === "bold") return `**${text}**`;
@@ -60,9 +102,11 @@ function nodeToMarkdown(node: ProseMirrorNode): string {
 function normalizeEditorContent(content: string): string {
   try {
     const document = JSON.parse(content) as ProseMirrorNode;
-    return document.type === "doc" ? nodeToMarkdown(document).trim() : content;
+    const markdown =
+      document.type === "doc" ? nodeToMarkdown(document).trim() : content;
+    return normalizeMathDelimiters(markdown);
   } catch {
-    return content;
+    return normalizeMathDelimiters(content);
   }
 }
 

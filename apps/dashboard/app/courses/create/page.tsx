@@ -32,6 +32,39 @@ import type { CourseFormData, CourseModule as Module, Lesson } from "../types";
 import { saveCourse } from "../persistence";
 import { uploadThumbnail } from "../../../lib/course-thumbnail";
 
+const AVAILABLE_TAGS = [
+  "Machine Learning",
+  "Deep Learning",
+  "Artificial Intelligence",
+  "Data Science",
+  "Data Analytics",
+  "Databases",
+  "SQL",
+  "Python",
+  "Statistics",
+  "Probability",
+  "Calculus",
+  "Linear Algebra",
+  "Mathematics",
+  "Data Structures",
+  "Algorithms",
+  "React",
+  "TypeScript",
+  "JavaScript",
+  "Next.js",
+  "Node.js",
+  "Web Development",
+  "Backend",
+  "Frontend",
+  "Full Stack",
+  "DevOps",
+  "Cloud Computing",
+  "Cybersecurity",
+  "API Development",
+  "UI/UX",
+  "Mobile Development",
+] as const;
+
 export default function CreateCoursePage() {
   const router = useRouter();
   const [formData, setFormData] = useState<CourseFormData>({
@@ -57,33 +90,18 @@ export default function CreateCoursePage() {
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [thumbnailError, setThumbnailError] = useState<string | null>(null);
 
-  const availableTags = [
-    "React",
-    "TypeScript",
-    "JavaScript",
-    "Next.js",
-    "Node.js",
-    "Python",
-    "SQL",
-    "Data Structures",
-    "Algorithms",
-    "Web Development",
-    "Backend",
-    "Frontend",
-    "Full Stack",
-    "DevOps",
-    "UI/UX",
-    "Mobile",
-    "AI/ML",
-    "Database",
-    "API",
-  ];
-
   const addTag = (tag: string) => {
-    if (!formData.tags.includes(tag)) {
+    const normalizedTag = tag.trim();
+    if (
+      normalizedTag &&
+      !formData.tags.some(
+        (selectedTag) =>
+          selectedTag.toLowerCase() === normalizedTag.toLowerCase(),
+      )
+    ) {
       setFormData({
         ...formData,
-        tags: [...formData.tags, tag],
+        tags: [...formData.tags, normalizedTag],
       });
     }
     setTagInput("");
@@ -530,34 +548,46 @@ export default function CreateCoursePage() {
                     type="text"
                     value={tagInput}
                     onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && tagInput.trim()) {
+                        event.preventDefault();
+                        addTag(tagInput);
+                      }
+                    }}
                     placeholder="Type to search or add tags..."
                     className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
                   />
-                  {tagInput && (
-                    <div
-                      className="border rounded-md p-3 mt-2 max-h-48 overflow-y-auto bg-surface-100 border-border/10"
-                    >
-                      <div className="flex flex-wrap gap-2">
-                        {availableTags
-                          .filter(
-                            (tag) =>
-                              tag.toLowerCase().includes(tagInput.toLowerCase()) &&
-                              !formData.tags.includes(tag)
-                          )
-                          .slice(0, 8)
-                          .map((tag) => (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() => addTag(tag)}
-                              className="px-3 py-1.5 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
-                            >
-                              +{tag}
-                            </button>
-                          ))}
-                      </div>
+                  <div className="border rounded-md p-3 mt-2 max-h-52 overflow-y-auto bg-surface-100 border-border/10">
+                    <div className="flex flex-wrap gap-2">
+                      {AVAILABLE_TAGS.filter(
+                        (tag) =>
+                          tag.toLowerCase().includes(tagInput.trim().toLowerCase()) &&
+                          !formData.tags.includes(tag),
+                      ).map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => addTag(tag)}
+                          className="px-3 py-1.5 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                        >
+                          +{tag}
+                        </button>
+                      ))}
                     </div>
-                  )}
+                    {tagInput.trim() &&
+                      !AVAILABLE_TAGS.some(
+                        (tag) =>
+                          tag.toLowerCase() === tagInput.trim().toLowerCase(),
+                      ) && (
+                        <button
+                          type="button"
+                          onClick={() => addTag(tagInput)}
+                          className="mt-3 text-sm font-medium text-primary hover:underline"
+                        >
+                          Add custom tag “{tagInput.trim()}”
+                        </button>
+                      )}
+                  </div>
                 </div>
               </div>
             </div>
