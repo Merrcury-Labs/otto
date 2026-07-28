@@ -3,11 +3,20 @@ import katex from "katex";
 
 type MathKind = "inline" | "block";
 
+function normalizeLatex(latex: string) {
+  return latex
+    .replace(/(\p{L})\s*\^\s*[-−](?=\s*(?:=|$))/gu, "\\bar{$1}")
+    .replace(/(\p{L})\u0304/gu, "\\bar{$1}")
+    .replace(/(\p{L})\u0305/gu, "\\overline{$1}")
+    .replace(/(\p{L})[\u00AF\u02C9]/gu, "\\bar{$1}")
+    .replace(/(\p{L})\u203E/gu, "\\overline{$1}");
+}
+
 function renderMath(dom: HTMLElement, latex: string, displayMode: boolean) {
   dom.replaceChildren();
 
   try {
-    katex.render(latex, dom, {
+    katex.render(normalizeLatex(latex), dom, {
       displayMode,
       throwOnError: false,
       strict: "warn",

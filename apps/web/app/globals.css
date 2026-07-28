@@ -517,3 +517,11 @@ a {
     --text-title-small: 1.25rem;
   }
 }
+
+/* Keep rendered equations inside the lesson reader on narrow screens. */
+.markdown-content .katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25rem;
+}
