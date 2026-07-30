@@ -41,6 +41,39 @@ import { adminCoursesQuery } from "../../../../lib/graphql/courses";
 import { saveCourse } from "../../persistence";
 import { uploadThumbnail } from "../../../../lib/course-thumbnail";
 
+const AVAILABLE_TAGS = [
+  "Machine Learning",
+  "Deep Learning",
+  "Artificial Intelligence",
+  "Data Science",
+  "Data Analytics",
+  "Databases",
+  "SQL",
+  "Python",
+  "Statistics",
+  "Probability",
+  "Calculus",
+  "Linear Algebra",
+  "Mathematics",
+  "Data Structures",
+  "Algorithms",
+  "React",
+  "TypeScript",
+  "JavaScript",
+  "Next.js",
+  "Node.js",
+  "Web Development",
+  "Backend",
+  "Frontend",
+  "Full Stack",
+  "DevOps",
+  "Cloud Computing",
+  "Cybersecurity",
+  "API Development",
+  "UI/UX",
+  "Mobile Development",
+] as const;
+
 function getLessonIcon(type: Lesson["type"]) {
   if (type === "video") return <Video className="h-4 w-4" />;
   if (type === "quiz") return <Check className="h-4 w-4" />;
@@ -52,6 +85,7 @@ export default function EditCoursePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [formData, setFormData] = useState<CourseFormData | null>(null);
+  const [tagInput, setTagInput] = useState("");
   const [status, setStatus] = useState<CourseStatus>("published");
   const [isLoadingCourse, setIsLoadingCourse] = useState(true);
   const [courseError, setCourseError] = useState<string | null>(null);
@@ -158,13 +192,27 @@ export default function EditCoursePage() {
     );
   }
 
-  const updateTags = (value: string) => {
+  const addTag = (tag: string) => {
+    const normalizedTag = tag.trim();
+    if (
+      normalizedTag &&
+      !formData.tags.some(
+        (selectedTag) =>
+          selectedTag.toLowerCase() === normalizedTag.toLowerCase(),
+      )
+    ) {
+      setFormData({
+        ...formData,
+        tags: [...formData.tags, normalizedTag],
+      });
+    }
+    setTagInput("");
+  };
+
+  const removeTag = (tagToRemove: string) => {
     setFormData({
       ...formData,
-      tags: value
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+      tags: formData.tags.filter((tag) => tag !== tagToRemove),
     });
   };
 
@@ -553,15 +601,86 @@ export default function EditCoursePage() {
                 >
                   Tags
                 </label>
-                <div className="relative">
-                  <Tag
-                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-                  />
-                  <input
-                    value={formData.tags.join(", ")}
-                    onChange={(event) => updateTags(event.target.value)}
-                    className="w-full rounded-md py-3 pl-10 pr-4 cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
-                  />
+                <div className="space-y-3">
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm cursor-btn-hover focus-warm transition-all duration-150 bg-surface-300 text-foreground"
+                        >
+                          <Tag className="h-3.5 w-3.5" />
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            aria-label={`Remove ${tag} tag`}
+                            className="ml-1 hover:text-red-600 transition-colors text-foreground"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(event) => setTagInput(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && tagInput.trim()) {
+                          event.preventDefault();
+                          addTag(tagInput);
+                        }
+                      }}
+                      placeholder="Type to search or add tags..."
+                      className="w-full px-4 py-3 rounded-md cursor-btn-hover focus-warm transition-all duration-150 bg-surface-100 border border-border/10 text-foreground"
+                    />
+                    <div className="border rounded-md p-3 mt-2 max-h-52 overflow-y-auto bg-surface-100 border-border/10">
+                      <div className="flex flex-wrap gap-2">
+                        {AVAILABLE_TAGS.filter(
+                          (tag) =>
+                            tag
+                              .toLowerCase()
+                              .includes(tagInput.trim().toLowerCase()) &&
+                            !formData.tags.some(
+                              (selectedTag) =>
+                                selectedTag.toLowerCase() === tag.toLowerCase(),
+                            ),
+                        ).map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => addTag(tag)}
+                            className="px-3 py-1.5 rounded-md cursor-btn-hover focus-warm transition-all duration-150 text-sm bg-card text-foreground"
+                          >
+                            +{tag}
+                          </button>
+                        ))}
+                      </div>
+                      {tagInput.trim() &&
+                        !formData.tags.some(
+                          (tag) =>
+                            tag.toLowerCase() ===
+                            tagInput.trim().toLowerCase(),
+                        ) &&
+                        !AVAILABLE_TAGS.some(
+                          (tag) =>
+                            tag.toLowerCase() ===
+                            tagInput.trim().toLowerCase(),
+                        ) && (
+                          <button
+                            type="button"
+                            onClick={() => addTag(tagInput)}
+                            className="mt-3 text-sm font-medium text-primary hover:underline"
+                          >
+                            Add custom tag “{tagInput.trim()}”
+                          </button>
+                        )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
