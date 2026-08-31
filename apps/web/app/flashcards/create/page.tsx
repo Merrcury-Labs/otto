@@ -57,6 +57,7 @@ export default function CreateFlashcardDeckPage() {
   const [csvMessage, setCsvMessage] = useState("");
   const [csvHasError, setCsvHasError] = useState(false);
   const csvInputRef = useRef<HTMLInputElement>(null);
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -69,6 +70,7 @@ export default function CreateFlashcardDeckPage() {
       try {
         const result = await graphqlFetch<CoursesData>({
           query: publishedCoursesQuery,
+          operationName: "PublishedCourses",
         });
         setCourses(result.courses ?? []);
       } catch (err) {
@@ -93,6 +95,13 @@ export default function CreateFlashcardDeckPage() {
         },
       ],
     }));
+
+    requestAnimationFrame(() => {
+      cardsContainerRef.current?.scrollTo({
+        top: cardsContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    });
   };
 
   const handleCsvImport = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +172,7 @@ export default function CreateFlashcardDeckPage() {
     try {
       const deckResult = await graphqlFetch<DeckData>({
         query: createFlashcardDeckMutation,
+        operationName: "CreateFlashcardDeck",
         variables: {
           courseId: formData.courseId,
           title: formData.title.trim(),
@@ -177,6 +187,7 @@ export default function CreateFlashcardDeckPage() {
         validCards.map((card, i) =>
           graphqlFetch<CardData>({
             query: createFlashcardMutation,
+            operationName: "CreateFlashcard",
             variables: {
               deckId,
               front: card.front.trim(),
@@ -334,8 +345,12 @@ export default function CreateFlashcardDeckPage() {
             accepted. Wrap fields containing commas in double quotes.
           </p>
 
-          {formData.cards.map((card, index) => (
-            <div key={card.id || index} className="rounded-2xl border bg-card/40 p-4 space-y-3">
+          <div
+            ref={cardsContainerRef}
+            className="max-h-[min(65vh,42rem)] space-y-3 overflow-y-auto overscroll-contain rounded-2xl pr-2 [scrollbar-gutter:stable]"
+          >
+            {formData.cards.map((card, index) => (
+              <div key={card.id || index} className="rounded-2xl border bg-card/40 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Card #{index + 1}
@@ -412,8 +427,9 @@ export default function CreateFlashcardDeckPage() {
                   />
                 </div>
               </div>
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Save */}
