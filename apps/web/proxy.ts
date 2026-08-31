@@ -52,10 +52,6 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/onboarding", request.url));
     }
 
-    if (session.user.role === "org") {
-      return NextResponse.redirect(new URL("/", DASHBOARD_URL));
-    }
-
     return NextResponse.redirect(
       new URL(appDestination(request), request.url),
     );
@@ -63,10 +59,6 @@ export async function proxy(request: NextRequest) {
 
   if (!session.user.role) {
     return NextResponse.redirect(new URL("/onboarding", request.url));
-  }
-
-  if (session.user.role === "org") {
-    return NextResponse.redirect(new URL("/", DASHBOARD_URL));
   }
 
   return NextResponse.next();
