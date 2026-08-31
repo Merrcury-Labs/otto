@@ -2,20 +2,20 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { cn } from "@/lib/utils";
 import { AppLayout } from "./app-layout";
 
-const inter = Inter({
-	subsets: ['latin'],
-	variable: '--font-sans',
-	weight: ['400', '500', '600', '700'],
+const geistSans = localFont({
+	src: "./fonts/GeistVF.woff",
+	variable: "--font-sans",
+	weight: "100 900",
 });
 
-const jetbrainsMono = JetBrains_Mono({
-	subsets: ['latin'],
-	variable: '--font-jetbrains',
-	weight: ['400', '500'],
+const geistMono = localFont({
+	src: "./fonts/GeistMonoVF.woff",
+	variable: "--font-jetbrains",
+	weight: "100 900",
 });
 
 export const metadata: Metadata = {
@@ -43,7 +43,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning className={cn("font-sans", inter.variable, jetbrainsMono.variable)}>
+		<html lang="en" suppressHydrationWarning className={cn("font-sans", geistSans.variable, geistMono.variable)}>
 			<body className="antialiased">
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					<AppLayout>{children}</AppLayout>
