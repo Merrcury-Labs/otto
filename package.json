@@ -13,6 +13,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
     "docker:db": "cd apps/api && docker compose up db",
     "docker:up": "cd apps/api && docker compose up",
     "docker:down": "cd apps/api && docker compose down",
@@ -23,10 +25,12 @@
     "api:install": "cd apps/api && uv sync"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
     "concurrently": "^10.0.3",
     "prettier": "^3.7.4",
     "turbo": "^2.8.10",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {

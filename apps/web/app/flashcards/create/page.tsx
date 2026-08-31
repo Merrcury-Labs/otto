@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   Cards,
   Plus,
   Trash,
   ArrowLeft,
+  UploadSimple,
 } from "@phosphor-icons/react";
 import { graphqlFetch } from "@/lib/graphql/client";
 import {
@@ -13,6 +15,7 @@ import {
   createFlashcardMutation,
 } from "@/lib/graphql/flashcards";
 import { publishedCoursesQuery } from "@/lib/graphql/courses";
+import { parseFlashcardsCsv } from "../csv";
 
 type Course = {
   id: string;
@@ -51,6 +54,9 @@ type CardData = {
 export default function CreateFlashcardDeckPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [saving, setSaving] = useState(false);
+  const [csvMessage, setCsvMessage] = useState("");
+  const [csvHasError, setCsvHasError] = useState(false);
+  const csvInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<FormData>({
     title: "",
     description: "",
@@ -87,6 +93,39 @@ export default function CreateFlashcardDeckPage() {
         },
       ],
     }));
+  };
+
+  const handleCsvImport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    try {
+      const importedCards = parseFlashcardsCsv(await file.text());
+      setFormData((previous) => {
+        const hasOnlyBlankCard =
+          previous.cards.length === 1 &&
+          !previous.cards[0]?.front.trim() &&
+          !previous.cards[0]?.back.trim();
+        const cards = hasOnlyBlankCard
+          ? importedCards
+          : [...previous.cards, ...importedCards];
+
+        return {
+          ...previous,
+          cards: cards.map((card, position) => ({ ...card, position })),
+        };
+      });
+      setCsvHasError(false);
+      setCsvMessage(
+        `Imported ${importedCards.length} card${importedCards.length === 1 ? "" : "s"} from ${file.name}.`
+      );
+    } catch (error) {
+      setCsvHasError(true);
+      setCsvMessage(
+        error instanceof Error ? error.message : "Could not import the CSV file."
+      );
+    }
   };
 
   const removeCard = (index: number) => {
@@ -164,12 +203,12 @@ export default function CreateFlashcardDeckPage() {
       <div className="flex flex-col gap-6 pb-20">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <a
+          <Link
             href="/flashcards"
             className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-          </a>
+          </Link>
           <div>
             <h1
               className="text-xl font-semibold tracking-tight"
@@ -247,18 +286,53 @@ export default function CreateFlashcardDeckPage() {
 
         {/* Cards Editor */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-sm font-semibold">
               Cards ({formData.cards.length})
             </h2>
-            <button
-              onClick={addCard}
-              className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
-            >
-              <Plus className="size-3" weight="bold" />
-              Add Card
-            </button>
+            <div className="flex items-center gap-2">
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={handleCsvImport}
+              />
+              <button
+                type="button"
+                onClick={() => csvInputRef.current?.click()}
+                className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
+              >
+                <UploadSimple className="size-3.5" />
+                Import CSV
+              </button>
+              <button
+                type="button"
+                onClick={addCard}
+                className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
+              >
+                <Plus className="size-3" weight="bold" />
+                Add Card
+              </button>
+            </div>
           </div>
+
+          {csvMessage && (
+            <div
+              role={csvHasError ? "alert" : "status"}
+              className={`rounded-xl border px-3 py-2 text-xs ${
+                csvHasError
+                  ? "border-destructive/30 bg-destructive/10 text-destructive"
+                  : "bg-secondary/40 text-muted-foreground"
+              }`}
+            >
+              {csvMessage}
+            </div>
+          )}
+          <p className="text-[11px] text-muted-foreground">
+            CSV columns: front, back, hint, tags. Question and answer are also
+            accepted. Wrap fields containing commas in double quotes.
+          </p>
 
           {formData.cards.map((card, index) => (
             <div key={card.id || index} className="rounded-2xl border bg-card/40 p-4 space-y-3">
@@ -351,12 +425,12 @@ export default function CreateFlashcardDeckPage() {
           >
             {saving ? "Saving..." : "Create Deck"}
           </button>
-          <a
+          <Link
             href="/flashcards"
             className="flex items-center gap-2 rounded-xl border px-5 py-2.5 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
           >
             Cancel
-          </a>
+          </Link>
         </div>
       </div>
     </div>
