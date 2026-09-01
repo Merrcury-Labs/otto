@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@repo/ui/button";
-import { X, Cards, ArrowLeft, ArrowRight } from "@phosphor-icons/react";
+import { X, Cards } from "@phosphor-icons/react";
 import type { FlashcardDeck } from "../types";
 import { MarkdownPreview } from "../../courses/components/lesson-modal/MarkdownPreview";
 

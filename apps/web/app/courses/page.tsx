@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import {
     BookOpen,
     PlayCircle,
@@ -153,9 +154,10 @@ export default function CoursesPage() {
                             {/* Image Section */}
                             <div className="relative aspect-video overflow-hidden">
                                 {course.thumbnail || course.image ? (
-                                    <img
+                                    <Image
                                         src={course.thumbnail || course.image}
                                         alt={course.title}
+                                        fill
                                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                     />
                                 ) : (

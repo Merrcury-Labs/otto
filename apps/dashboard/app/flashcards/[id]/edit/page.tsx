@@ -7,7 +7,6 @@ import {
   Plus,
   Trash,
   ArrowLeft,
-  CaretDown,
   UploadSimple,
 } from "@phosphor-icons/react";
 import type { Flashcard, FlashcardDeck } from "../../types";
@@ -33,7 +32,7 @@ type CoursesData = {
 
 export default function EditFlashcardDeckPage({ params }: { params: Promise<{ id: string }> }) {
   const [deck, setDeck] = useState<FlashcardDeck | null>(null);
-  const [courses, setCourses] = useState<Course[]>([]);
+  const [, setCourses] = useState<Course[]>([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState("");
@@ -49,6 +48,7 @@ export default function EditFlashcardDeckPage({ params }: { params: Promise<{ id
       setDeckId(id);
       fetchDeck(id);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- params is a Promise that resolves once
   }, []);
 
   useEffect(() => {

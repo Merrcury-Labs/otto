@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { useParams } from "next/navigation"
 import { graphqlFetch } from "@/lib/graphql/client"
 import { courseDetailQuery, courseDetailWithEnrollmentQuery, studentByUserIdQuery, enrollStudentMutation } from "@/lib/graphql/courses"
@@ -190,9 +191,10 @@ export default function CourseLandingPage() {
                 {/* Hero background image */}
                 {course?.image && (
                     <div className="absolute inset-0">
-                        <img
+                        <Image
                             src={course.image}
                             alt=""
+                            fill
                             className="h-full w-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
@@ -353,9 +355,10 @@ export default function CourseLandingPage() {
                         <div className="overflow-hidden rounded-2xl" style={{ border: '1px solid var(--border-primary)', backgroundColor: 'var(--surface-100)', boxShadow: 'var(--shadow-card)' }}>
                             <div className="aspect-video relative">
                                 {course?.thumbnail ? (
-                                    <img
+                                    <Image
                                         src={course.thumbnail}
                                         alt={course?.title ?? "Course Preview"}
+                                        fill
                                         className="h-full w-full object-cover"
                                         style={{ borderBottom: '1px solid var(--border-primary)' }}
                                     />

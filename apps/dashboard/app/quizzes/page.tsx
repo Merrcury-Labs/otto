@@ -30,7 +30,7 @@ import { Button } from "@repo/ui/button";
 import { QuizPreviewModal } from "./components/QuizPreviewModal";
 import type { Quiz, QuestionType } from "./types";
 import { graphqlFetch } from "../../lib/graphql/client";
-import { adminQuizzesQuery, deleteQuizMutation } from "../../lib/graphql/quizzes";
+import { adminQuizzesQuery } from "../../lib/graphql/quizzes";
 
 type QuizStats = {
   total: number;

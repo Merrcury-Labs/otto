@@ -20,7 +20,6 @@ import {
   Brain,
   Sparkle,
   CheckCircle,
-  Circle,
   BookOpen,
 } from "@phosphor-icons/react";
 import { Button } from "@repo/ui/button";

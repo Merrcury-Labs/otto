@@ -36,7 +36,12 @@
     "DATABASE",
     "NODE_ENV",
     "OPENAI_API_KEY",
-    "AI_MODEL"
+    "AI_MODEL",
+    "AI_BASE_URL",
+    "AI_API_KEY",
+    "AI_PROVIDER",
+    "GEMINI_API_KEY",
+    "GOOGLE_GENERATIVE_AI_API_KEY"
   ],
   "tasks": {
     "build": {

@@ -1,15 +1,14 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import {
     Trophy,
     Clock,
     BarChart3,
     CheckCircle2,
-    Lock,
     Play,
     Search,
-    Filter,
     ArrowUpRight,
     Star,
     Award,
@@ -160,7 +159,7 @@ export default function QuizzesPage() {
         return () => {
             mounted = false
         }
-    }, [user])
+    }, [user, isSessionLoading])
 
     // Derive categories, stats from quiz data
     React.useEffect(() => {
@@ -264,9 +263,10 @@ export default function QuizzesPage() {
                                         {/* Image Header with Badge */}
                                         <div className="relative h-32 overflow-hidden bg-muted">
                                             {quiz.image ? (
-                                                <img
+                                                <Image
                                                     src={quiz.image}
                                                     alt={quiz.title}
+                                                    fill
                                                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                 />
                                             ) : (
