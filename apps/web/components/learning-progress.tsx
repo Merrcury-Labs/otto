@@ -3,19 +3,13 @@
 import * as React from "react";
 import {
   CheckCircle2,
-  Circle,
   Lock,
   Play,
   TrendingUp,
-  Clock,
   Flame,
-  Target,
-  BookOpen,
-  Zap,
 } from "lucide-react";
 import {
   type DisplayModule,
-  type DisplayLesson,
 } from "@/lib/graphql/normalize";
 
 // ─── Progress Ring ────────────────────────────────────────────────────

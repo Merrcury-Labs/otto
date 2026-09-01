@@ -31,6 +31,7 @@ import {
     normalizeQuiz,
 } from "@/lib/graphql/normalize"
 import { authClient } from "@/lib/auth-client"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 function getGreetingTime(): string {
@@ -271,9 +272,9 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between px-1">
                                 <h3 className="text-xl font-bold tracking-tight">Explore Courses</h3>
                                 <Button variant="ghost" size="sm" className="font-bold text-primary group" asChild>
-                                    <a href="/courses">
+                                    <Link href="/courses">
                                         Browse all <ArrowUpRight className="ml-1 size-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                                    </a>
+                                    </Link>
                                 </Button>
                             </div>
 
@@ -396,7 +397,7 @@ export default function DashboardPage() {
                                         Outstanding work. You&apos;ve completed every quiz with an average of {studentAvgScore}%.
                                     </p>
                                     <Button className="mt-8 w-full bg-white text-black font-black hover:bg-white/90 rounded-2xl h-12 shadow-xl shadow-white/5" asChild>
-                                        <a href="/courses">Explore Courses</a>
+                                        <Link href="/courses">Explore Courses</Link>
                                     </Button>
                                 </div>
                             </div>

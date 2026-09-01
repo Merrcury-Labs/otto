@@ -31,7 +31,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
   type DragOverEvent,
   pointerWithin,
   useDroppable,
@@ -481,7 +480,6 @@ function CategorizeQuestion({
         itemList = opts.items.map(String)
       } else if (opts.buckets && typeof opts.buckets === "object") {
         // Format 2 but items might be missing — fall back to correctAnswer
-        const buckets = opts.buckets as Record<string, unknown>
         if (Array.isArray(correct) || (correct && typeof correct === "object")) {
           const correctObj = correct as Record<string, unknown>
           // correctAnswer can be { item: category } or { category: [items] }

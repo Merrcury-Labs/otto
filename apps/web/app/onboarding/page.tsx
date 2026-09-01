@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
+
 import { authClient } from "@/lib/auth-client";
 import { GraduationCap, Buildings, CircleNotch } from "@phosphor-icons/react";
 

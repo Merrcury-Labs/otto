@@ -10,8 +10,7 @@ import {
     TrendingUp,
     Users,
     MoreHorizontal,
-    Hash,
-    Filter
+    Hash
 } from "lucide-react"
 import { communityPosts, trendingTopics, topContributors } from "@/lib/data"
 import { Button } from "@/components/ui/button"
@@ -105,7 +104,7 @@ export default function CommunityPage() {
                                     <div className="flex flex-col gap-3">
                                         <h2 className="text-xl font-bold tracking-tight group-hover:text-primary transition-colors cursor-pointer">{post.title}</h2>
                                         <p className="text-muted-foreground/90 leading-relaxed line-clamp-3 italic">
-                                            "{post.content}"
+                                            &ldquo;{post.content}&rdquo;
                                         </p>
                                     </div>
 

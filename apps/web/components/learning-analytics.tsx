@@ -11,12 +11,11 @@ import {
   CheckCircle2,
   ArrowUpRight,
   BarChart3,
-  Calendar,
   Zap,
   GraduationCap,
   Star,
 } from "lucide-react";
-import { ProgressRing, ProgressBar } from "@/components/learning-progress";
+import { ProgressBar } from "@/components/learning-progress";
 
 // ─── Types ────────────────────────────────────────────────────────────
 
