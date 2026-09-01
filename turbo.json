@@ -31,6 +31,10 @@
     "DB_PASSWORD",
     "DB_NAME",
     "DB_PORT",
+    "HOST",
+    "PASSWORD",
+    "DATABASE",
+    "NODE_ENV",
     "OPENAI_API_KEY",
     "AI_MODEL"
   ],

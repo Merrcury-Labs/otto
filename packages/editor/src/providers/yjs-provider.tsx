@@ -5,7 +5,6 @@ import {
   useContext,
   useState,
   useEffect,
-  useCallback,
   type ReactNode,
 } from "react";
 import * as Y from "yjs";
@@ -89,6 +88,7 @@ export function YjsProvider({
       provider.destroy();
       doc.destroy();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- user object identity is unstable; name/color are the real deps
   }, [documentId, user?.name, user?.color]);
 
   return <YjsContext.Provider value={value}>{children}</YjsContext.Provider>;
