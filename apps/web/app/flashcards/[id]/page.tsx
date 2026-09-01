@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Cards,
   Plus,
@@ -42,6 +43,7 @@ type Deck = {
   cardCount: number;
   avgMastery: number;
   cards: Flashcard[];
+  isOwned: boolean;
 };
 
 type DeckData = {
@@ -99,6 +101,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
       try {
         const result = await graphqlFetch<DeckData>({
           query: flashcardDeckDetailQuery,
+          operationName: "FlashcardDeckDetail",
           variables: { id: deckId },
         });
         setDeck(result.flashcardDeck);
@@ -131,6 +134,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
     try {
       await graphqlFetch<DeckUpdateData>({
         query: updateFlashcardDeckMutation,
+        operationName: "UpdateFlashcardDeck",
         variables: {
           id: deckId,
           title: deckTitle.trim(),
@@ -152,6 +156,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
     try {
       await graphqlFetch({
         query: deleteFlashcardDeckMutation,
+        operationName: "DeleteFlashcardDeck",
         variables: { id: deckId },
       });
       window.location.href = "/flashcards";
@@ -180,6 +185,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
     try {
       await graphqlFetch<CardData>({
         query: updateFlashcardMutation,
+        operationName: "UpdateFlashcard",
         variables: {
           id: cardId,
           front: editFront.trim(),
@@ -209,6 +215,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
     try {
       await graphqlFetch({
         query: deleteFlashcardMutation,
+        operationName: "DeleteFlashcard",
         variables: { id: cardId },
       });
       setDeck((prev) => prev ? {
@@ -228,6 +235,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
     try {
       const result = await graphqlFetch<CardData>({
         query: createFlashcardMutation,
+        operationName: "CreateFlashcard",
         variables: {
           deckId,
           front: newFront.trim(),
@@ -290,12 +298,12 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
               This deck may have been deleted or doesn&apos;t exist
             </p>
           </div>
-          <a
+          <Link
             href="/flashcards"
             className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90"
           >
             Back to Flashcards
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -306,12 +314,12 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
       <div className="flex flex-col gap-6 pb-20">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <a
+          <Link
             href="/flashcards"
             className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
           >
             <ArrowLeft className="size-4" />
-          </a>
+          </Link>
           <div className="flex-1 min-w-0">
             {editingDeck ? (
               <div className="space-y-2">
@@ -363,20 +371,22 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           {!editingDeck && (
             <div className="flex items-center gap-2">
-              <button
-                onClick={startEditDeck}
-                className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                title="Edit deck"
-              >
-                <PencilSimple className="size-4" />
-              </button>
-              <a
+              {deck.isOwned && (
+                <button
+                  onClick={startEditDeck}
+                  className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  title="Edit deck"
+                >
+                  <PencilSimple className="size-4" />
+                </button>
+              )}
+              <Link
                 href={`/flashcards/${deckId}/study`}
                 className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90"
               >
                 <Sparkle className="size-3.5" />
                 Study
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -401,13 +411,15 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
             <h2 className="text-sm font-semibold">
               Cards ({deck.cards.length})
             </h2>
-            <button
-              onClick={() => setAddingCard(true)}
-              className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
-            >
-              <Plus className="size-3" weight="bold" />
-              Add Card
-            </button>
+            {deck.isOwned && (
+              <button
+                onClick={() => setAddingCard(true)}
+                className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
+              >
+                <Plus className="size-3" weight="bold" />
+                Add Card
+              </button>
+            )}
           </div>
 
           {/* New card form */}
@@ -598,7 +610,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                         Card #{index + 1}
                       </span>
-                      <div className="flex items-center gap-1">
+                      {deck.isOwned && <div className="flex items-center gap-1">
                         <button
                           onClick={() => startEditCard(card)}
                           className="flex size-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -630,7 +642,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
                             <Trash className="size-3.5" />
                           </button>
                         )}
-                      </div>
+                      </div>}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -679,7 +691,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
         </div>
 
         {/* Danger zone */}
-        <div className="border-t pt-6 mt-4">
+        {deck.isOwned && <div className="border-t pt-6 mt-4">
           {deletingDeck ? (
             <div className="flex items-center gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4">
               <p className="text-sm text-destructive flex-1">
@@ -707,7 +719,7 @@ export default function DeckDetailPage({ params }: { params: Promise<{ id: strin
               Delete this deck
             </button>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );

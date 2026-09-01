@@ -15,6 +15,13 @@ class FlashcardDeck(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     course = models.ForeignKey('courses.Course', related_name='flashcard_decks', on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        'users.User',
+        related_name='owned_flashcard_decks',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=DRAFT)

@@ -1,10 +1,28 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import {
   executeGraphqlRequest,
   type GraphqlRequestBody,
 } from "@/lib/graphql/schema";
 
 const MAX_GRAPHQL_BODY_BYTES = 350_000;
+const STUDENT_FLASHCARD_OPERATIONS = new Set([
+  "PublishedFlashcardDecks",
+  "FlashcardDeckDetail",
+  "CreateFlashcardDeck",
+  "CreateFlashcard",
+  "UpdateFlashcardDeck",
+  "UpdateFlashcard",
+  "DeleteFlashcardDeck",
+  "DeleteFlashcard",
+]);
+
+function operationName(body: GraphqlRequestBody) {
+  return (
+    body.operationName ??
+    body.query?.match(/\b(?:query|mutation)\s+([_A-Za-z][_0-9A-Za-z]*)/)?.[1]
+  );
+}
 
 const graphqlErrorResponse = (message: string, status: number) =>
   NextResponse.json(
@@ -52,6 +70,23 @@ export async function POST(request: Request) {
         : "Request body must be valid JSON.";
 
     return graphqlErrorResponse(message, 400);
+  }
+
+  const requestedOperation = operationName(body);
+  if (requestedOperation && STUDENT_FLASHCARD_OPERATIONS.has(requestedOperation)) {
+    const session = await auth.api.getSession({ headers: request.headers });
+    if (!session?.user?.id) {
+      return graphqlErrorResponse("Unauthorized.", 401);
+    }
+
+    body = {
+      ...body,
+      variables: {
+        ...body.variables,
+        ownerUserId: session.user.id,
+        viewerUserId: session.user.id,
+      },
+    };
   }
 
   const { result, status } = await executeGraphqlRequest(body, {

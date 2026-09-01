@@ -1,6 +1,6 @@
 export const publishedFlashcardDecksQuery = /* GraphQL */ `
-  query PublishedFlashcardDecks {
-    flashcardDecks(status: "PUBLISHED") {
+  query PublishedFlashcardDecks($viewerUserId: String!) {
+    flashcardDecks(status: "PUBLISHED", viewerUserId: $viewerUserId) {
       id
       title
       description
@@ -11,13 +11,14 @@ export const publishedFlashcardDecksQuery = /* GraphQL */ `
       avgMastery
       createdAt
       updatedAt
+      isOwned
     }
   }
 `;
 
 export const flashcardDeckDetailQuery = /* GraphQL */ `
-  query FlashcardDeckDetail($id: ID!) {
-    flashcardDeck(id: $id) {
+  query FlashcardDeckDetail($id: ID!, $viewerUserId: String!) {
+    flashcardDeck(id: $id, viewerUserId: $viewerUserId) {
       id
       title
       description
@@ -28,6 +29,7 @@ export const flashcardDeckDetailQuery = /* GraphQL */ `
       avgMastery
       createdAt
       updatedAt
+      isOwned
       cards {
         id
         front
@@ -74,12 +76,14 @@ export const createFlashcardDeckMutation = /* GraphQL */ `
     $title: String!
     $description: String
     $status: String
+    $ownerUserId: String!
   ) {
     createFlashcardDeck(
       courseId: $courseId
       title: $title
       description: $description
       status: $status
+      ownerUserId: $ownerUserId
     ) {
       id
     }
@@ -94,6 +98,7 @@ export const createFlashcardMutation = /* GraphQL */ `
     $position: Int
     $hint: String
     $tags: JSON
+    $viewerUserId: String!
   ) {
     createFlashcard(
       deckId: $deckId
@@ -102,6 +107,7 @@ export const createFlashcardMutation = /* GraphQL */ `
       position: $position
       hint: $hint
       tags: $tags
+      viewerUserId: $viewerUserId
     ) {
       id
     }
@@ -114,12 +120,14 @@ export const updateFlashcardDeckMutation = /* GraphQL */ `
     $title: String
     $description: String
     $status: String
+    $viewerUserId: String!
   ) {
     updateFlashcardDeck(
       id: $id
       title: $title
       description: $description
       status: $status
+      viewerUserId: $viewerUserId
     ) {
       id
       title
@@ -137,6 +145,7 @@ export const updateFlashcardMutation = /* GraphQL */ `
     $position: Int
     $hint: String
     $tags: JSON
+    $viewerUserId: String!
   ) {
     updateFlashcard(
       id: $id
@@ -145,6 +154,7 @@ export const updateFlashcardMutation = /* GraphQL */ `
       position: $position
       hint: $hint
       tags: $tags
+      viewerUserId: $viewerUserId
     ) {
       id
       front
@@ -157,13 +167,13 @@ export const updateFlashcardMutation = /* GraphQL */ `
 `;
 
 export const deleteFlashcardDeckMutation = /* GraphQL */ `
-  mutation DeleteFlashcardDeck($id: ID!) {
-    deleteFlashcardDeck(id: $id)
+  mutation DeleteFlashcardDeck($id: ID!, $viewerUserId: String!) {
+    deleteFlashcardDeck(id: $id, viewerUserId: $viewerUserId)
   }
 `;
 
 export const deleteFlashcardMutation = /* GraphQL */ `
-  mutation DeleteFlashcard($id: ID!) {
-    deleteFlashcard(id: $id)
+  mutation DeleteFlashcard($id: ID!, $viewerUserId: String!) {
+    deleteFlashcard(id: $id, viewerUserId: $viewerUserId)
   }
 `;

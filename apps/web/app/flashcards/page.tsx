@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Layers,
   Brain,
@@ -8,7 +9,6 @@ import {
   ArrowRight,
   Search,
   BookOpen,
-  Clock,
   Flame,
   Plus,
   Settings2,
@@ -43,6 +43,7 @@ export default function FlashcardsPage() {
       try {
         const result = await graphqlFetch<DecksData>({
           query: publishedFlashcardDecksQuery,
+          operationName: "PublishedFlashcardDecks",
         });
         setDecks(result.flashcardDecks ?? []);
       } catch (err) {
@@ -88,13 +89,13 @@ export default function FlashcardsPage() {
               and let the algorithm optimize your review schedule.
             </p>
           </div>
-          <a
+          <Link
             href="/flashcards/create"
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90 sm:w-auto"
           >
             <Plus className="size-3.5" />
             Create Deck
-          </a>
+          </Link>
         </div>
 
         {/* Quick Stats */}
@@ -194,20 +195,20 @@ export default function FlashcardsPage() {
 
                 {/* Action buttons */}
                 <div className="mt-auto flex items-center gap-2">
-                  <a
+                  <Link
                     href={`/flashcards/${deck.id}/study`}
                     className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-primary-foreground transition-all hover:bg-primary/90"
                   >
                     <Sparkles className="size-3.5" />
                     Study Now
                     <ArrowRight className="size-3.5" />
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href={`/flashcards/${deck.id}`}
                     className="flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2.5 text-[13px] font-medium text-muted-foreground transition-all hover:border-primary/20 hover:text-foreground"
                   >
                     <Settings2 className="size-3.5" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             ))}
