@@ -177,7 +177,7 @@ export default function CreateFlashcardDeckPage() {
           courseId: formData.courseId,
           title: formData.title.trim(),
           description: formData.description.trim(),
-          status: "DRAFT",
+          status: "PUBLISHED",
         },
       });
 
