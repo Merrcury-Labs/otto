@@ -24,7 +24,9 @@
       "Bash(curl -s -X POST http://127.0.0.1:8000/graphql -H \"Content-Type: application/json\" -d '{\"query\":\"{ studentQuizProgress\\(studentId: \\\\\"464867fb-5f76-4707-b022-59b1a51f9e80\\\\\"\\) { id bestScore attemptsCount completed lastAttempted quiz { id } } }\"}')",
       "Bash(npx vitest *)",
       "Bash(pnpm test *)",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(git push *)",
+      "Bash(pnpm lint *)"
     ],
     "additionalDirectories": [
       "/home/isaac_s/Desktop/otto/apps/dashboard/app/courses/[id]/preview",

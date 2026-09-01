@@ -40,7 +40,7 @@ def _sm2_update(progress: FlashcardProgress, quality: int) -> FlashcardProgress:
 
 class FlashcardDeckViewSet(viewsets.ModelViewSet):
     queryset = (
-        FlashcardDeck.objects.select_related('course')
+        FlashcardDeck.objects.filter(owner__isnull=True).select_related('course')
         .prefetch_related('cards')
         .order_by('title')
     )
@@ -50,7 +50,7 @@ class FlashcardDeckViewSet(viewsets.ModelViewSet):
 
 
 class FlashcardViewSet(viewsets.ModelViewSet):
-    queryset = Flashcard.objects.select_related('deck').order_by('deck__title', 'position', 'id')
+    queryset = Flashcard.objects.filter(deck__owner__isnull=True).select_related('deck').order_by('deck__title', 'position', 'id')
     serializer_class = FlashcardSerializer
     authentication_classes = ()
     permission_classes = (AllowAny,)

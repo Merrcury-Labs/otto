@@ -6,6 +6,7 @@ from strawberry.scalars import JSON
 
 from dashboard.models import Org
 from courses.schema import CourseType
+from users.models import User
 from users.schema import StudentType
 
 from .models import Flashcard, FlashcardDeck, FlashcardProgress
@@ -56,6 +57,10 @@ class FlashcardDeckType:
     status: str
     created_at: datetime
     updated_at: datetime
+
+    @strawberry.field(name="isOwned")
+    def is_owned(self) -> bool:
+        return self.owner_id is not None
 
     @strawberry.field
     def course(self) -> CourseType:
@@ -109,6 +114,7 @@ class FlashcardQuery:
         status: str | None = None,
         search: str | None = None,
         owner_user_id: str | None = None,
+        viewer_user_id: str | None = None,
     ) -> list[FlashcardDeckType]:
         qs = FlashcardDeck.objects.select_related("course").prefetch_related(
             "cards", "cards__progress_records",
@@ -117,9 +123,15 @@ class FlashcardQuery:
         if owner_user_id:
             org = Org.objects.filter(owner_user_id=owner_user_id).first()
             if org:
-                qs = qs.filter(course__tutor__org=org)
+                qs = qs.filter(course__tutor__org=org, owner__isnull=True)
             else:
                 return []
+        elif viewer_user_id:
+            qs = qs.filter(
+                Q(owner__isnull=True) | Q(owner__userID=viewer_user_id)
+            )
+        else:
+            qs = qs.filter(owner__isnull=True)
 
         if status is not None:
             qs = qs.filter(status=status)
@@ -130,13 +142,23 @@ class FlashcardQuery:
         return list(qs.order_by("title"))
 
     @strawberry.field
-    def flashcard_deck(self, id: strawberry.ID) -> FlashcardDeckType | None:
-        return (
+    def flashcard_deck(
+        self,
+        id: strawberry.ID,
+        viewer_user_id: str | None = None,
+    ) -> FlashcardDeckType | None:
+        qs = (
             FlashcardDeck.objects.select_related("course")
             .prefetch_related("cards", "cards__progress_records")
             .filter(pk=id)
-            .first()
         )
+        if viewer_user_id:
+            qs = qs.filter(
+                Q(owner__isnull=True) | Q(owner__userID=viewer_user_id)
+            )
+        else:
+            qs = qs.filter(owner__isnull=True)
+        return qs.first()
 
     @strawberry.field
     def flashcard_progress(self, student_id: strawberry.ID) -> list[FlashcardProgressType]:
@@ -160,23 +182,28 @@ class FlashcardQuery:
         self, student_id: strawberry.ID, deck_id: strawberry.ID
     ) -> list[FlashcardType]:
         """Get cards due for review in a specific deck."""
+        progress_access = (
+            Q(card__deck__owner__isnull=True)
+            | Q(card__deck__owner_id=student_id)
+        )
+        card_access = Q(deck__owner__isnull=True) | Q(deck__owner_id=student_id)
         now = datetime.now()
         # Get cards that have progress with next_review <= now
         due_card_ids = FlashcardProgress.objects.filter(
             student_id=student_id,
             card__deck_id=deck_id,
             next_review__lte=now,
-        ).values_list("card_id", flat=True)
+        ).filter(progress_access).values_list("card_id", flat=True)
 
         # Also include cards with no progress (never studied)
         studied_card_ids = FlashcardProgress.objects.filter(
             student_id=student_id,
             card__deck_id=deck_id,
-        ).values_list("card_id", flat=True)
+        ).filter(progress_access).values_list("card_id", flat=True)
 
         unstudied_cards = Flashcard.objects.filter(
             deck_id=deck_id,
-        ).exclude(id__in=studied_card_ids)
+        ).filter(card_access).exclude(id__in=studied_card_ids)
 
         due_cards = Flashcard.objects.filter(
             id__in=due_card_ids,
@@ -187,7 +214,7 @@ class FlashcardQuery:
 
     @strawberry.field
     def flashcard_deck_stats(self, owner_user_id: str | None = None) -> FlashcardDeckStatsType:
-        qs = FlashcardDeck.objects.all()
+        qs = FlashcardDeck.objects.filter(owner__isnull=True)
         if owner_user_id:
             org = Org.objects.filter(owner_user_id=owner_user_id).first()
             if org:
@@ -200,7 +227,7 @@ class FlashcardQuery:
         total = qs.count()
         published = qs.filter(status=FlashcardDeck.PUBLISHED).count()
 
-        progress_qs = FlashcardProgress.objects.all()
+        progress_qs = FlashcardProgress.objects.filter(card__deck__owner__isnull=True)
         if owner_user_id:
             org = Org.objects.filter(owner_user_id=owner_user_id).first()
             if org:
@@ -274,9 +301,14 @@ class FlashcardMutation:
         title: str,
         description: str = "",
         status: str = FlashcardDeck.DRAFT,
+        owner_user_id: str | None = None,
     ) -> FlashcardDeckType:
+        owner = None
+        if owner_user_id:
+            owner = User.objects.get(userID=owner_user_id)
         return FlashcardDeck.objects.create(
             course_id=course_id,
+            owner=owner,
             title=title,
             description=description,
             status=status,
@@ -289,8 +321,14 @@ class FlashcardMutation:
         title: str | None = None,
         description: str | None = None,
         status: str | None = None,
+        viewer_user_id: str | None = None,
     ) -> FlashcardDeckType:
-        deck = FlashcardDeck.objects.get(pk=id)
+        decks = FlashcardDeck.objects.filter(pk=id)
+        if viewer_user_id:
+            decks = decks.filter(owner__userID=viewer_user_id)
+        else:
+            decks = decks.filter(owner__isnull=True)
+        deck = decks.get()
         if title is not None:
             deck.title = title
         if description is not None:
@@ -301,8 +339,17 @@ class FlashcardMutation:
         return deck
 
     @strawberry.mutation
-    def delete_flashcard_deck(self, id: strawberry.ID) -> bool:
-        deleted, _ = FlashcardDeck.objects.filter(pk=id).delete()
+    def delete_flashcard_deck(
+        self,
+        id: strawberry.ID,
+        viewer_user_id: str | None = None,
+    ) -> bool:
+        decks = FlashcardDeck.objects.filter(pk=id)
+        if viewer_user_id:
+            decks = decks.filter(owner__userID=viewer_user_id)
+        else:
+            decks = decks.filter(owner__isnull=True)
+        deleted, _ = decks.delete()
         return deleted > 0
 
     @strawberry.mutation
@@ -314,9 +361,16 @@ class FlashcardMutation:
         position: int = 0,
         hint: str = "",
         tags: JSON | None = None,
+        viewer_user_id: str | None = None,
     ) -> FlashcardType:
+        decks = FlashcardDeck.objects.filter(pk=deck_id)
+        if viewer_user_id:
+            decks = decks.filter(owner__userID=viewer_user_id)
+        else:
+            decks = decks.filter(owner__isnull=True)
+        deck = decks.get()
         return Flashcard.objects.create(
-            deck_id=deck_id,
+            deck=deck,
             front=front,
             back=back,
             position=position,
@@ -333,8 +387,14 @@ class FlashcardMutation:
         position: int | None = None,
         hint: str | None = None,
         tags: JSON | None = None,
+        viewer_user_id: str | None = None,
     ) -> FlashcardType:
-        card = Flashcard.objects.get(pk=id)
+        cards = Flashcard.objects.filter(pk=id)
+        if viewer_user_id:
+            cards = cards.filter(deck__owner__userID=viewer_user_id)
+        else:
+            cards = cards.filter(deck__owner__isnull=True)
+        card = cards.get()
         if front is not None:
             card.front = front
         if back is not None:
@@ -349,8 +409,17 @@ class FlashcardMutation:
         return card
 
     @strawberry.mutation
-    def delete_flashcard(self, id: strawberry.ID) -> bool:
-        deleted, _ = Flashcard.objects.filter(pk=id).delete()
+    def delete_flashcard(
+        self,
+        id: strawberry.ID,
+        viewer_user_id: str | None = None,
+    ) -> bool:
+        cards = Flashcard.objects.filter(pk=id)
+        if viewer_user_id:
+            cards = cards.filter(deck__owner__userID=viewer_user_id)
+        else:
+            cards = cards.filter(deck__owner__isnull=True)
+        deleted, _ = cards.delete()
         return deleted > 0
 
     @strawberry.mutation
@@ -361,6 +430,10 @@ class FlashcardMutation:
         quality: int,
     ) -> FlashcardProgressType:
         """Submit a review for a flashcard. Quality is 0-5 (SM-2 scale)."""
+        Flashcard.objects.filter(
+            Q(deck__owner__isnull=True) | Q(deck__owner_id=student_id),
+            pk=card_id,
+        ).get()
         progress, _ = FlashcardProgress.objects.get_or_create(
             card_id=card_id,
             student_id=student_id,

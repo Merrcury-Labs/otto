@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   RotateCcw,
   Sparkles,
   X,
-  ChevronRight,
   Lightbulb,
 } from "lucide-react";
 import { graphqlFetch } from "@/lib/graphql/client";
@@ -81,6 +81,7 @@ export default function StudyPage() {
       try {
         const result = await graphqlFetch<DeckDetailData>({
           query: flashcardDeckDetailQuery,
+          operationName: "FlashcardDeckDetail",
           variables: { id: deckId },
         });
         const d = result.flashcardDeck;
@@ -231,9 +232,9 @@ export default function StudyPage() {
     return (
       <div className="flex h-svh flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground text-sm">Deck not found</p>
-        <a href="/flashcards" className="text-sm text-primary hover:underline">
+        <Link href="/flashcards" className="text-sm text-primary hover:underline">
           Back to Flash Cards
-        </a>
+        </Link>
       </div>
     );
   }
@@ -255,18 +256,18 @@ export default function StudyPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <a
+          <Link
             href={`/flashcards/${deckId}/study`}
             className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Study Again
-          </a>
-          <a
+          </Link>
+          <Link
             href="/flashcards"
             className="rounded-xl border px-5 py-2.5 text-sm font-semibold hover:bg-muted transition-colors"
           >
             All Decks
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -296,10 +297,10 @@ export default function StudyPage() {
 
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 py-3 border-b">
-        <a href="/flashcards" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+        <Link href="/flashcards" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="size-4" />
           <span className="text-xs font-medium">Exit</span>
-        </a>
+        </Link>
         <div className="text-center">
           <p className="text-xs font-semibold truncate max-w-[200px]">{deck.title}</p>
           <p className="text-[10px] text-muted-foreground">
