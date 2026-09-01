@@ -234,6 +234,7 @@ function OttoEditorInner({
         await handleAIAction(command, selectedText, from, to);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleAIAction is stable via its own useCallback
     [editor]
   );
 

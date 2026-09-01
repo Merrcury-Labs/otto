@@ -10,9 +10,8 @@ export function createCollaborationCursorExtension(
   provider: unknown,
   user: { name: string; color: string }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return CollaborationCursor.configure({
-    provider: provider as any,
+    provider: provider as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     user,
   });
 }

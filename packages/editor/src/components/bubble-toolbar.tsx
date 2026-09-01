@@ -92,7 +92,7 @@ export function BubbleToolbar({ editor }: BubbleToolbarProps) {
 
   return (
     <div className="flex items-center gap-0.5 rounded-lg bg-foreground px-1 py-0.5 shadow-lg">
-      {buttons.map((btn, i) => (
+      {buttons.map((btn) => (
         <button
           key={btn.label}
           type="button"
