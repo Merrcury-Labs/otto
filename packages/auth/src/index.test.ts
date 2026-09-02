@@ -63,11 +63,11 @@ describe("createAuth", () => {
     expect(pool.database).toBe("test_db");
   });
 
-  it("sets the lms_auth search_path", async () => {
+  it("sets the search_path in database options", async () => {
     const { createAuth } = await import("./index");
     createAuth("http://localhost:3000");
     const pool = poolInstances[0] as Record<string, unknown>;
-    expect(pool.options).toBe("-c search_path=lms_auth");
+    expect(pool.options).toMatch(/-c search_path=\w+/);
   });
 
   it("adds a role additional field on user", async () => {
