@@ -43,3 +43,9 @@ jobs:
 
       - name: Build
         run: pnpm build
+        env:
+          BETTER_AUTH_SECRET: ci-dummy-secret-for-build-only
+          NEXT_PUBLIC_DASHBOARD_URL: http://localhost:3002
+          NEXT_PUBLIC_WEB_URL: http://localhost:3000
+          NEXT_PUBLIC_COLLAB_URL: http://localhost:1234
+          NEXT_PUBLIC_COLLAB_SECRET: ci-dummy-collab-secret
