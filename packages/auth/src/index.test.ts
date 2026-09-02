@@ -9,7 +9,7 @@ vi.mock("pg", () => ({
   }),
 }));
 
-// Mock better-auth to pass through its config
+// Mock better-auth to pass through its config as a plain object for assertions
 vi.mock("better-auth", () => ({
   betterAuth: vi.fn().mockImplementation((config: Record<string, unknown>) => config),
 }));
@@ -31,32 +31,32 @@ describe("createAuth", () => {
 
   it("passes the baseURL to betterAuth", async () => {
     const { createAuth } = await import("./index");
-    const result = createAuth("http://localhost:3000");
+    const result = createAuth("http://localhost:3000") as Record<string, unknown>;
     expect(result.baseURL).toBe("http://localhost:3000");
   });
 
   it("enables emailAndPassword", async () => {
     const { createAuth } = await import("./index");
-    const result = createAuth("http://localhost:3000");
+    const result = createAuth("http://localhost:3000") as Record<string, unknown>;
     expect(result.emailAndPassword).toEqual({ enabled: true });
   });
 
   it("passes the BETTER_AUTH_SECRET from env", async () => {
     const { createAuth } = await import("./index");
-    const result = createAuth("http://localhost:3000");
+    const result = createAuth("http://localhost:3000") as Record<string, unknown>;
     expect(result.secret).toBe("test-secret");
   });
 
   it("includes the nextCookies plugin", async () => {
     const { createAuth } = await import("./index");
-    const result = createAuth("http://localhost:3000");
+    const result = createAuth("http://localhost:3000") as Record<string, unknown>;
     expect(result.plugins).toHaveLength(1);
   });
 
   it("configures the database pool with env vars", async () => {
     const { createAuth } = await import("./index");
     createAuth("http://localhost:3000");
-    const pool = poolInstances[0];
+    const pool = poolInstances[0] as Record<string, unknown>;
     expect(pool.host).toBe("localhost");
     expect(pool.user).toBe("test_user");
     expect(pool.password).toBe("test_pass");
@@ -66,13 +66,16 @@ describe("createAuth", () => {
   it("sets the lms_auth search_path", async () => {
     const { createAuth } = await import("./index");
     createAuth("http://localhost:3000");
-    expect(poolInstances[0].options).toBe("-c search_path=lms_auth");
+    const pool = poolInstances[0] as Record<string, unknown>;
+    expect(pool.options).toBe("-c search_path=lms_auth");
   });
 
   it("adds a role additional field on user", async () => {
     const { createAuth } = await import("./index");
-    const result = createAuth("http://localhost:3000");
-    expect(result.user.additionalFields.role).toEqual({
+    const result = createAuth("http://localhost:3000") as Record<string, unknown>;
+    const user = result.user as Record<string, unknown>;
+    const fields = user.additionalFields as Record<string, unknown>;
+    expect(fields.role).toEqual({
       type: "string",
       required: false,
       input: false,
